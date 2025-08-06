@@ -26,6 +26,7 @@ plot_timeseries(fig2, ax2, SMPS['2025-08-05_093558_SMPS_Mass'], bin_labels, bin_
 fig2.tight_layout()
 
 fig3, ax3 = plt.subplots(figsize = (3.3, 3))
-mean_number, error_number, mean_mass, error_mass, ax3, ax3_2 = plot_bin_mean(ax3, timestamps, SMPS['2025-08-05_093558_SMPS_Number'], SMPS['2025-08-05_093558_SMPS_Mass'], bin_labels, 'Time', bin_Dp[1:], None, 0.10, None, True)
-ax3.set_xlim(bin_Dp[1], max(bin_Dp))
+mean_number, mean_mass, ax3, ax3_2 = plot_bin_mean(ax3, timestamps, SMPS['2025-08-05_093558_SMPS_Number'], SMPS['2025-08-05_093558_SMPS_Mass'], bin_labels, 'Time', bin_Dp[1:], None, None, True)
+ax3.set(ylim = (0, 6600))
+ax3_2.set_ylim(0, 1.3)
 fig3.tight_layout()
