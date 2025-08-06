@@ -192,22 +192,26 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
 
     min_std_number = [m - std for m, std in zip(mean_number, std_number)]
     max_std_number = [m + std for m, std in zip(mean_number, std_number)]
-    abs_error_number = [abs(error) for error in error_number]
+    min_error_number = [m - abs(error) for m, error in zip(mean_number, error_number)]
+    max_error_number = [m + abs(error) for m, error in zip(mean_number, error_number)]
 
     if cut_point == None:
         ax.fill_between(bin_Dp, min_std_number, max_std_number, alpha=0.2, color='tab:blue', linewidth=0)
-        ax.errorbar(bin_Dp, mean_number, abs_error_number, ecolor='k', elinewidth=0.5, capsize=2, capthick=0.5, color='tab:blue', lw = 1.2)
+        ax.fill_between(bin_Dp, min_error_number, max_error_number, alpha=0.1, color='tab:blue', linewidth=0)
+        ax.plot(bin_Dp, mean_number, color='tab:blue', lw = 1)
     else:
-        df_number = pd.DataFrame({'Bin mean': bin_Dp, 'Concentration': mean_number, 'Std min': min_std_number, 'Std max': max_std_number, 'Error': abs_error_number})
+        df_number = pd.DataFrame({'Bin mean': bin_Dp, 'Concentration': mean_number, 'Std min': min_std_number, 'Std max': max_std_number, 'Error min': min_error_number, 'Error max': max_error_number})
         
         lower_cut = df_number['Bin mean'] < cut_point
         upper_cut = df_number['Bin mean'] > cut_point
 
         ax.fill_between(df_number['Bin mean'][lower_cut], df_number['Std min'][lower_cut], df_number['Std max'][lower_cut], alpha=0.2, color='tab:blue', linewidth=0)
-        ax.errorbar(df_number['Bin mean'][lower_cut], df_number['Concentration'][lower_cut], df_number['Error'][lower_cut], ecolor='k', elinewidth=0.5, capsize=2, capthick=0.5, color='tab:blue', lw = 1.2)
+        ax.fill_between(df_number['Bin mean'][lower_cut], df_number['Error min'][lower_cut], df_number['Error max'][lower_cut], alpha=0.1, color='tab:blue', linewidth=0)
+        ax.plot(df_number['Bin mean'][lower_cut], df_number['Concentration'][lower_cut], color='tab:blue', lw = 1.2)
 
         ax.fill_between(df_number['Bin mean'][upper_cut], df_number['Std min'][upper_cut], df_number['Std max'][upper_cut], alpha=0.2, color='tab:blue', linewidth=0)
-        ax.errorbar(df_number['Bin mean'][upper_cut], df_number['Concentration'][upper_cut], df_number['Error'][upper_cut], ecolor='k', elinewidth=0.5, capsize=2, capthick=0.5, color='tab:blue', lw = 1.2)
+        ax.fill_between(df_number['Bin mean'][upper_cut], df_number['Error min'][upper_cut], df_number['Error max'][upper_cut], alpha=0.1, color='tab:blue', linewidth=0)
+        ax.plot(df_number['Bin mean'][upper_cut], df_number['Concentration'][upper_cut], color='tab:blue', lw = 1.2)
 
     # Explicitly set ylabel color for primary axis
     ax.tick_params(axis = 'y', labelcolor='tab:blue')
@@ -226,7 +230,8 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
 
         min_std_mass = [m - std for m, std in zip(mean_mass, std_mass)]
         max_std_mass = [m + std for m, std in zip(mean_mass, std_mass)]
-        abs_error_mass = [abs(error) for error in error_mass]
+        min_error_mass = [m - abs(error) for m, error in zip(mean_mass, error_mass)]
+        max_error_mass = [m + abs(error) for m, error in zip(mean_mass, error_mass)]
 
         # Create a secondary y-axis for mass concentration
         ax2 = ax.twinx()
@@ -234,18 +239,21 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
         # Plotting for the mass concentration
         if cut_point == None:
             ax2.fill_between(bin_Dp, min_std_mass, max_std_mass, alpha=0.2, color='red', linewidth=0)
-            ax2.errorbar(bin_Dp, mean_mass, abs_error_mass, ecolor='k', elinewidth=0.5, capsize=2, capthick=0.5, color='red', lw = 1.2)
+            ax2.fill_between(bin_Dp, min_error_mass, max_error_mass, alpha=0.1, color='red', linewidth=0)
+            ax2.plot(bin_Dp, mean_mass, color='red', lw = 1)
         else:
-            df_mass = pd.DataFrame({'Bin mean': bin_Dp, 'Concentration': mean_mass, 'Std min': min_std_mass, 'Std max': max_std_mass, 'Error': abs_error_mass})
+            df_mass = pd.DataFrame({'Bin mean': bin_Dp, 'Concentration': mean_mass, 'Std min': min_std_mass, 'Std max': max_std_mass, 'Error min': min_error_mass, 'Error max': max_error_mass})
             
             lower_cut = df_mass['Bin mean'] < cut_point
             upper_cut = df_mass['Bin mean'] > cut_point
 
-            ax2.fill_between(df_mass['Bin mean'][lower_cut], df_mass['Std min'][lower_cut], df_mass['Std max'][lower_cut], alpha=0.2, color='red', linewidth=0)
-            ax2.errorbar(df_mass['Bin mean'][lower_cut], df_mass['Concentration'][lower_cut], df_mass['Error'][lower_cut], ecolor='k', elinewidth=0.5, capsize=2, capthick=0.5, color='red', lw = 1.2)
+            ax.fill_between(df_mass['Bin mean'][lower_cut], df_mass['Std min'][lower_cut], df_mass['Std max'][lower_cut], alpha=0.2, color='red', linewidth=0)
+            ax.fill_between(df_mass['Bin mean'][lower_cut], df_mass['Error min'][lower_cut], df_mass['Error max'][lower_cut], alpha=0.1, color='red', linewidth=0)
+            ax.plot(df_mass['Bin mean'][lower_cut], df_mass['Concentration'][lower_cut], color='red', lw = 1.2)
 
-            ax2.fill_between(df_mass['Bin mean'][upper_cut], df_mass['Std min'][upper_cut], df_mass['Std max'][upper_cut], alpha=0.2, color='red', linewidth=0)
-            ax2.errorbar(df_mass['Bin mean'][upper_cut], df_mass['Concentration'][upper_cut], df_mass['Error'][upper_cut], ecolor='k', elinewidth=0.5, capsize=2, capthick=0.5, color='red', lw = 1.2)
+            ax.fill_between(df_mass['Bin mean'][upper_cut], df_mass['Std min'][upper_cut], df_mass['Std max'][upper_cut], alpha=0.2, color='red', linewidth=0)
+            ax.fill_between(df_mass['Bin mean'][upper_cut], df_mass['Error min'][upper_cut], df_mass['Error max'][upper_cut], alpha=0.1, color='red', linewidth=0)
+            ax.plot(df_mass['Bin mean'][upper_cut], df_mass['Concentration'][upper_cut], color='red', lw = 1.2)
 
         ax2.tick_params(axis = 'y', labelcolor='red')
 
