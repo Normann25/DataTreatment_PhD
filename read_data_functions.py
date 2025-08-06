@@ -46,3 +46,17 @@ def import_SMPS(path, parent_path, hour):
                     pass
 
     return data_dict
+
+def import_SASS(path, parent_path, hour, minutes):
+    files = file_list(path, parent_path)
+    data_dict = {}
+
+    for file in files:
+        if 'SASS' in file:
+            file_name = linecache.getline(os.path.join(path, file), 2).split('\t')[3]
+            
+            with open(os.path.join(path, file)) as f:
+                df = pd.read_table(f, sep = '\t', skiprows = 8)
+        
+            
+    return data_dict
