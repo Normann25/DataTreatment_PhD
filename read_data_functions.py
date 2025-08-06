@@ -37,7 +37,7 @@ def import_SMPS(path, parent_path, hour):
                     with open(os.path.join(path, file), 'r') as f:
                         df = pd.read_csv(f, sep = separation, skiprows = 52)
 
-                    df['Time'] = format_timestamps(df['DateTime Sample Start'], '%m/%d/%y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
+                    df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
                     df['Time'] = df['Time'] + pd.Timedelta(hours = hour)
 
                     data_dict[name] = df
