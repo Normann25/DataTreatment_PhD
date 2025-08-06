@@ -181,36 +181,30 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
             if total != None:
                 ax2.set_ylabel('Total concentration / $\mu$g m$^{-3}$')
 
-def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp, bin_edges, inst_error, cut_point, mass):
-    mean_number, std_number, error_number = bin_mean(timestamps, df_number, df_keys, timelabel, inst_error)
+def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp, bin_edges, cut_point, mass):
+    mean_number, std_number = bin_mean(timestamps, df_number, df_keys, timelabel)
 
     if bin_edges != None:   # bin_egdes should only be different from None when the dataset is not normalized
         dlogDp = np.log10(bin_edges[1:])-np.log10(bin_edges[:-1])
         mean_number=mean_number/dlogDp
         std_number=std_number/dlogDp
-        error_number=error_number/dlogDp
 
     min_std_number = [m - std for m, std in zip(mean_number, std_number)]
     max_std_number = [m + std for m, std in zip(mean_number, std_number)]
-    min_error_number = [m - abs(error) for m, error in zip(mean_number, error_number)]
-    max_error_number = [m + abs(error) for m, error in zip(mean_number, error_number)]
 
     if cut_point == None:
         ax.fill_between(bin_Dp, min_std_number, max_std_number, alpha=0.2, color='tab:blue', linewidth=0)
-        ax.fill_between(bin_Dp, min_error_number, max_error_number, alpha=0.1, color='tab:blue', linewidth=0)
         ax.plot(bin_Dp, mean_number, color='tab:blue', lw = 1)
     else:
-        df_number = pd.DataFrame({'Bin mean': bin_Dp, 'Concentration': mean_number, 'Std min': min_std_number, 'Std max': max_std_number, 'Error min': min_error_number, 'Error max': max_error_number})
+        df_number = pd.DataFrame({'Bin mean': bin_Dp, 'Concentration': mean_number, 'Std min': min_std_number, 'Std max': max_std_number})
         
         lower_cut = df_number['Bin mean'] < cut_point
         upper_cut = df_number['Bin mean'] > cut_point
 
         ax.fill_between(df_number['Bin mean'][lower_cut], df_number['Std min'][lower_cut], df_number['Std max'][lower_cut], alpha=0.2, color='tab:blue', linewidth=0)
-        ax.fill_between(df_number['Bin mean'][lower_cut], df_number['Error min'][lower_cut], df_number['Error max'][lower_cut], alpha=0.1, color='tab:blue', linewidth=0)
         ax.plot(df_number['Bin mean'][lower_cut], df_number['Concentration'][lower_cut], color='tab:blue', lw = 1.2)
 
         ax.fill_between(df_number['Bin mean'][upper_cut], df_number['Std min'][upper_cut], df_number['Std max'][upper_cut], alpha=0.2, color='tab:blue', linewidth=0)
-        ax.fill_between(df_number['Bin mean'][upper_cut], df_number['Error min'][upper_cut], df_number['Error max'][upper_cut], alpha=0.1, color='tab:blue', linewidth=0)
         ax.plot(df_number['Bin mean'][upper_cut], df_number['Concentration'][upper_cut], color='tab:blue', lw = 1.2)
 
     # Explicitly set ylabel color for primary axis
@@ -220,18 +214,15 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
     ax.set(xlabel='Particle diameter / nm', xscale='log')
 
     if mass:
-        mean_mass, std_mass, error_mass = bin_mean(timestamps, df_mass, df_keys, timelabel, inst_error)
+        mean_mass, std_mass = bin_mean(timestamps, df_mass, df_keys, timelabel)
 
         if bin_edges != None:
             dlogDp = np.log10(bin_edges[1:])-np.log10(bin_edges[:-1])
             mean_mass=mean_mass/dlogDp
             std_mass=std_mass/dlogDp
-            error_mass=error_mass/dlogDp
 
         min_std_mass = [m - std for m, std in zip(mean_mass, std_mass)]
         max_std_mass = [m + std for m, std in zip(mean_mass, std_mass)]
-        min_error_mass = [m - abs(error) for m, error in zip(mean_mass, error_mass)]
-        max_error_mass = [m + abs(error) for m, error in zip(mean_mass, error_mass)]
 
         # Create a secondary y-axis for mass concentration
         ax2 = ax.twinx()
@@ -239,20 +230,17 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
         # Plotting for the mass concentration
         if cut_point == None:
             ax2.fill_between(bin_Dp, min_std_mass, max_std_mass, alpha=0.2, color='red', linewidth=0)
-            ax2.fill_between(bin_Dp, min_error_mass, max_error_mass, alpha=0.1, color='red', linewidth=0)
             ax2.plot(bin_Dp, mean_mass, color='red', lw = 1)
         else:
-            df_mass = pd.DataFrame({'Bin mean': bin_Dp, 'Concentration': mean_mass, 'Std min': min_std_mass, 'Std max': max_std_mass, 'Error min': min_error_mass, 'Error max': max_error_mass})
+            df_mass = pd.DataFrame({'Bin mean': bin_Dp, 'Concentration': mean_mass, 'Std min': min_std_mass, 'Std max': max_std_mass})
             
             lower_cut = df_mass['Bin mean'] < cut_point
             upper_cut = df_mass['Bin mean'] > cut_point
 
             ax.fill_between(df_mass['Bin mean'][lower_cut], df_mass['Std min'][lower_cut], df_mass['Std max'][lower_cut], alpha=0.2, color='red', linewidth=0)
-            ax.fill_between(df_mass['Bin mean'][lower_cut], df_mass['Error min'][lower_cut], df_mass['Error max'][lower_cut], alpha=0.1, color='red', linewidth=0)
             ax.plot(df_mass['Bin mean'][lower_cut], df_mass['Concentration'][lower_cut], color='red', lw = 1.2)
 
             ax.fill_between(df_mass['Bin mean'][upper_cut], df_mass['Std min'][upper_cut], df_mass['Std max'][upper_cut], alpha=0.2, color='red', linewidth=0)
-            ax.fill_between(df_mass['Bin mean'][upper_cut], df_mass['Error min'][upper_cut], df_mass['Error max'][upper_cut], alpha=0.1, color='red', linewidth=0)
             ax.plot(df_mass['Bin mean'][upper_cut], df_mass['Concentration'][upper_cut], color='red', lw = 1.2)
 
         ax2.tick_params(axis = 'y', labelcolor='red')
@@ -261,6 +249,6 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
         ax2.set_ylabel('dM/dlogDp / $\mu$g m$^{-3}$', color='red')  # Use axis_labels[2] for clarity
     
     else:
-        ax2, mean_mass, error_mass = 0, 0, 0
+        ax2, mean_mass = 0, 0
     
-    return mean_number, error_number, mean_mass, error_mass, ax, ax2
+    return mean_number, mean_mass, ax, ax2

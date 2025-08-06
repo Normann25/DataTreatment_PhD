@@ -53,7 +53,7 @@ def running_mean(df, dictkey, concentration, timelabel, interval, wndw, timestam
 
     return new_df
 
-def bin_mean(timestamps, df, df_keys, timelabel, inst_error):
+def bin_mean(timestamps, df, df_keys, timelabel):
     mean = np.zeros(len(df_keys))
     std = np.zeros(len(df_keys))
 
@@ -72,14 +72,9 @@ def bin_mean(timestamps, df, df_keys, timelabel, inst_error):
         conc = pd.to_numeric(conc, errors='coerce')
         filtered_conc = conc[time_filter]
         mean[i] += filtered_conc.mean()
-        std[i] += filtered_conc.std() / np.sqrt(len(filtered_conc))
-    
-    if inst_error != None:
-        errors = mean * inst_error
-    else:
-        errors = 0
+        std[i] += filtered_conc.std() #/ np.sqrt(len(filtered_conc))
 
-    return mean, std, errors
+    return mean, std
 
 def calc_mass_conc(df, df_keys, bin_mid_points, rho):
     try:
