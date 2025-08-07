@@ -304,3 +304,24 @@ def plot_running_sizedist(fig, ax, df, bins, bin_edges, axis_labels, run_length,
         ax.set(xlabel=axis_labels[0], ylabel=axis_labels[1], xscale='log')
     
     return ax
+
+def instrument_comparison(ax, x_data, y_data, label, ax_labels, forced_zero):
+    x_plot = np.linspace(min(x_data), max(x_data), 1000)
+    ax.plot(x_plot, x_plot, color = 'grey', lw = 1, ls = '--', label = None)
+
+    if forced_zero:
+        fit_params, fit_errors, squares, ndof, R2 = linear_fit(x_data, y_data, linear_forced_zero, a_guess = 1)
+        y_fit = linear_forced_zero(x_plot, *fit_params)
+    else:
+        fit_params, fit_errors, squares, ndof, R2 = linear_fit(x_data, y_data, linear, a_guess = 1, b_guess = 0)
+        y_fit = linear(x_plot, *fit_params)
+    
+    print(fit_params)
+
+    ax.plot(x_plot, y_fit, color = 'k', lw = 1.2, label = 'Fit')
+    ax.scatter(x_data, y_data, s=10, c='b', label = label)
+    ax.legend()
+    
+    ax.set(xlabel = ax_labels[0], ylabel = ax_labels[1])
+    
+    return fit_params, fit_errors, squares, ndof, R2

@@ -79,7 +79,7 @@ def import_SASS(path, parent_path, hour, minute, second):
                         continue
 
                     # Header line (start of scan data)
-                    if line.startswith("Scan Time"):
+                    if line.endswith("dLog(Da)/m3"):
                         in_data_block = True
                         continue
 
@@ -88,13 +88,17 @@ def import_SASS(path, parent_path, hour, minute, second):
                         if current_data:
                             # Convert collected lines to DataFrame
                             df = pd.DataFrame(current_data, columns=[
-                                'ScanTime', 'Time', 'Size', 'SpectralDensity', 'CorrectedSpectralDensity'
+                                'ScanTime', 'Time', 'Size', 'SpectralDensity', 'CorrectedSpectralDensity', 
+                                'tau', 'tauSpectralDensity', 'CorrTauSpectralDensity',
+                                'MobilitySize', 'MobilitySpectralDensity', 'CorrMobilitySpectralDensity'
                             ])
                             df['Time'] = start_time + pd.Timedelta(minutes = (scan_number-1)*10)
                             df['ScanNumber'] = scan_number
                             df['Size'] = pd.to_numeric(df['Size'], errors='coerce')
                             df['CorrectedSpectralDensity'] = pd.to_numeric(df['CorrectedSpectralDensity'], errors='coerce')
-                            df = df[['Size', 'CorrectedSpectralDensity', 'ScanNumber', 'Time']].dropna()
+                            df['MobilitySize'] = pd.to_numeric(df['MobilitySize'], errors='coerce')
+                            df['CorrMobilitySpectralDensity'] = pd.to_numeric(df['CorrMobilitySpectralDensity'], errors='coerce')
+                            df = df[['Size', 'CorrectedSpectralDensity', 'ScanNumber', 'Time', 'MobilitySize', 'CorrMobilitySpectralDensity']].dropna()
                             scans.append(df)
                             current_data = []
                         in_data_block = False
@@ -103,8 +107,8 @@ def import_SASS(path, parent_path, hour, minute, second):
                     # Collect data lines
                     if in_data_block:
                         parts = line.split('\t')
-                        if len(parts) >= 5:
-                            current_data.append(parts[:5])
+                        if len(parts) >= 11:
+                            current_data.append(parts[:11])
                     
             if scans:
                 full_df = pd.concat(scans, ignore_index=True)

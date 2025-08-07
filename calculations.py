@@ -1,23 +1,25 @@
 import numpy as np
 import pandas as pd
+import scipy
+from iminuit import Minuit
+from ExternalFunctions import *
 #%%
 
-def running_mean(df, dictkey, concentration, timelabel, interval, wndw, timestamps):
-    # Set 'Time' as the index
-    new_df = pd.DataFrame() 
+def running_mean(df, concentration, timelabel, interval, wndw, timestamps):
 
-    if timestamps == None:
-        new_df[timelabel] = pd.to_datetime(df[timelabel])
-        new_df[dictkey] = df[concentration]
-        new_df = new_df.set_index(timelabel)
+    if timestamps == None:      
+        df = df.set_index(timelabel)
 
         # Resample the data to bins 
-        new_df = new_df.resample(interval).mean() 
+        new_df = df[concentration].resample(interval).mean() 
         
-        # Now, apply the rolling mean
-        new_df[dictkey] = new_df[dictkey].rolling(window = wndw, min_periods = 1).mean()
+        for key in concentration:
+            # Now, apply the rolling mean
+            new_df[key] = new_df[key].rolling(window = wndw, min_periods = 1).mean()
 
-    if timestamps != None:
+    else:
+        new_df = pd.DataFrame()
+        
         start_time = pd.to_datetime(timestamps[0])
         end_time = pd.to_datetime(timestamps[1])
 
@@ -102,3 +104,65 @@ def bin_edges(d_min, bin_mid):
     
     return bins_list
 
+def calc_total_conc(df, size_bins, norm, SASS_specific):
+    new_df = pd.DataFrame({'Time': df['Time'].unique()})
+    
+    Total_conc = np.zeros(len(new_df['Time']))
+    
+    if SASS_specific is not None:
+        for scan_id, group in df.groupby('ScanNumber'):
+            mask = (group[SASS_specific[0]] > size_bins[0]) & (group[SASS_specific[0]] < size_bins[1])
+            temp = group[mask]
+            #Total_conc[scan_id-1] += sum(pd.to_numeric(temp[SASS_specific[1]])) / norm
+            Total_conc[scan_id-1] += abs(scipy.integrate.simpson(pd.to_numeric(temp[SASS_specific[1]]), x = temp[SASS_specific[0]])) / norm
+
+    else:
+        temp = df[size_bins]
+        Dp = []
+        for label in size_bins:
+            Dp.append(float(label))
+        
+        for i, row in temp.iterrows():
+            if norm is not None:
+                #Total_conc[i] += sum(row) / norm
+                Total_conc[i] += scipy.integrate.simpson(row, x = Dp) / norm
+            else: 
+                Total_conc[i] += sum(row)
+        
+    new_df['Total Concentration'] = Total_conc
+    
+    return new_df
+
+def linear_forced_zero(x, a):
+    return (a * x)
+
+def linear(x, a, b):
+    return b + (a * x)
+
+def linear_fit(x, y, fitfunc, **kwargs):
+
+    Npoints = len(y)
+    x, y = np.array(x), np.array(y)
+    
+    def obt(*args):
+        squares = np.sum(((y-fitfunc(x, *args)))**2)
+        return squares
+
+    minuit = Minuit(obt, **kwargs, name = [*kwargs]) # Setup; obtimization function, initial variable guesses, names of variables. 
+    minuit.errordef = 1 # needed for likelihood fits. No explaination in the documentation.
+
+    minuit.migrad() # Compute the fit
+    valuesfit = np.array(minuit.values, dtype = np.float64) # Convert to numpy
+    errorsfit = np.array(minuit.errors, dtype = np.float64) # Convert to numpy
+    # if not minuit.valid: # Give custom error if the fit did not converge
+    #     print("!!! Fit did not converge !!!\n!!! Give better initial parameters !!!")
+
+    Nvar = len(kwargs)           # Number of variables
+    Ndof_fit = len(x) - Nvar
+
+    squares_fit = minuit.fval  
+
+    # Calculate R2
+    R2 = ((Npoints * np.sum(x * y) - np.sum(x) * np.sum(y)) / (np.sqrt(Npoints * np.sum(x**2) - (np.sum(x))**2)*np.sqrt(Npoints * np.sum(y**2) - (np.sum(y))**2)))**2 
+
+    return valuesfit, errorsfit, Ndof_fit, squares_fit, R2
