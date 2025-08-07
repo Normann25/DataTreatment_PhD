@@ -47,16 +47,68 @@ def import_SMPS(path, parent_path, hour):
 
     return data_dict
 
-def import_SASS(path, parent_path, hour, minutes):
+def import_SASS(path, parent_path, hour, minute, second):
     files = file_list(path, parent_path)
     data_dict = {}
 
     for file in files:
         if 'SASS' in file:
-            file_name = linecache.getline(os.path.join(path, file), 2).split('\t')[3]
+            start_time = linecache.getline(os.path.join(path, file), 2).split('\t')[1]
+            date = linecache.getline(os.path.join(path, file), 2).split('\t')[3]
+            date = date.split(' ')[0]
+            start_time = pd.to_datetime(f'{date} {start_time}') + pd.Timedelta(hours = hour, minutes = minute, seconds = second)
             
-            with open(os.path.join(path, file)) as f:
-                df = pd.read_table(f, sep = '\t', skiprows = 8)
-        
-            
+            # List to store scans 
+            scans = []
+            scan_number = None
+            in_data_block = False
+            current_data = []
+
+            with open(os.path.join(path, file), 'r') as f:
+                for line in f:
+                    line = line.strip()
+
+                    # Start of a new scan
+                    if line.startswith("SCAN"):
+                        parts = line.split('\t')
+                        try:
+                            scan_number = int(parts[1])
+                        except (IndexError, ValueError):
+                            scan_number = None
+                        in_data_block = False  # wait for next header to begin collecting
+                        continue
+
+                    # Header line (start of scan data)
+                    if line.startswith("Scan Time"):
+                        in_data_block = True
+                        continue
+
+                    # End of a scan block
+                    if line.startswith("END OF SCAN"):
+                        if current_data:
+                            # Convert collected lines to DataFrame
+                            df = pd.DataFrame(current_data, columns=[
+                                'ScanTime', 'Time', 'Size', 'SpectralDensity', 'CorrectedSpectralDensity'
+                            ])
+                            df['Time'] = start_time + pd.Timedelta(minutes = (scan_number-1)*10)
+                            df['ScanNumber'] = scan_number
+                            df['Size'] = pd.to_numeric(df['Size'], errors='coerce')
+                            df['CorrectedSpectralDensity'] = pd.to_numeric(df['CorrectedSpectralDensity'], errors='coerce')
+                            df = df[['Size', 'CorrectedSpectralDensity', 'ScanNumber', 'Time']].dropna()
+                            scans.append(df)
+                            current_data = []
+                        in_data_block = False
+                        continue
+
+                    # Collect data lines
+                    if in_data_block:
+                        parts = line.split('\t')
+                        if len(parts) >= 5:
+                            current_data.append(parts[:5])
+                    
+            if scans:
+                full_df = pd.concat(scans, ignore_index=True)
+                
+            data_dict[date] = full_df
+               
     return data_dict

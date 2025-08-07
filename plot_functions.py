@@ -252,3 +252,55 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
         ax2, mean_mass = 0, 0
     
     return mean_number, mean_mass, ax, ax2
+
+def plot_running_sizedist(fig, ax, df, bins, bin_edges, axis_labels, run_length, SASS):
+
+    if SASS:
+        n_lines = len(df['ScanNumber'].unique())
+        cmap = mpl.colormaps['plasma_r']
+        colors = cmap(np.linspace(0, 1, n_lines))
+        
+        for scan_id, group in df.groupby('ScanNumber'):
+            ax.scatter(group['Size'], group['CorrectedSpectralDensity'], color = colors[scan_id-1], s = 0.1)
+
+        # Create a scalar mappable for colorbar
+        norm = mpl.colors.Normalize(vmin=run_length, vmax=run_length + (n_lines - 1) * run_length)
+        sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm.set_array([])  # Required for colorbar
+
+        # Create and place the colorbar
+        cbar = fig.colorbar(sm, ax=ax, orientation='vertical')
+        cbar.set_label('Time / min', fontsize=9)
+        cbar.ax.tick_params(labelsize=8)
+
+        ax.tick_params(axis='both', labelsize=8)
+        ax.set(xlabel=axis_labels[0], ylabel=axis_labels[1], xscale='log')
+        
+    else:
+        n_lines = len(df.keys())
+        cmap = mpl.colormaps['plasma_r']
+        colors = cmap(np.linspace(0, 1, n_lines))
+        
+        data = np.array(df[df.keys()]).T
+        
+        if bin_edges is not None:
+            dlogDp = np.log10(bin_edges[1:]) - np.log10(bin_edges[:-1])
+            data = data / dlogDp
+        
+        for i in range(n_lines):
+            ax.plot(bins, data[i], color=colors[i], lw=1.2)
+
+        # Create a scalar mappable for colorbar
+        norm = mpl.colors.Normalize(vmin=run_length, vmax=run_length + (n_lines - 1) * run_length)
+        sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm.set_array([])  # Required for colorbar
+
+        # Add colorbar to the figure
+        cbar = fig.colorbar(sm, ax=ax, orientation='vertical')
+        cbar.set_label('Time / min', fontsize=9)
+        cbar.ax.tick_params(labelsize=8)
+
+        ax.tick_params(axis='both', labelsize=8)
+        ax.set(xlabel=axis_labels[0], ylabel=axis_labels[1], xscale='log')
+    
+    return ax

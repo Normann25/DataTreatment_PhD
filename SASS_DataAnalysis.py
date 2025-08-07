@@ -76,6 +76,8 @@ filepath = Path(r"O:\Nat_Chem-Aerosol-data\People\Ditte Thomsen\Python\SASS\Data
 
 df = import_SASS(filepath)
 
+print(df)
+
 plt.figure(figsize=(10,6))
 for scan_id, group in df.groupby("ScanNumber"):
     plt.plot(group["Size"], group["CorrectedSpectralDensity"],marker='.',linestyle='None',label=f"Scan {scan_id}")
