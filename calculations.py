@@ -114,7 +114,7 @@ def calc_total_conc(df, size_bins, norm, SASS_specific):
             mask = (group[SASS_specific[0]] > size_bins[0]) & (group[SASS_specific[0]] < size_bins[1])
             temp = group[mask]
             #Total_conc[scan_id-1] += sum(pd.to_numeric(temp[SASS_specific[1]])) / norm
-            Total_conc[scan_id-1] += abs(scipy.integrate.simpson(pd.to_numeric(temp[SASS_specific[1]]), x = temp[SASS_specific[0]])) / norm
+            Total_conc[scan_id-1] += abs(scipy.integrate.simpson(np.array(temp[SASS_specific[1]]) / norm, x = temp[SASS_specific[0]]))
 
     else:
         temp = df[size_bins]
@@ -125,7 +125,7 @@ def calc_total_conc(df, size_bins, norm, SASS_specific):
         for i, row in temp.iterrows():
             if norm is not None:
                 #Total_conc[i] += sum(row) / norm
-                Total_conc[i] += scipy.integrate.simpson(row, x = Dp) / norm
+                Total_conc[i] += scipy.integrate.simpson(np.array(row) / norm, x = Dp)
             else: 
                 Total_conc[i] += sum(row)
         

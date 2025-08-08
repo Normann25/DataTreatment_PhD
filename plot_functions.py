@@ -5,7 +5,6 @@ import pandas as pd
 import sys
 import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from iminuit import Minuit
 sys.path.append('..')
 from calculations import *
 #%%
@@ -38,29 +37,55 @@ def plot_inset(ax, height, loc, bb2a, plot_width, xdata, ydata, width, bar, time
 
     return artist, inset_ax
 
-def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed):
-    data = np.array(df[df_keys])
+def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed, SASS):
+    
+    if SASS:
+        data = np.array([df['CorrectedSpectralDensity'][df['ScanNumber'] == 1].tolist()])
+        for scan_id, group in df.groupby('ScanNumber'):
+            if scan_id != 1:
+                conc = group['CorrectedSpectralDensity'].tolist()
+                if len(conc) < 599:
+                    conc.append(0)                
+                if (scan_id % 2) == 0:
+                    conc = conc[::-1]                              
+                data = np.concatenate((data, np.array([conc])), axis = 0)
+            #else:
+                #data = np.append(data, conc.tolist(), axis = 0)
 
-    if normed == False:
-        dlogDp = np.log10(bin_edges[1:])-np.log10(bin_edges[:-1])
-        data=data/dlogDp
+        data = np.array(data[:max(df['ScanNumber'])])
+        
+        # Generate an extra time bin, which is needed for the meshgrid
+        time = np.unique(time)
+        dt = time[1]-time[0]
+        new_time = time - pd.Timedelta(minutes = 10)
+        new_time = np.append(new_time, time[-1])     
 
+        size = df['Size'][df['ScanNumber'] == 1].tolist() + [111.9]
+        
+        # generate 2d meshgrid for the x, y, and z data of the 3D color plot
+        y, x = np.meshgrid(np.array(size), new_time)
+    
+    else:
+        data = np.array(df[df_keys])
+
+        if normed == False:
+            dlogDp = np.log10(bin_edges[1:])-np.log10(bin_edges[:-1])
+            data=data/dlogDp
+            
+        # Generate an extra time bin, which is needed for the meshgrid
+        dt = time[1]-time[0]
+        new_time = time - dt
+        new_time = np.append(new_time, new_time[-1]+dt)
+    
+        # generate 2d meshgrid for the x, y, and z data of the 3D color plot
+        y, x = np.meshgrid(bin_edges, new_time)
+    
     # Set the upper and/or lower limit of the color scale based on input
     y_min = np.nanmin(data)
     y_max = np.nanmax(data)
-
-    # Generate an extra time bin, which is needed for the meshgrid
-    dt = time[1]-time[0]
-    new_time = time - dt
-    new_time = np.append(new_time, new_time[-1]+dt)
-
-    # generate 2d meshgrid for the x, y, and z data of the 3D color plot
-    y, x = np.meshgrid(bin_edges, new_time)
-
+    
     # Fill the generated mesh with particle concentration data
     p1 = ax.pcolormesh(x, y, data, cmap='jet',vmin=y_min, vmax=y_max,shading='flat')
-
-    # ax.hlines(np.array([0.1, 2.5]), np.array([new_time[0], new_time[0]]), np.array([new_time[-1], new_time[-1]]), colors = 'white', linestyles = '--')
 
     if cutpoint != None:
         ax.hlines(cutpoint, new_time[0], new_time[-1], colors = 'white', linestyles = '--')
@@ -75,12 +100,13 @@ def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed):
     ax.set_ylabel("Dp / nm")
     return ax, p1
 
-def plot_total(ax, df, conc_key, clr, lstyle):
-    if conc_key == None:
-        total_conc = df.iloc[:,1:].sum(axis=1)
-        ax.plot(df['Time'], total_conc, lw = 1, color = 'r')
+def plot_total(ax, df, conc_key, clr, SASS):
+    if SASS:
+        total_conc = calc_total_conc(df, [111, 5490], 202.5, ['Size', 'CorrectedSpectralDensity'])
+        ax.plot(total_conc['Time'], total_conc['Total Concentration'], lw = 1, color = clr)
+        
     else:
-        ax.plot(df['Time'], df[conc_key], lw = 1, color = clr, ls = lstyle)
+        ax.plot(df['Time'], df[conc_key], lw = 1, color = clr)
 
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
     ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha="left")
@@ -88,7 +114,7 @@ def plot_total(ax, df, conc_key, clr, lstyle):
     plt.subplots_adjust(hspace=0.05)
     return ax
 
-def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, normed, total, cutpoint):
+def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, normed, total, cutpoint, SASS):
     
     start_time = pd.to_datetime(timestamps[0])
     end_time = pd.to_datetime(timestamps[1])
@@ -112,27 +138,27 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
             new_df_number[key], new_df_mass[key] = filtered_number, filtered_mass
 
         if total != None:
-            ax1, p1 = plot_heatmap(ax[0][0], new_df_number, df_keys, filtered_time, bin_edges, cutpoint, normed)
-            ax2, p2 = plot_heatmap(ax[0][1], new_df_mass, df_keys, filtered_time, bin_edges, cutpoint, normed)
+            ax1, p1 = plot_heatmap(ax[0][0], new_df_number, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS)
+            ax2, p2 = plot_heatmap(ax[0][1], new_df_mass, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS)
 
             total_df_number = pd.DataFrame({'Time': filtered_time})
             conc = np.array(df_number[total])
             conc = pd.to_numeric(conc, errors='coerce')
             total_df_number[total] = conc[time_filter]
-            ax3 = plot_total(ax[1], total_df_number, total, None, None)
+            ax3 = plot_total(ax[1], total_df_number, total, 'r', SASS)
 
             total_df_mass = pd.DataFrame({'Time': filtered_time})
             conc = np.array(df_mass[total])
             conc = pd.to_numeric(conc, errors='coerce')
             total_df_mass[total] = conc[time_filter]     
-            ax4 = plot_total(ax[1], total_df_mass, total, None, None)
+            ax4 = plot_total(ax[1], total_df_mass, total, 'r', SASS)
 
             ax3.set_ylabel('Total number conc. / cm$^{-3}$')
             ax4.set_ylabel('Total mass conc. / $\mu$g m$^{-3}$')
 
         else:
-            ax1, p1 = plot_heatmap(ax[0], new_df_number, df_keys, filtered_time, bin_edges, cutpoint, normed)
-            ax2, p2 = plot_heatmap(ax[1], new_df_mass, df_keys, filtered_time, bin_edges, cutpoint, normed)
+            ax1, p1 = plot_heatmap(ax[0], new_df_number, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS)
+            ax2, p2 = plot_heatmap(ax[1], new_df_mass, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS)
 
         # Insert coloarbar and label it
         col1 = fig.colorbar(p1, ax=ax1)
@@ -158,17 +184,20 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
             new_df[key] = filtered_conc
 
         if total != None:
-            ax1, p1 = plot_heatmap(ax[0], new_df, df_keys, filtered_time, bin_edges, cutpoint, normed)
-
-            total_df = pd.DataFrame({'Time': filtered_time})
-            conc = np.array(df[total])
-            conc = pd.to_numeric(conc, errors='coerce')
-            total_df[total] = conc[time_filter]
+            ax1, p1 = plot_heatmap(ax[0], new_df, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS)
             
-            ax2 = plot_total(ax[1], total_df, total, None, None)
+            if SASS:
+                ax2 = plot_total(ax[1], new_df, None, 'r', SASS)
+            else:
+                total_df = pd.DataFrame({'Time': filtered_time})
+                conc = np.array(df[total])
+                conc = pd.to_numeric(conc, errors='coerce')
+                total_df[total] = conc[time_filter]
+                
+                ax2 = plot_total(ax[1], total_df, total, 'r', SASS)
 
         else:
-            ax1, p1 = plot_heatmap(ax, new_df, df_keys, filtered_time, bin_edges, cutpoint, normed)
+            ax1, p1 = plot_heatmap(ax, new_df, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS)
 
         # Insert coloarbar and label it
         col = fig.colorbar(p1, ax=ax1)
@@ -316,7 +345,7 @@ def instrument_comparison(ax, x_data, y_data, label, ax_labels, forced_zero):
         fit_params, fit_errors, squares, ndof, R2 = linear_fit(x_data, y_data, linear, a_guess = 1, b_guess = 0)
         y_fit = linear(x_plot, *fit_params)
     
-    print(fit_params)
+    print(f'f(x) = {fit_params[0]}x + {fit_params[1]}, R2 = {R2}')
 
     ax.plot(x_plot, y_fit, color = 'k', lw = 1.2, label = 'Fit')
     ax.scatter(x_data, y_data, s=10, c='b', label = label)
