@@ -42,7 +42,7 @@ fig3.savefig('SMPS_SASS/SMPS_SizeDist.jpg', dpi = 600)
 fig4, ax4 = plt.subplots(figsize = (4, 3))
 plot_running_sizedist(fig4, ax4, SASS['2025-08-05'], None, None, ['Particle diameter / nm', 'dN/dlogDp / cm$^{-3}$'], 10, True)
 fig4.tight_layout()
-fig3.savefig('SMPS_SASS/SASS_SizeDist.jpg', dpi = 600)
+fig4.savefig('SMPS_SASS/SASS_SizeDist.jpg', dpi = 600)
 
 SASS_keys = ['CorrectedSpectralDensity', 'Size', 'ScanNumber']
 fig5, ax5 = plt.subplots(2, 1, figsize = (6.3, 6))
