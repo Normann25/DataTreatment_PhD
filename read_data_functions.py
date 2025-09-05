@@ -22,30 +22,54 @@ def format_timestamps(timestamps, old_format, new_format):
         new_timestamps.append(new_datetime)
     return pd.to_datetime(new_timestamps, format=new_format)
 
+def import_txt(path, parent_path, timelabel, time_format, hour):
+    files = file_list(path, parent_path)
+
+    for file in files:
+        if file.endswith('.txt'):
+            with open(os.path.join(path, file), 'r') as f:
+                df = pd.read_table(f, sep = '\t')
+
+            df = df.dropna()
+            
+            if timelabel is not None:
+                df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
+                df['Time'] =  df['Time'] + pd.Timedelta(hours = hour)
+
+    return df
+
 def import_SMPS(path, parent_path, hour):
     """Read SMPS data from CSV files in the specified path."""
     files = file_list(path, parent_path)
-    data_dict = {}
+    SMPS_files = []
 
     for file in files:
-
         if 'SMPS' in file:
-            separations = [',', '\t']
-            name = file.split('.')[0]
-            for separation in separations:
-                try:
-                    with open(os.path.join(path, file), 'r') as f:
-                        df = pd.read_csv(f, sep = separation, skiprows = 52)
+            SMPS_files.append(file)
 
-                    df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
-                    df['Time'] = df['Time'] + pd.Timedelta(hours = hour)
+    if len(SMPS_files) > 1:
+        data = {}
 
-                    data_dict[name] = df
+    for file in SMPS_files:
+        separations = [',', '\t']
+        for separation in separations:
+            try:
+                with open(os.path.join(path, file), 'r') as f:
+                    df = pd.read_csv(f, sep = separation, skiprows = 52)
 
-                except KeyError:
-                    pass
+                df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
+                df['Time'] = df['Time'] + pd.Timedelta(hours = hour)
 
-    return data_dict
+                if len(SMPS_files) > 1:
+                    name = file.split('.')[0]
+                    data[name] = df
+                else:
+                    data = df
+
+            except KeyError:
+                pass
+
+    return data
 
 def import_SASS(path, parent_path, hour, minute, second):
     files = file_list(path, parent_path)
