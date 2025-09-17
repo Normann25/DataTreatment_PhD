@@ -367,3 +367,76 @@ def instrument_comparison(ax, x_data, y_data, label, ax_labels, forced_zero):
     ax.set(xlabel = ax_labels[0], ylabel = ax_labels[1])
     
     return fit_params, fit_errors, squares, ndof, R2
+
+def vanKrevelen_OS(ax):
+    O_C_ratio = np.linspace(0, 1, 100)
+
+    for OS in np.linspace(-2, 2, 9): # Oxidation states from -2 to 2
+        H_C_ratio = 2*O_C_ratio-OS
+        ax.plot(O_C_ratio, H_C_ratio, color = 'lightgray', lw = 0.75, ls = '--', zorder = -10)
+    
+    OS_labels = ['OS = -1.5', 'OS = -1', 'OS = -0.5', 'OS = 0', 'OS = 0.5']
+    OS_placement = [[0.001, 1.57], [0.005, 1.08], [0.22, 1.01], [0.48, 1.03], [0.715, 1.002]]
+    for label, placement in zip(OS_labels, OS_placement):
+        ax.text(placement[0], placement[1], label, rotation = 60, fontsize = 7, color = 'darkgray')
+
+    # Organic compound lines
+    x = np.linspace(0, 1, 100)
+    y1 = linear(x, 0, 2) # Alcohol/peroxide
+    y2 = linear(x, -1, 2) # Carboxylic acid
+    y3 = linear(x, -2, 2) # Carbonyls (aldehyde/ketone)
+
+    compound_labels = ['slope = 0 \n + alcohol/peroxide', 'slope = -1 \n + carboxylic acid', 'slope = -2 \n + carbonyls']
+    compound_placements = [[0.6, 1.96], [0.6, 1.22], [0.25, 1.25]]
+
+    for i, y in enumerate([y1, y2, y3]):
+        ax.plot(x, y, color = 'darkgray', lw = 0.75, zorder = -10)
+        ax.text(compound_placements[i][0], compound_placements[i][1], 
+                compound_labels[i], 
+                bbox=dict(ec = 'gray', fc = 'white', lw = 0.5, pad = 0.5),
+                color = 'gray', fontsize = 6)
+
+    ax.set(xlim = (0,1), ylim = (1,2.05), xlabel = 'O:C', ylabel = 'H:C')
+    return ax
+
+def vanKrevelen_ts(df, df_keys, timestamps, run_length):
+    new_df = time_filtered_conc(df, df_keys, timestamps)
+
+    n_points = len(new_df['Time'])
+    cmap = mpl.colormaps['gist_rainbow']
+    fig, ax = plt.subplots(1,2, figsize = (6.3, 3))
+
+    c_ = np.linspace(1, n_points, n_points)
+    ax[0].scatter(new_df[df_keys[1]], new_df[df_keys[0]], c = c_, cmap = cmap, s = 10)
+    ax[1].scatter(new_df[df_keys[1]], new_df[df_keys[0]], c = c_, cmap = cmap, s = 10)
+
+    # Create a scalar mappable for colorbar
+    norm = mpl.colors.Normalize(vmin=run_length, vmax=run_length + (n_points - 1) * run_length)
+    sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm.set_array([])  # Required for colorbar
+
+    # Add colorbar to the figure
+    cbar = fig.colorbar(sm, ax=ax[1], orientation='vertical')
+    cbar.set_label('Time / min', fontsize=9)
+    cbar.ax.tick_params(labelsize=8)
+
+    vanKrevelen_OS(ax[0])
+
+    ax[1].set(xlabel = 'O:C', ylabel = 'H:C')
+
+    return fig, ax
+
+def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels):
+    n_exp = len(dict_keys)
+    cmap = mpl.colormaps['gist_rainbow']
+    colors = cmap(np.linspace(0, 1, n_exp))
+
+    for i, key in enumerate(dict_keys):
+        new_df = time_filtered_conc(data_dict[key], df_keys, timestamps[i])
+
+        ax.scatter(new_df[df_keys[1]], new_df[df_keys[0]], color = colors[i], s = 10)
+
+    ax.legend(labels = labels, bbox_to_anchor = (1, 0, 0, 1))
+    vanKrevelen_OS(ax)
+
+    return ax
