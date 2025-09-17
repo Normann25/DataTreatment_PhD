@@ -37,7 +37,7 @@ def plot_inset(ax, height, loc, bb2a, plot_width, xdata, ydata, width, bar, time
 
     return artist, inset_ax
 
-def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed, SASS):
+def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed, SASS, t_zero):
     
     if SASS:
         data = np.array([df['CorrectedSpectralDensity'][df['ScanNumber'] == 1].tolist()])
@@ -71,6 +71,9 @@ def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed, SASS):
         if normed == False:
             dlogDp = np.log10(bin_edges[1:])-np.log10(bin_edges[:-1])
             data=data/dlogDp
+        
+        if t_zero is not None:
+            time = (pd.to_datetime(time) - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
             
         # Generate an extra time bin, which is needed for the meshgrid
         dt = time[1]-time[0]
@@ -90,31 +93,41 @@ def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed, SASS):
     if cutpoint != None:
         ax.hlines(cutpoint, new_time[0], new_time[-1], colors = 'white', linestyles = '--')
 
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha="left")
-    ax.set_xlabel("Time / HH:MM")
-    plt.subplots_adjust(hspace=0.05)
+    if t_zero is not None:
+        ax.set_xlabel('Time / min')
+    else:
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha="left")
+        ax.set_xlabel("Time / HH:MM")
+        plt.subplots_adjust(hspace=0.05)
         
     # Make the y-scal logarithmic and set a label
     ax.set_yscale("log")
     ax.set_ylabel("Dp / nm")
     return ax, p1
 
-def plot_total(ax, df, conc_key, clr, SASS):
-    if SASS:
-        total_conc = calc_total_conc(df, [111, 5490], 202.5, ['Size', 'CorrectedSpectralDensity'])
-        ax.plot(total_conc['Time'], total_conc['Total Concentration'], lw = 1, color = clr)
-        
-    else:
-        ax.plot(df['Time'], df[conc_key], lw = 1, color = clr)
+def plot_total(ax, df, conc_key, clr, SASS, t_zero):
+    if t_zero is not None:
+        time = (df['Time'] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+        ax.plot(time, df[conc_key], lw = 1, color = clr)
 
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha="left")
-    ax.set_xlabel("Time / HH:MM")
-    plt.subplots_adjust(hspace=0.05)
+        ax.set_xlabel('Time / min')
+
+    else:
+        if SASS:
+            total_conc = calc_total_conc(df, [111, 5490], 202.5, ['Size', 'CorrectedSpectralDensity'])
+            ax.plot(total_conc['Time'], total_conc['Total Concentration'], lw = 1, color = clr)
+            
+        else:
+            ax.plot(df['Time'], df[conc_key], lw = 1, color = clr)
+
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha="left")
+        ax.set_xlabel("Time / HH:MM")
+        plt.subplots_adjust(hspace=0.05)
     return ax
 
-def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, normed, total, cutpoint, SASS):
+def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, normed, total, cutpoint, SASS, t_zero):
     
     start_time = pd.to_datetime(timestamps[0])
     end_time = pd.to_datetime(timestamps[1])
@@ -138,27 +151,27 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
             new_df_number[key], new_df_mass[key] = filtered_number, filtered_mass
 
         if total != None:
-            ax1, p1 = plot_heatmap(ax[0][0], new_df_number, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS)
-            ax2, p2 = plot_heatmap(ax[0][1], new_df_mass, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS)
+            ax1, p1 = plot_heatmap(ax[0][0], new_df_number, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
+            ax2, p2 = plot_heatmap(ax[0][1], new_df_mass, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
 
             total_df_number = pd.DataFrame({'Time': filtered_time})
             conc = np.array(df_number[total])
             conc = pd.to_numeric(conc, errors='coerce')
             total_df_number[total] = conc[time_filter]
-            ax3 = plot_total(ax[1], total_df_number, total, 'r', SASS)
+            ax3 = plot_total(ax[1], total_df_number, total, 'r', SASS, t_zero)
 
             total_df_mass = pd.DataFrame({'Time': filtered_time})
             conc = np.array(df_mass[total])
             conc = pd.to_numeric(conc, errors='coerce')
             total_df_mass[total] = conc[time_filter]     
-            ax4 = plot_total(ax[1], total_df_mass, total, 'r', SASS)
+            ax4 = plot_total(ax[1], total_df_mass, total, 'r', SASS, t_zero)
 
             ax3.set_ylabel('Total number conc. / cm$^{-3}$')
             ax4.set_ylabel('Total mass conc. / $\mu$g m$^{-3}$')
 
         else:
-            ax1, p1 = plot_heatmap(ax[0], new_df_number, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS)
-            ax2, p2 = plot_heatmap(ax[1], new_df_mass, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS)
+            ax1, p1 = plot_heatmap(ax[0], new_df_number, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
+            ax2, p2 = plot_heatmap(ax[1], new_df_mass, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
 
         # Insert coloarbar and label it
         col1 = fig.colorbar(p1, ax=ax1)
@@ -184,20 +197,20 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
             new_df[key] = filtered_conc
 
         if total != None:
-            ax1, p1 = plot_heatmap(ax[0], new_df, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS)
+            ax1, p1 = plot_heatmap(ax[0], new_df, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
             
             if SASS:
-                ax2 = plot_total(ax[1], new_df, None, 'r', SASS)
+                ax2 = plot_total(ax[1], new_df, None, 'r', SASS, t_zero)
             else:
                 total_df = pd.DataFrame({'Time': filtered_time})
                 conc = np.array(df[total])
                 conc = pd.to_numeric(conc, errors='coerce')
                 total_df[total] = conc[time_filter]
                 
-                ax2 = plot_total(ax[1], total_df, total, 'r', SASS)
+                ax2 = plot_total(ax[1], total_df, total, 'r', SASS, t_zero)
 
         else:
-            ax1, p1 = plot_heatmap(ax, new_df, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS)
+            ax1, p1 = plot_heatmap(ax, new_df, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
 
         # Insert coloarbar and label it
         col = fig.colorbar(p1, ax=ax1)
