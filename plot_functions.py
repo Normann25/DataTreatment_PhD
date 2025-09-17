@@ -435,7 +435,7 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
     for i, key in enumerate(dict_keys):
         new_df = time_filtered_conc(data_dict[key], df_keys, timestamps[i])
 
-        ax.scatter(new_df[df_keys[1]], new_df[df_keys[0]], color = colors[i], s = 10, marker = markers[i])
+        ax.scatter(new_df[df_keys[1]], new_df[df_keys[0]], color = colors[i], s = 10, marker = markers[i], edgecolors = 'k')
 
     ax.legend(labels = labels, bbox_to_anchor = (1, 0, 0, 1))
     vanKrevelen_OS(ax)
