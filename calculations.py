@@ -4,6 +4,21 @@ import scipy
 from iminuit import Minuit
 from ExternalFunctions import *
 #%%
+def time_filtered_conc(df, df_keys, timestamps):
+    start_time, end_time = pd.to_datetime(timestamps[0]), pd.to_datetime(timestamps[1])
+    time = pd.to_datetime(df['Time'])
+    time_filter = (time >= start_time) & (time <= end_time)
+    filtered_time = np.array(time[time_filter])
+    new_df = pd.DataFrame({'Time': filtered_time})
+
+    for key in df_keys:
+        conc = np.array(df[key])
+        conc = pd.to_numeric(conc, errors='coerce')
+        filtered_conc = conc[time_filter]
+
+        new_df[key] = filtered_conc
+
+    return new_df
 
 def running_mean(df, concentration, timelabel, interval, wndw, timestamps):
 
