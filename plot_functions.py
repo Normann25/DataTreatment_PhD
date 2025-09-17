@@ -430,7 +430,7 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
     n_exp = len(dict_keys)
     cmap = mpl.colormaps['gist_rainbow']
     colors = cmap(np.linspace(0, 1, n_exp))
-    markers = ['.', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X']
+    markers = ['o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X']
 
     for i, key in enumerate(dict_keys):
         new_df = time_filtered_conc(data_dict[key], df_keys, timestamps[i])
