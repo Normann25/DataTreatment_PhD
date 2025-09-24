@@ -148,6 +148,10 @@ def calc_total_conc(df, size_bins, norm, SASS_specific):
     
     return new_df
 
+def density_from_AMS(H_C_ratio, O_C_ratio):
+    rho = 1000 * (12 + 1*H_C_ratio + 16*O_C_ratio) / (7.0 + 5.0*H_C_ratio + 4.15*O_C_ratio) # Density in kg/m^3
+    return rho
+
 def linear_forced_zero(x, a):
     return (a * x)
 
