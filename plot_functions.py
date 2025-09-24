@@ -434,10 +434,13 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
 
     for i, key in enumerate(dict_keys):
         new_df = time_filtered_conc(data_dict[key], df_keys, timestamps[i])
+        rho = density_from_AMS(new_df[df_keys[0]], new_df[df_keys[1]])
 
-        ax.scatter(new_df[df_keys[1]], new_df[df_keys[0]], color = colors[i], s = 10, marker = markers[i])
+        ax[0].scatter(new_df[df_keys[1]], new_df[df_keys[0]], color = colors[i], s = 10, marker = markers[i])
+        ax[1].scatter(new_df[df_keys[2]], rho, color = colors[i], s = 10, marker = markers[i])
 
-    ax.legend(labels = labels, bbox_to_anchor = (1, 0, 0, 1))
-    vanKrevelen_OS(ax)
+    ax[1].legend(labels = labels, fontsize = 8, frameon = True)   #, bbox_to_anchor = (1, 0, 0, 1))
+    vanKrevelen_OS(ax[0])
+    ax[1].set(xlabel = 'Org conc / $\mu$g m$^{-3}$', ylabel = 'Density / kg m$^{-3}$', xlim = (0, 325), ylim = (1.1*10**3, 1.27*10**3))
 
     return ax
