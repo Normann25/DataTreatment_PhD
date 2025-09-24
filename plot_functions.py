@@ -368,7 +368,7 @@ def instrument_comparison(ax, x_data, y_data, label, ax_labels, forced_zero):
     
     return fit_params, fit_errors, squares, ndof, R2
 
-def vanKrevelen_OS(ax):
+def vanKrevelen_OS(ax, rotation):
     O_C_ratio = np.linspace(0, 1, 100)
 
     for OS in np.linspace(-2, 2, 9): # Oxidation states from -2 to 2
@@ -378,7 +378,7 @@ def vanKrevelen_OS(ax):
     OS_labels = ['OS = -1.5', 'OS = -1', 'OS = -0.5', 'OS = 0', 'OS = 0.5']
     OS_placement = [[0.001, 1.57], [0.005, 1.08], [0.22, 1.01], [0.48, 1.03], [0.715, 1.002]]
     for label, placement in zip(OS_labels, OS_placement):
-        ax.text(placement[0], placement[1], label, rotation = 60, fontsize = 7, color = 'darkgray')
+        ax.text(placement[0], placement[1], label, rotation = rotation, fontsize = 7, color = 'darkgray')
 
     # Organic compound lines
     x = np.linspace(0, 1, 100)
@@ -420,7 +420,7 @@ def vanKrevelen_ts(df, df_keys, timestamps, run_length):
     cbar.set_label('Time (min)', fontsize=9)
     cbar.ax.tick_params(labelsize=8)
 
-    vanKrevelen_OS(ax[0])
+    vanKrevelen_OS(ax[0], 63.5)
 
     ax[1].set(xlabel = 'O:C', ylabel = 'H:C')
 
@@ -440,7 +440,7 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
         ax[1].scatter(new_df[df_keys[2]], rho, color = colors[i], s = 10, marker = markers[i])
 
     ax[1].legend(labels = labels, fontsize = 8, frameon = True)   #, bbox_to_anchor = (1, 0, 0, 1))
-    vanKrevelen_OS(ax[0])
+    vanKrevelen_OS(ax[0], 60)
     ax[1].set(xlabel = 'Org conc ($\mu$g m$^{-3}$)', ylabel = 'Density (kg m$^{-3}$)', xlim = (0, 325), ylim = (1.1*10**3, 1.27*10**3))
 
     return ax
