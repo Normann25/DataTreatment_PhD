@@ -94,16 +94,16 @@ def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed, SASS, t_zer
         ax.hlines(cutpoint, new_time[0], new_time[-1], colors = 'white', linestyles = '--')
 
     if t_zero is not None:
-        ax.set_xlabel('Time / min')
+        ax.set_xlabel('Time (min)')
     else:
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
         ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha="left")
-        ax.set_xlabel("Time / HH:MM")
+        ax.set_xlabel("Time (HH:MM)")
         plt.subplots_adjust(hspace=0.05)
         
     # Make the y-scal logarithmic and set a label
     ax.set_yscale("log")
-    ax.set_ylabel("Dp / nm")
+    ax.set_ylabel("Dp (nm)")
     return ax, p1
 
 def plot_total(ax, df, conc_key, clr, SASS, t_zero):
@@ -111,7 +111,7 @@ def plot_total(ax, df, conc_key, clr, SASS, t_zero):
         time = (df['Time'] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
         ax.plot(time, df[conc_key], lw = 1, color = clr)
 
-        ax.set_xlabel('Time / min')
+        ax.set_xlabel('Time (min)')
 
     else:
         if SASS:
@@ -123,7 +123,7 @@ def plot_total(ax, df, conc_key, clr, SASS, t_zero):
 
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
         ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha="left")
-        ax.set_xlabel("Time / HH:MM")
+        ax.set_xlabel("Time (HH:MM)")
         plt.subplots_adjust(hspace=0.05)
     return ax
 
@@ -166,8 +166,8 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
             total_df_mass[total] = conc[time_filter]     
             ax4 = plot_total(ax[1], total_df_mass, total, 'r', SASS, t_zero)
 
-            ax3.set_ylabel('Total number conc. / cm$^{-3}$')
-            ax4.set_ylabel('Total mass conc. / $\mu$g m$^{-3}$')
+            ax3.set_ylabel('Total number conc. (# cm$^{-3}$)')
+            ax4.set_ylabel('Total mass conc. ($\mu$g m$^{-3}$)')
 
         else:
             ax1, p1 = plot_heatmap(ax[0], new_df_number, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
@@ -177,8 +177,8 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
         col1 = fig.colorbar(p1, ax=ax1)
         col2 = fig.colorbar(p2, ax=ax2)
 
-        col1.set_label('dN/dlogDp / cm$^{-3}$')
-        col2.set_label('dM/dlogDp / $\mu$g m$^{-3}$')
+        col1.set_label('dN/dlogDp (# cm$^{-3}$)')
+        col2.set_label('dM/dlogDp ($\mu$g m$^{-3}$)')
 
     else:
         time = pd.to_datetime(df['Time'])
@@ -215,13 +215,13 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
         # Insert coloarbar and label it
         col = fig.colorbar(p1, ax=ax1)
         if datatype == "number":
-            col.set_label('dN/dlogDp / cm$^{-3}$')
+            col.set_label('dN/dlogDp (# cm$^{-3}$)')
             if total != None:
-                ax2.set_ylabel('Total concentration / cm$^{-3}$')
+                ax2.set_ylabel('Total concentration (# cm$^{-3}$)')
         elif datatype == "mass":
-            col.set_label('dM/dlogDp / $\mu$g m$^{-3}$')
+            col.set_label('dM/dlogDp ($\mu$g m$^{-3}$)')
             if total != None:
-                ax2.set_ylabel('Total concentration / $\mu$g m$^{-3}$')
+                ax2.set_ylabel('Total concentration ($\mu$g m$^{-3}$)')
 
 def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp, bin_edges, cut_point, mass):
     mean_number, std_number = bin_mean(timestamps, df_number, df_keys, timelabel)
@@ -251,9 +251,9 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
 
     # Explicitly set ylabel color for primary axis
     ax.tick_params(axis = 'y', labelcolor='tab:blue')
-    ax.set_ylabel('dN/dlogDp / cm$^{-3}$', color='tab:blue')
+    ax.set_ylabel('dN/dlogDp (# cm$^{-3}$)', color='tab:blue')
 
-    ax.set(xlabel='Particle diameter / nm', xscale='log')
+    ax.set(xlabel='Particle diameter (nm)', xscale='log')
 
     if mass:
         mean_mass, std_mass = bin_mean(timestamps, df_mass, df_keys, timelabel)
@@ -288,7 +288,7 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
         ax2.tick_params(axis = 'y', labelcolor='red')
 
         # Explicitly set ylabel color for secondary axis
-        ax2.set_ylabel('dM/dlogDp / $\mu$g m$^{-3}$', color='red')  # Use axis_labels[2] for clarity
+        ax2.set_ylabel('dM/dlogDp ($\mu$g m$^{-3}$)', color='red')  # Use axis_labels[2] for clarity
     
     else:
         ax2, mean_mass = 0, 0
@@ -312,7 +312,7 @@ def plot_running_sizedist(fig, ax, df, bins, bin_edges, axis_labels, run_length,
 
         # Create and place the colorbar
         cbar = fig.colorbar(sm, ax=ax, orientation='vertical')
-        cbar.set_label('Time / min', fontsize=9)
+        cbar.set_label('Time (min)', fontsize=9)
         cbar.ax.tick_params(labelsize=8)
 
         ax.tick_params(axis='both', labelsize=8)
@@ -339,7 +339,7 @@ def plot_running_sizedist(fig, ax, df, bins, bin_edges, axis_labels, run_length,
 
         # Add colorbar to the figure
         cbar = fig.colorbar(sm, ax=ax, orientation='vertical')
-        cbar.set_label('Time / min', fontsize=9)
+        cbar.set_label('Time (min)', fontsize=9)
         cbar.ax.tick_params(labelsize=8)
 
         ax.tick_params(axis='both', labelsize=8)
@@ -417,7 +417,7 @@ def vanKrevelen_ts(df, df_keys, timestamps, run_length):
 
     # Add colorbar to the figure
     cbar = fig.colorbar(sm, ax=ax[1], orientation='vertical')
-    cbar.set_label('Time / min', fontsize=9)
+    cbar.set_label('Time (min)', fontsize=9)
     cbar.ax.tick_params(labelsize=8)
 
     vanKrevelen_OS(ax[0])
@@ -441,6 +441,6 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
 
     ax[1].legend(labels = labels, fontsize = 8, frameon = True)   #, bbox_to_anchor = (1, 0, 0, 1))
     vanKrevelen_OS(ax[0])
-    ax[1].set(xlabel = 'Org conc / $\mu$g m$^{-3}$', ylabel = 'Density / kg m$^{-3}$', xlim = (0, 325), ylim = (1.1*10**3, 1.27*10**3))
+    ax[1].set(xlabel = 'Org conc ($\mu$g m$^{-3}$)', ylabel = 'Density (kg m$^{-3}$)', xlim = (0, 325), ylim = (1.1*10**3, 1.27*10**3))
 
     return ax
