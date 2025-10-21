@@ -34,8 +34,11 @@ def import_txt(path, parent_path, timelabel, time_format, hour):
             df = df.dropna()
             
             if timelabel is not None:
-                df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
-                df['Time'] =  df['Time'] + pd.Timedelta(hours = hour)
+                try:
+                    df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
+                    df['Time'] =  df['Time'] + pd.Timedelta(hours = hour)
+                except KeyError:
+                    pass
             
             data_dict[file.split('.')[0]] = df
 
