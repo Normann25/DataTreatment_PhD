@@ -23,6 +23,7 @@ def format_timestamps(timestamps, old_format, new_format):
     return pd.to_datetime(new_timestamps, format=new_format)
 
 def import_txt(path, parent_path, timelabel, time_format, hour):
+    data_dict = {}
     files = file_list(path, parent_path)
 
     for file in files:
@@ -35,8 +36,10 @@ def import_txt(path, parent_path, timelabel, time_format, hour):
             if timelabel is not None:
                 df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
                 df['Time'] =  df['Time'] + pd.Timedelta(hours = hour)
+            
+            data_dict[file.split('.')[0]] = df
 
-    return df
+    return data_dict
 
 def import_SMPS(path, parent_path, hour):
     """Read SMPS data from CSV files in the specified path."""

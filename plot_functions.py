@@ -403,7 +403,7 @@ def vanKrevelen_ts(df, df_keys, timestamps, run_length):
     new_df = time_filtered_conc(df, df_keys, timestamps)
 
     n_points = len(new_df['Time'])
-    cmap = mpl.colormaps['gist_rainbow']
+    cmap = mpl.colormaps['viridis_r']
     fig, ax = plt.subplots(1,2, figsize = (6.3, 3))
 
     c_ = np.linspace(1, n_points, n_points)
@@ -428,8 +428,8 @@ def vanKrevelen_ts(df, df_keys, timestamps, run_length):
 
 def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels):
     n_exp = len(dict_keys)
-    cmap = mpl.colormaps['gist_rainbow']
-    colors = cmap(np.linspace(0, 1, n_exp))
+    cmap = mpl.colormaps['viridis_r']
+    colors = cmap(np.linspace(0, 1, n_exp+1))
     markers = ['o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X']
 
     for i, key in enumerate(dict_keys):
