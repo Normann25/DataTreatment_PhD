@@ -400,6 +400,9 @@ def vanKrevelen_OS(ax, rotation):
     return ax
 
 def vanKrevelen_ts(df, df_keys, timestamps, run_length):
+    conc_mask = df[df_keys[2]] >= 0.3
+    df = df[conc_mask]
+
     new_df = time_filtered_conc(df, df_keys, timestamps)
 
     n_points = len(new_df['Time'])
@@ -433,7 +436,10 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
     markers = ['o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X']
 
     for i, key in enumerate(dict_keys):
-        new_df = time_filtered_conc(data_dict[key], df_keys, timestamps[i])
+        conc_mask = data_dict[key][df_keys[2]] >= 0.3
+        df = data_dict[key][conc_mask]
+
+        new_df = time_filtered_conc(df, df_keys, timestamps[i])
         rho = density_from_AMS(new_df[df_keys[0]], new_df[df_keys[1]])
 
         ax[0].scatter(new_df[df_keys[1]], new_df[df_keys[0]], color = colors[i], s = 10, marker = markers[i])
