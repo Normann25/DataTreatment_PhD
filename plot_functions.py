@@ -447,6 +447,6 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
 
     ax[1].legend(labels = labels, fontsize = 8, frameon = True)   #, bbox_to_anchor = (1, 0, 0, 1))
     vanKrevelen_OS(ax[0], 60)
-    ax[1].set(xlabel = 'Org conc ($\mu$g m$^{-3}$)', ylabel = 'Density (kg m$^{-3}$)', xlim = (0, 325), ylim = (1.1*10**3, 1.27*10**3))
+    ax[1].set(xlabel = 'Org conc ($\mu$g m$^{-3}$)', ylabel = 'Density (kg m$^{-3}$)')
 
     return ax
