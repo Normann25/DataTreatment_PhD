@@ -22,7 +22,7 @@ def format_timestamps(timestamps, old_format, new_format):
         new_timestamps.append(new_datetime)
     return pd.to_datetime(new_timestamps, format=new_format)
 
-def import_txt(path, parent_path, timelabel, time_format, hour):
+def import_data(path, parent_path, timelabel, time_format, hour):
     data_dict = {}
     files = file_list(path, parent_path)
 
@@ -32,6 +32,19 @@ def import_txt(path, parent_path, timelabel, time_format, hour):
                 df = pd.read_table(f, sep = '\t')
 
             df = df.dropna()
+            
+            if timelabel is not None:
+                try:
+                    df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
+                    df['Time'] =  df['Time'] + pd.Timedelta(hours = hour)
+                except KeyError:
+                    pass
+            
+            data_dict[file.split('.')[0]] = df
+        
+        if file.endswith('.csv'):
+            with open(os.path.join(path, file), 'r') as f:
+                df = pd.read_csv(f, sep = ',')
             
             if timelabel is not None:
                 try:
