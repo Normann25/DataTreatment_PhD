@@ -37,51 +37,24 @@ def plot_inset(ax, height, loc, bb2a, plot_width, xdata, ydata, width, bar, time
 
     return artist, inset_ax
 
-def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed, SASS, t_zero):
-    
-    if SASS:
-        data = np.array([df['CorrectedSpectralDensity'][df['ScanNumber'] == 1].tolist()])
-        for scan_id, group in df.groupby('ScanNumber'):
-            if scan_id != 1:
-                conc = group['CorrectedSpectralDensity'].tolist()
-                if len(conc) < 599:
-                    conc.append(0)                
-                if (scan_id % 2) == 0:
-                    conc = conc[::-1]                              
-                data = np.concatenate((data, np.array([conc])), axis = 0)
-            #else:
-                #data = np.append(data, conc.tolist(), axis = 0)
+def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed, t_zero):
 
-        data = np.array(data[:max(df['ScanNumber'])])
-        
-        # Generate an extra time bin, which is needed for the meshgrid
-        time = np.unique(time)
-        dt = time[1]-time[0]
-        new_time = time - pd.Timedelta(minutes = 10)
-        new_time = np.append(new_time, time[-1])     
+    data = np.array(df[df_keys])
 
-        size = df['Size'][df['ScanNumber'] == 1].tolist() + [111.9]
-        
-        # generate 2d meshgrid for the x, y, and z data of the 3D color plot
-        y, x = np.meshgrid(np.array(size), new_time)
+    if normed == False:
+        dlogDp = np.log10(bin_edges[1:])-np.log10(bin_edges[:-1])
+        data=data/dlogDp
     
-    else:
-        data = np.array(df[df_keys])
+    if t_zero is not None:
+        time = (pd.to_datetime(time) - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+        
+    # Generate an extra time bin, which is needed for the meshgrid
+    dt = time[1]-time[0]
+    new_time = time - dt
+    new_time = np.append(new_time, new_time[-1]+dt)
 
-        if normed == False:
-            dlogDp = np.log10(bin_edges[1:])-np.log10(bin_edges[:-1])
-            data=data/dlogDp
-        
-        if t_zero is not None:
-            time = (pd.to_datetime(time) - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
-            
-        # Generate an extra time bin, which is needed for the meshgrid
-        dt = time[1]-time[0]
-        new_time = time - dt
-        new_time = np.append(new_time, new_time[-1]+dt)
-    
-        # generate 2d meshgrid for the x, y, and z data of the 3D color plot
-        y, x = np.meshgrid(bin_edges, new_time)
+    # generate 2d meshgrid for the x, y, and z data of the 3D color plot
+    y, x = np.meshgrid(bin_edges, new_time)
     
     # Set the upper and/or lower limit of the color scale based on input
     y_min = np.nanmin(data)
@@ -106,7 +79,7 @@ def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed, SASS, t_zer
     ax.set_ylabel("Dp (nm)")
     return ax, p1
 
-def plot_total(ax, df, conc_key, clr, SASS, t_zero):
+def plot_total(ax, df, conc_key, clr, t_zero):
     if t_zero is not None:
         time = (df['Time'] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
         ax.plot(time, df[conc_key], lw = 1, color = clr)
@@ -114,12 +87,7 @@ def plot_total(ax, df, conc_key, clr, SASS, t_zero):
         ax.set_xlabel('Time (min)')
 
     else:
-        if SASS:
-            total_conc = calc_total_conc(df, [111, 5490], 202.5, ['Size', 'CorrectedSpectralDensity'])
-            ax.plot(total_conc['Time'], total_conc['Total Concentration'], lw = 1, color = clr)
-            
-        else:
-            ax.plot(df['Time'], df[conc_key], lw = 1, color = clr)
+        ax.plot(df['Time'], df[conc_key], lw = 1, color = clr)
 
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
         ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha="left")
@@ -127,51 +95,30 @@ def plot_total(ax, df, conc_key, clr, SASS, t_zero):
         plt.subplots_adjust(hspace=0.05)
     return ax
 
-def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, normed, total, cutpoint, SASS, t_zero):
-    
-    start_time = pd.to_datetime(timestamps[0])
-    end_time = pd.to_datetime(timestamps[1])
+def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, normed, total, cutpoint, t_zero):
 
     if datatype == 'number and mass':
         df_number, df_mass = df[0], df[1]
 
-        time = pd.to_datetime(df_number['Time'])
+        new_df_number = time_filtered_conc(df_number, df_keys, timestamps)
+        new_df_mass = time_filtered_conc(df_mass, df_keys, timestamps)
 
-        time_filter = (time >= start_time) & (time <= end_time)
+        if total is not None:
+            ax1, p1 = plot_heatmap(ax[0][0], new_df_number, df_keys, np.array(new_df_number['Time']), bin_edges, cutpoint, normed, t_zero)
+            ax2, p2 = plot_heatmap(ax[0][1], new_df_mass, df_keys, np.array(new_df_mass['Time']), bin_edges, cutpoint, normed, t_zero)
 
-        filtered_time = np.array(time[time_filter])
+            total_df_number = time_filtered_conc(df_number, [total], timestamps)
+            ax3 = plot_total(ax[1], total_df_number, total, 'r', t_zero)
 
-        new_df_number, new_df_mass = pd.DataFrame({'Time': filtered_time}), pd.DataFrame({'Time': filtered_time})
-
-        for key in df_keys:
-            conc_number, conc_mass = np.array(df_number[key]), np.array(df_mass[key])
-            conc_number, conc_mass = pd.to_numeric(conc_number, errors='coerce'), pd.to_numeric(conc_mass, errors='coerce')
-            filtered_number, filtered_mass = conc_number[time_filter], conc_mass[time_filter]
-
-            new_df_number[key], new_df_mass[key] = filtered_number, filtered_mass
-
-        if total != None:
-            ax1, p1 = plot_heatmap(ax[0][0], new_df_number, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
-            ax2, p2 = plot_heatmap(ax[0][1], new_df_mass, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
-
-            total_df_number = pd.DataFrame({'Time': filtered_time})
-            conc = np.array(df_number[total])
-            conc = pd.to_numeric(conc, errors='coerce')
-            total_df_number[total] = conc[time_filter]
-            ax3 = plot_total(ax[1], total_df_number, total, 'r', SASS, t_zero)
-
-            total_df_mass = pd.DataFrame({'Time': filtered_time})
-            conc = np.array(df_mass[total])
-            conc = pd.to_numeric(conc, errors='coerce')
-            total_df_mass[total] = conc[time_filter]     
-            ax4 = plot_total(ax[1], total_df_mass, total, 'r', SASS, t_zero)
+            total_df_mass = time_filtered_conc(df_mass, [total], timestamps)    
+            ax4 = plot_total(ax[1], total_df_mass, total, 'r', t_zero)
 
             ax3.set_ylabel('Total number conc. (# cm$^{-3}$)')
             ax4.set_ylabel('Total mass conc. ($\mu$g m$^{-3}$)')
 
         else:
-            ax1, p1 = plot_heatmap(ax[0], new_df_number, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
-            ax2, p2 = plot_heatmap(ax[1], new_df_mass, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
+            ax1, p1 = plot_heatmap(ax[0], new_df_number, df_keys, np.array(new_df_number['Time']), bin_edges, cutpoint, normed, t_zero)
+            ax2, p2 = plot_heatmap(ax[1], new_df_mass, df_keys, np.array(new_df_mass['Time']), bin_edges, cutpoint, normed, t_zero)
 
         # Insert coloarbar and label it
         col1 = fig.colorbar(p1, ax=ax1)
@@ -181,36 +128,16 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
         col2.set_label('dM/dlogDp ($\mu$g m$^{-3}$)')
 
     else:
-        time = pd.to_datetime(df['Time'])
+        new_df = time_filtered_conc(df, df_keys, timestamps)
 
-        time_filter = (time >= start_time) & (time <= end_time)
+        if total is not None:
+            ax1, p1 = plot_heatmap(ax[0], new_df, df_keys, np.array(new_df['Time']), bin_edges, cutpoint, normed, t_zero)
 
-        filtered_time = np.array(time[time_filter])
-
-        new_df = pd.DataFrame({'Time': filtered_time})
-
-        for key in df_keys:
-            conc = np.array(df[key])
-            conc = pd.to_numeric(conc, errors='coerce')
-            filtered_conc = conc[time_filter]
-
-            new_df[key] = filtered_conc
-
-        if total != None:
-            ax1, p1 = plot_heatmap(ax[0], new_df, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
-            
-            if SASS:
-                ax2 = plot_total(ax[1], new_df, None, 'r', SASS, t_zero)
-            else:
-                total_df = pd.DataFrame({'Time': filtered_time})
-                conc = np.array(df[total])
-                conc = pd.to_numeric(conc, errors='coerce')
-                total_df[total] = conc[time_filter]
-                
-                ax2 = plot_total(ax[1], total_df, total, 'r', SASS, t_zero)
+            total_df = time_filtered_conc(df, [total], timestamps)             
+            ax2 = plot_total(ax[1], total_df, total, 'r', t_zero)
 
         else:
-            ax1, p1 = plot_heatmap(ax, new_df, df_keys, filtered_time, bin_edges, cutpoint, normed, SASS, t_zero)
+            ax1, p1 = plot_heatmap(ax, new_df, df_keys, np.array(new_df['Time']), bin_edges, cutpoint, normed, t_zero)
 
         # Insert coloarbar and label it
         col = fig.colorbar(p1, ax=ax1)
@@ -222,6 +149,7 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
             col.set_label('dM/dlogDp ($\mu$g m$^{-3}$)')
             if total != None:
                 ax2.set_ylabel('Total concentration ($\mu$g m$^{-3}$)')
+
 
 def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp, bin_edges, cut_point, mass):
     mean_number, std_number = bin_mean(timestamps, df_number, df_keys, timelabel)
@@ -295,55 +223,33 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
     
     return mean_number, mean_mass, ax, ax2
 
-def plot_running_sizedist(fig, ax, df, bins, bin_edges, axis_labels, run_length, SASS):
+def plot_running_sizedist(fig, ax, df, bins, bin_edges, axis_labels, run_length):
 
-    if SASS:
-        n_lines = len(df['ScanNumber'].unique())
-        cmap = mpl.colormaps['plasma_r']
-        colors = cmap(np.linspace(0, 1, n_lines))
-        
-        for scan_id, group in df.groupby('ScanNumber'):
-            ax.scatter(group['Size'], group['CorrectedSpectralDensity'], color = colors[scan_id-1], s = 0.1)
+    n_lines = len(df.keys())
+    cmap = mpl.colormaps['plasma_r']
+    colors = cmap(np.linspace(0, 1, n_lines))
+    
+    data = np.array(df[df.keys()]).T
+    
+    if bin_edges is not None:
+        dlogDp = np.log10(bin_edges[1:]) - np.log10(bin_edges[:-1])
+        data = data / dlogDp
+    
+    for i in range(n_lines):
+        ax.plot(bins, data[i], color=colors[i], lw=1.2)
 
-        # Create a scalar mappable for colorbar
-        norm = mpl.colors.Normalize(vmin=run_length, vmax=run_length + (n_lines - 1) * run_length)
-        sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
-        sm.set_array([])  # Required for colorbar
+    # Create a scalar mappable for colorbar
+    norm = mpl.colors.Normalize(vmin=run_length, vmax=run_length + (n_lines - 1) * run_length)
+    sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm.set_array([])  # Required for colorbar
 
-        # Create and place the colorbar
-        cbar = fig.colorbar(sm, ax=ax, orientation='vertical')
-        cbar.set_label('Time (min)', fontsize=9)
-        cbar.ax.tick_params(labelsize=8)
+    # Add colorbar to the figure
+    cbar = fig.colorbar(sm, ax=ax, orientation='vertical')
+    cbar.set_label('Time (min)', fontsize=9)
+    cbar.ax.tick_params(labelsize=8)
 
-        ax.tick_params(axis='both', labelsize=8)
-        ax.set(xlabel=axis_labels[0], ylabel=axis_labels[1], xscale='log')
-        
-    else:
-        n_lines = len(df.keys())
-        cmap = mpl.colormaps['plasma_r']
-        colors = cmap(np.linspace(0, 1, n_lines))
-        
-        data = np.array(df[df.keys()]).T
-        
-        if bin_edges is not None:
-            dlogDp = np.log10(bin_edges[1:]) - np.log10(bin_edges[:-1])
-            data = data / dlogDp
-        
-        for i in range(n_lines):
-            ax.plot(bins, data[i], color=colors[i], lw=1.2)
-
-        # Create a scalar mappable for colorbar
-        norm = mpl.colors.Normalize(vmin=run_length, vmax=run_length + (n_lines - 1) * run_length)
-        sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
-        sm.set_array([])  # Required for colorbar
-
-        # Add colorbar to the figure
-        cbar = fig.colorbar(sm, ax=ax, orientation='vertical')
-        cbar.set_label('Time (min)', fontsize=9)
-        cbar.ax.tick_params(labelsize=8)
-
-        ax.tick_params(axis='both', labelsize=8)
-        ax.set(xlabel=axis_labels[0], ylabel=axis_labels[1], xscale='log')
+    ax.tick_params(axis='both', labelsize=8)
+    ax.set(xlabel=axis_labels[0], ylabel=axis_labels[1], xscale='log')
     
     return ax
 
@@ -450,3 +356,98 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
     ax[1].set(xlabel = 'Org conc ($\mu$g m$^{-3}$)', ylabel = 'Density (kg m$^{-3}$)')
 
     return ax
+
+def plot_SASS(df, timestamps, run_length, datatype, name):
+
+    def plot_SASS_heatmap(fig, axes, df, datatype):
+        time = np.array(df['Time'])
+
+        data = np.array([df['CorrectedSpectralDensity'][df['ScanNumber'] == 1].tolist()])
+        for scan_id, group in df.groupby('ScanNumber'):
+            if scan_id != 1:
+                conc = group['CorrectedSpectralDensity'].tolist()
+                if len(conc) < 599:
+                    conc.append(0)                
+                if (scan_id % 2) == 0:
+                    conc = conc[::-1]                              
+                data = np.concatenate((data, np.array([conc])), axis = 0)
+            #else:
+                #data = np.append(data, conc.tolist(), axis = 0)
+
+        data = np.array(data[:max(df['ScanNumber'])])
+        
+        # Generate an extra time bin, which is needed for the meshgrid
+        time = np.unique(time)
+        new_time = time - pd.Timedelta(minutes = 10)
+        new_time = np.append(new_time, time[-1])     
+
+        size = df['Size'][df['ScanNumber'] == 1].tolist() + [111.9]
+        
+        # generate 2d meshgrid for the x, y, and z data of the 3D color plot
+        y, x = np.meshgrid(np.array(size), new_time)
+
+        # Set the upper and/or lower limit of the color scale based on input
+        y_min = np.nanmin(data)
+        y_max = np.nanmax(data)
+        
+        # Fill the generated mesh with particle concentration data
+        p1 = axes[0].pcolormesh(x, y, data, cmap='jet',vmin=y_min, vmax=y_max,shading='flat')
+        axes[0].set_yscale("log")
+        axes[0].set_ylabel("Dp (nm)")
+        
+        total_conc = calc_total_conc(df, [111, 5490], 202.5, ['Size', 'CorrectedSpectralDensity'])
+        axes[1].plot(total_conc['Time'], total_conc['Total Concentration'], lw = 1, color = 'r')
+
+        for ax in axes:
+            ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha="left")
+            ax.set_xlabel("Time (HH:MM)")
+            plt.subplots_adjust(hspace=0.05)
+
+        if datatype == 'number':
+            col = fig.colorbar(p1, ax=axes[0])
+            col.set_label('dN/dlogDp (# cm$^{-3}$)')
+            axes[1].set_ylabel('Total concentration (# cm$^{-3}$)')
+
+        if datatype == 'mass':
+            col = fig.colorbar(p1, ax=axes[0])
+            col.set_label('dM/dlogDp ($\mu$g m$^{-3}$)')
+            axes[1].set_ylabel('Total concentration ($\mu$g m$^{-3}$)')
+        
+    def SASS_running_SizeDist(fig, ax, df, run_length, axis_labels):
+        n_lines = len(df['ScanNumber'].unique())
+        cmap = mpl.colormaps['plasma_r']
+        colors = cmap(np.linspace(0, 1, n_lines))
+        
+        for scan_id, group in df.groupby('ScanNumber'):
+            ax.scatter(group['Size'], group['CorrectedSpectralDensity'], color = colors[scan_id-1], s = 0.1)
+
+        # Create a scalar mappable for colorbar
+        norm = mpl.colors.Normalize(vmin=run_length, vmax=run_length + (n_lines - 1) * run_length)
+        sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm.set_array([])  # Required for colorbar
+
+        # Create and place the colorbar
+        cbar = fig.colorbar(sm, ax=ax, orientation='vertical')
+        cbar.set_label('Time (min)', fontsize=9)
+        cbar.ax.tick_params(labelsize=8)
+
+        ax.tick_params(axis='both', labelsize=8)
+        ax.set(xlabel=axis_labels[0], ylabel=axis_labels[1], xscale='log')
+        return
+    
+    ax_labels = ['dN/dlogDp (# cm$^{-3}$)', 'dM/dlogDp ($\mu$g m$^{-3}$)']
+    for i, dtype in enumerate(datatype):
+        new_df = time_filtered_conc(df[i], ['CorrectedSpectralDensity', 'Size', 'ScanNumber'], timestamps)
+
+        fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
+        plot_SASS_heatmap(fig1, axes1, new_df, dtype)
+        fig1.tight_layout()
+        fig1.savefig(f'Timeseries_{name}_{dtype}.jpg', dpi = 600)
+
+        fig2, ax2 = plt.subplots(figsize = (4,3))
+        SASS_running_SizeDist(fig2, ax2, new_df, run_length, ['Particle diameter (nm)', ax_labels[i]])
+        fig2.tight_layout()
+        fig2.savefig(f'SizeDist_{name}_{dtype}.jpg', dpi = 600)
+
+    return
