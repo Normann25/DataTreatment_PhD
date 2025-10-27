@@ -44,7 +44,20 @@ def import_data(path, parent_path, timelabel, time_format, hour):
         
         if file.endswith('.csv'):
             with open(os.path.join(path, file), 'r') as f:
-                df = pd.read_csv(f, sep = ',')
+                df = pd.read_csv(f)
+            
+            if timelabel is not None:
+                try:
+                    df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
+                    df['Time'] =  df['Time'] + pd.Timedelta(hours = hour)
+                except KeyError:
+                    pass
+            
+            data_dict[file.split('.')[0]] = df
+
+        if file.endswith('.CSV'):
+            with open(os.path.join(path, file), 'r') as f:
+                df = pd.read_csv(f, sep = ';', decimal = ',')
             
             if timelabel is not None:
                 try:
