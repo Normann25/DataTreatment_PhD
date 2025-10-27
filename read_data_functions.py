@@ -70,6 +70,24 @@ def import_data(path, parent_path, timelabel, time_format, hour):
 
     return data_dict
 
+def import_PTRMS(path, parent_path, starttime):
+    data = import_data(path, parent_path, None, None, None)
+
+    new_dict = {}
+    for key in data.keys():
+        df = data[key]
+
+        Timestamps = []
+        for time in df['RelTime']:
+            timestamp = pd.to_datetime(starttime, format = '%d/%m/%Y %H:%M:%S') + pd.Timedelta(seconds = time)
+            Timestamps.append(timestamp)
+        df['Time'] = Timestamps
+
+        new_dict[key] = df
+
+    return new_dict
+
+
 def import_SMPS(path, parent_path, hour):
     """Read SMPS data from CSV files in the specified path."""
     files = file_list(path, parent_path)
