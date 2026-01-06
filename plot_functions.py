@@ -37,16 +37,22 @@ def plot_inset(ax, height, loc, bb2a, plot_width, xdata, ydata, width, bar, time
 
     return artist, inset_ax
 
-def plot_barchart(axes, means, stds, xticks, ax_label):
+def plot_barchart(ax, means, stds, xticks, ax_label):
     n_lines = len(xticks)
     cmap = mpl.colormaps['viridis']
     colors = cmap(np.linspace(0, 1, n_lines))
 
+    ax.bar(xticks, means, yerr = stds/np.sqrt(len(stds))
+           , color = colors)
+    ax.set_ylabel(ax_label)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha = 'left')
+    ax.tick_params(axis = 'x', which = 'minor', bottom = False)
+
+    return
+
+def plot_multi_barchart(axes, means, stds, xticks, ax_label):
     for ax, key in zip(axes, means.keys()):
-        ax.bar(xticks, means[key], yerr = stds[key], color = colors)
-        ax.set_ylabel(ax_label)
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha = 'left')
-        ax.tick_params(axis = 'x', which = 'minor', bottom = False)
+        plot_barchart(ax, means[key], stds[key], xticks, ax_label)
 
     return
 
