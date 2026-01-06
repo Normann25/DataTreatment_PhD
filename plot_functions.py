@@ -37,6 +37,19 @@ def plot_inset(ax, height, loc, bb2a, plot_width, xdata, ydata, width, bar, time
 
     return artist, inset_ax
 
+def plot_barchart(axes, means, stds, xticks, ax_label):
+    n_lines = len(xticks)
+    cmap = mpl.colormaps['viridis']
+    colors = cmap(np.linspace(0, 1, n_lines))
+
+    for ax, key in zip(axes, means.keys()):
+        ax.bar(xticks, means[key], yerr = stds[key], color = colors)
+        ax.set_ylabel(ax_label)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha = 'left')
+        ax.tick_params(axis = 'x', which = 'minor', bottom = False)
+
+    return
+
 def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed, t_zero):
 
     data = np.array(df[df_keys])

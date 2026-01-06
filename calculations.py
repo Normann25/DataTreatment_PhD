@@ -148,6 +148,22 @@ def calc_total_conc(df, size_bins, norm, SASS_specific):
     
     return new_df
 
+def exp_mean(df, df_keys, timestamps, mass_list):
+    new_df = pd.DataFrame()
+    for row, mass in zip(timestamps, mass_list):
+        data = time_filtered_conc(df, df_keys, row)
+        for key in data.keys():
+            data[key] = pd.to_numeric(data[key]) / mass
+        new_df = pd.concat([new_df, data], ignore_index = True)
+
+    mean = np.zeros(len(df_keys))
+    std = np.zeros(len(df_keys))
+    for i, key in enumerate(df_keys):
+        mean[i] += np.array(new_df[key]).mean()
+        std[i] += np.array(new_df[key]).std()
+
+    return mean, std
+
 def density_from_AMS(H_C_ratio, O_C_ratio):
     rho = 1000 * (12 + 1*H_C_ratio + 16*O_C_ratio) / (7.0 + 5.0*H_C_ratio + 4.15*O_C_ratio) # Density in kg/m^3
     return rho
