@@ -31,7 +31,7 @@ def import_data(path, parent_path, timelabel, time_format, hour):
             with open(os.path.join(path, file), 'r') as f:
                 df = pd.read_table(f, sep = '\t')
 
-            df = df.dropna()
+            df = df.fillna(0)
             
             if timelabel is not None:
                 try:
