@@ -42,8 +42,7 @@ def plot_barchart(ax, means, stds, xticks, ax_label):
     cmap = mpl.colormaps['viridis']
     colors = cmap(np.linspace(0, 1, n_lines))
 
-    ax.bar(xticks, means, yerr = stds/np.sqrt(len(stds))
-           , color = colors)
+    ax.bar(xticks, means, yerr = stds, color = colors)
     ax.set_ylabel(ax_label)
     ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha = 'left')
     ax.tick_params(axis = 'x', which = 'minor', bottom = False)
