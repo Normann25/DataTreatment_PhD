@@ -164,6 +164,34 @@ def exp_mean(df, df_keys, timestamps, mass_list):
 
     return mean, std
 
+def GCMS_concentration_calculation(flow_data, flow_dict_keys, flow_key, timestamps, gcms_data, sorbent_type, V_inj):
+    mean_flow = []
+    exp_duration = []
+    for time, key in zip(timestamps, flow_dict_keys):
+        time_filtered_flow = time_filtered_conc(flow_data[key], [flow_key], time)
+        mean_flow.append(np.array(time_filtered_flow[flow_key]).mean())
+        elapsed = pd.to_datetime(time[1]) - pd.to_datetime(time[0])
+        exp_duration.append(elapsed.total_seconds() / 60)
+    
+    gcms_concentrations = pd.DataFrame()
+
+    if sorbent_type == 'TA' or sorbent_type == 'CA':
+        for index, row in gcms_data.iterrows():
+            concentration = (V_inj*10**(-6) * row[gcms_data.keys()[5:]]*10**(-3)) / (mean_flow[index]*10**(-3) * exp_duration[index])
+            gcms_concentrations[row['Name']] = concentration
+
+    if sorbent_type == 'TA and CA':
+        for index, row in gcms_data.iterrows():
+            for j, key in enumerate(flow_dict_keys):
+                if key.split('_')[0] in row['Name'] and key.split('_')[1] in row['Name']:
+                    concentration = (V_inj*10**(-6) * row[gcms_data.keys()[5:]]*10**(3)) / (mean_flow[j]*10**(-3) * exp_duration[j]) # unit of ug/m^3
+                    gcms_concentrations[row['Name']] = concentration
+    
+    gcms_concentrations = gcms_concentrations.T
+    gcms_concentrations.columns = list(gcms_data.keys()[5:])
+
+    return gcms_concentrations
+
 def density_from_AMS(H_C_ratio, O_C_ratio):
     rho = 1000 * (12 + 1*H_C_ratio + 16*O_C_ratio) / (7.0 + 5.0*H_C_ratio + 4.15*O_C_ratio) # Density in kg/m^3
     return rho
