@@ -177,7 +177,7 @@ def GCMS_concentration_calculation(flow_data, flow_dict_keys, flow_key, timestam
 
     if sorbent_type == 'TA' or sorbent_type == 'CA':
         for index, row in gcms_data.iterrows():
-            concentration = (V_inj*10**(-6) * row[gcms_data.keys()[5:]]*10**(-3)) / (mean_flow[index]*10**(-3) * exp_duration[index])
+            concentration = (V_inj*10**(-6) * row[gcms_data.keys()[5:]]*10**(-3)) / (mean_flow[index]*10**(-3) * exp_duration[index]) # unit of ug/m^3
             gcms_concentrations[row['Name']] = concentration
 
     if sorbent_type == 'TA and CA':
