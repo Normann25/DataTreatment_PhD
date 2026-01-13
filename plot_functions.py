@@ -456,7 +456,10 @@ def plot_SASS(df, timestamps, run_length, datatype, name):
     
     ax_labels = ['dN/dlogDp (# cm$^{-3}$)', 'dM/dlogDp ($\mu$g m$^{-3}$)']
     for i, dtype in enumerate(datatype):
-        new_df = time_filtered_conc(df[i], ['CorrectedSpectralDensity', 'Size', 'ScanNumber'], timestamps)
+        if timestamps == None:
+            new_df = df[i]
+        else:
+            new_df = time_filtered_conc(df[i], ['CorrectedSpectralDensity', 'Size', 'ScanNumber'], timestamps)
 
         fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
         plot_SASS_heatmap(fig1, axes1, new_df, dtype)

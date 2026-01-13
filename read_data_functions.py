@@ -183,6 +183,6 @@ def import_SASS(path, parent_path, hour, minute, second):
             if scans:
                 full_df = pd.concat(scans, ignore_index=True)
                 
-            data_dict[date] = full_df
+            data_dict[file] = full_df
                
     return data_dict
