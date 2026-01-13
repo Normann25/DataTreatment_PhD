@@ -375,11 +375,19 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
 
     return ax
 
-def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, total_key, t_zero, nrows, ncols):
+def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, run_length, total_key, t_zero, nrows, ncols):
     bin_edges = [min_DP]
     for key in df_keys:
         bin_edges.append(float(key))
-
+    
+    running_SMPS = {}
+    for key, time in zip(dictkeys, timestamps):
+        temp = running_mean(data[key], df_keys, 'Time', f'{run_length}T', run_length, time)
+        running_SMPS[key] = temp
+        
+    fig_run_number, ax_run_number = plt.subplots(nrows, ncols, figsize = (3.3*ncols, 3*nrows))
+    if 'mass' in datatype:
+        fig_run_mass, ax_run_mass = plt.subplots(nrows, ncols, figsize = (3.3*ncols, 3*nrows))
     fig_mean, ax_mean = plt.subplots(nrows, ncols, figsize = (3.3*ncols, 3*nrows))
     axes_number, axes_mass = [], []
 
@@ -389,7 +397,6 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, total_key, 
             plot_timeseries(fig1, ax1, data[dictkeys[0][i]], df_keys, bin_edges, 'number', time, True, total_key, None, t_zero)
             fig1.tight_layout()
             fig1.savefig(f'Timeseries_{dictkeys[0][i]}.jpg', dpi = 600)
-
             fig2, ax2 = plt.subplots(2, 1, figsize = (6.3, 6))
             plot_timeseries(fig2, ax2, data[dictkeys[1][i]], df_keys, bin_edges, 'mass', time, True, total_key, None, t_zero)
             fig2.tight_layout()
@@ -400,6 +407,13 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, total_key, 
             fig_mean.savefig(f'SizeDist_{dictkeys[0][i].split('_')[0]}.jpg', dpi = 600)
             axes_number.append(ax3)
             axes_mass.append(ax3_2)
+
+            plot_running_sizedist(fig_run_number, ax_run_number, running_SMPS[dictkeys[0][i]], bin_edges[1:], None, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
+            fig_run_number.tight_layout()
+            fig_run_number.savefig(f'Running_SizeDist_{dictkeys[0][i].split('_')[0]}.jpg', dpi = 600)
+            plot_running_sizedist(fig_run_mass, ax_run_mass, running_SMPS[dictkeys[1][i]], bin_edges[1:], None, ['Diameter (nm)', 'dM/dlogDp ($\mu$g m$^{-3}$)'], run_length)
+            fig_run_mass.tight_layout()
+            fig_run_mass.savefig(f'Running_SizeDist_{dictkeys[1][i].split('_')[0]}.jpg', dpi = 600)
 
         else:
             fig1, ax1 = plt.subplots(2, 1, figsize = (6.3, 6))
@@ -412,6 +426,10 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, total_key, 
                 fig_mean.tight_layout()
                 fig_mean.savefig(f'SizeDist_{dictkeys[i]}.jpg', dpi = 600)
                 axes_number.append(ax2)
+
+                plot_running_sizedist(fig_run_number, ax_run_number, running_SMPS[dictkeys[i]], bin_edges[1:], None, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
+                fig_run_number.tight_layout()
+                fig_run_number.savefig(f'Running_SizeDist_{dictkeys[i]}.jpg', dpi = 600)
 
     return axes_number, axes_mass
 
