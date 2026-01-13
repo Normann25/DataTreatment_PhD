@@ -375,6 +375,46 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
 
     return ax
 
+def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, total_key, t_zero, nrows, ncols):
+    bin_edges = [min_DP]
+    for key in df_keys:
+        bin_edges.append(float(key))
+
+    fig_mean, ax_mean = plt.subplots(nrows, ncols, figsize = (3.3*ncols, 3*nrows))
+    axes_number, axes_mass = [], []
+
+    for i, time in enumerate(timestamps):
+        if datatype == 'number and mass':
+            fig1, ax1 = plt.subplots(2, 1, figsize = (6.3, 6))
+            plot_timeseries(fig1, ax1, data[dictkeys[0][i]], df_keys, bin_edges, 'number', time, True, total_key, None, t_zero)
+            fig1.tight_layout()
+            fig1.savefig(f'Timeseries_{dictkeys[0][i]}.jpg', dpi = 600)
+
+            fig2, ax2 = plt.subplots(2, 1, figsize = (6.3, 6))
+            plot_timeseries(fig2, ax2, data[dictkeys[1][i]], df_keys, bin_edges, 'mass', time, True, total_key, None, t_zero)
+            fig2.tight_layout()
+            fig2.savefig(f'Timeseries_{dictkeys[1][i]}.jpg', dpi = 600)
+
+            number, mass, ax3, ax3_2 = plot_bin_mean(ax_mean.flatten()[i], time, data[dictkeys[0][i]], data[dictkeys[1][i]], df_keys, 'Time', bin_edges[1:], None, None, True)
+            fig_mean.tight_layout()
+            fig_mean.savefig(f'SizeDist_{dictkeys[0][i].split('_')[0]}.jpg', dpi = 600)
+            axes_number.append(ax3)
+            axes_mass.append(ax3_2)
+
+        else:
+            fig1, ax1 = plt.subplots(2, 1, figsize = (6.3, 6))
+            plot_timeseries(fig1, ax1, data[dictkeys[i]], df_keys, bin_edges, datatype, time, True, total_key, None, t_zero)
+            fig1.tight_layout()
+            fig1.savefig(f'Timeseries_{dictkeys[i]}.jpg', dpi = 600)
+
+            if datatype == 'number':
+                number, mass, ax2, ax2_2 = plot_bin_mean(ax_mean.flatten()[i], time, data[dictkeys[i]], None, df_keys, 'Time', bin_edges[1:], None, None, False)
+                fig_mean.tight_layout()
+                fig_mean.savefig(f'SizeDist_{dictkeys[i]}.jpg', dpi = 600)
+                axes_number.append(ax2)
+
+    return axes_number, axes_mass
+
 def plot_SASS(df, timestamps, run_length, datatype, name):
 
     def plot_SASS_heatmap(fig, axes, df, datatype):
