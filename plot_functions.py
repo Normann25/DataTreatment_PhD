@@ -384,13 +384,11 @@ def plot_SASS(df, timestamps, run_length, datatype, name):
         for scan_id, group in df.groupby('ScanNumber'):
             if scan_id != 1:
                 conc = group['CorrectedSpectralDensity'].tolist()
-                if len(conc) < 599:
+                if 596 < len(conc) < 599:
                     conc.append(0)                
                 if (scan_id % 2) == 0:
                     conc = conc[::-1]                              
                 data = np.concatenate((data, np.array([conc])), axis = 0)
-            #else:
-                #data = np.append(data, conc.tolist(), axis = 0)
 
         data = np.array(data[:max(df['ScanNumber'])])
         
@@ -457,7 +455,7 @@ def plot_SASS(df, timestamps, run_length, datatype, name):
     ax_labels = ['dN/dlogDp (# cm$^{-3}$)', 'dM/dlogDp ($\mu$g m$^{-3}$)']
     for i, dtype in enumerate(datatype):
         if timestamps == None:
-            new_df = df[i]
+            new_df = df[i][['Time', 'CorrectedSpectralDensity', 'Size', 'ScanNumber']]
         else:
             new_df = time_filtered_conc(df[i], ['CorrectedSpectralDensity', 'Size', 'ScanNumber'], timestamps)
 
