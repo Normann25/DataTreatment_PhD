@@ -462,11 +462,11 @@ def plot_SASS(df, timestamps, run_length, datatype, name):
         fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
         plot_SASS_heatmap(fig1, axes1, new_df, dtype)
         fig1.tight_layout()
-        fig1.savefig(f'Timeseries_{name}_{dtype}.jpg', dpi = 600)
+        fig1.savefig(f'Figures/SASS/Timeseries_{name}_{dtype}.jpg', dpi = 600)
 
         fig2, ax2 = plt.subplots(figsize = (4,3))
         SASS_running_SizeDist(fig2, ax2, new_df, run_length, ['Particle diameter (nm)', ax_labels[i]])
         fig2.tight_layout()
-        fig2.savefig(f'SizeDist_{name}_{dtype}.jpg', dpi = 600)
+        fig2.savefig(f'Figures/SASS/SizeDist_{name}_{dtype}.jpg', dpi = 600)
 
     return
