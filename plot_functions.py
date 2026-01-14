@@ -382,12 +382,12 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, run_length,
     running_SMPS = {}
     for i, time in enumerate(timestamps):
         if datatype == 'number and mass':
-            temp_number = running_mean(data[dictkeys[0][i]], df_keys, 'Time', f'{run_length}T', run_length, time)
+            temp_number = running_mean(data[dictkeys[0][i]], df_keys, 'Time', f'{run_length}T', run_length, [t_zero, time[1]])
             running_SMPS[dictkeys[0][i]] = temp_number
-            temp_mass = running_mean(data[dictkeys[1][i]], df_keys, 'Time', f'{run_length}T', run_length, time)
+            temp_mass = running_mean(data[dictkeys[1][i]], df_keys, 'Time', f'{run_length}T', run_length, [t_zero, time[1]])
             running_SMPS[dictkeys[1][i]] = temp_mass
         else:
-            temp = running_mean(data[dictkeys[i]], df_keys, 'Time', f'{run_length}T', run_length, time)
+            temp = running_mean(data[dictkeys[i]], df_keys, 'Time', f'{run_length}T', run_length, [t_zero, time[1]])
             running_SMPS[dictkeys[i]] = temp
         
     fig_run_number, ax_run_number = plt.subplots(nrows, ncols, figsize = (3.5*ncols, 3*nrows))
@@ -413,7 +413,7 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, run_length,
             else:
                 ax = ax_mean
                 ax_number, ax_mass = ax_run_number, ax_run_mass
-            number, mass, ax3, ax3_2 = plot_bin_mean(ax, time, data[dictkeys[0][i]], data[dictkeys[1][i]], df_keys, 'Time', bin_edges[1:], None, None, True)
+            number, mass, ax3, ax3_2 = plot_bin_mean(ax, [t_zero, time[1]], data[dictkeys[0][i]], data[dictkeys[1][i]], df_keys, 'Time', bin_edges[1:], None, None, True)
             fig_mean.tight_layout()
             fig_mean.savefig(f'{save_path}SizeDist_{dictkeys[0][i]}.jpg', dpi = 600)
             axes_number.append(ax3)
@@ -440,7 +440,7 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, run_length,
                     ax = ax_mean
                     ax_number = ax_run_number
 
-                number, mass, ax2, ax2_2 = plot_bin_mean(ax, time, data[dictkeys[i]], None, df_keys, 'Time', bin_edges[1:], None, None, False)
+                number, mass, ax2, ax2_2 = plot_bin_mean(ax, [t_zero, time[1]], data[dictkeys[i]], None, df_keys, 'Time', bin_edges[1:], None, None, False)
                 fig_mean.tight_layout()
                 fig_mean.savefig(f'{save_path}SizeDist_{dictkeys[i]}.jpg', dpi = 600)
                 axes_number.append(ax2)
