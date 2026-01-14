@@ -90,13 +90,29 @@ def import_SMPS(path, parent_path, hour):
     SMPS_files = []
 
     for file in files:
-        if 'SMPS' in file:
-            SMPS_files.append(file)
+        SMPS_files.append(file)
 
     if len(SMPS_files) > 1:
         data = {}
 
-    for file in SMPS_files:
+        for file in SMPS_files:
+            separations = [',', '\t']
+            for separation in separations:
+                try:
+                    with open(os.path.join(path, file), 'r') as f:
+                        df = pd.read_csv(f, sep = separation, skiprows = 52)
+
+                    df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
+                    df['Time'] = df['Time'] + pd.Timedelta(hours = hour)
+
+                    name = file.split('.')[0]
+                    data[name] = df
+                    
+                except KeyError:
+                    pass
+
+    else:
+        file = SMPS_files[0]
         separations = [',', '\t']
         for separation in separations:
             try:
@@ -106,15 +122,11 @@ def import_SMPS(path, parent_path, hour):
                 df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
                 df['Time'] = df['Time'] + pd.Timedelta(hours = hour)
 
-                if len(SMPS_files) > 1:
-                    name = file.split('.')[0]
-                    data[name] = df
-                else:
-                    data = df
-
+                data = df
+                
             except KeyError:
                 pass
-
+        
     return data
 
 def import_SASS(path, parent_path, hour, minute, second):
