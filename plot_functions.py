@@ -292,25 +292,25 @@ def instrument_comparison(ax, x_data, y_data, label, ax_labels, forced_zero):
     return fit_params, fit_errors, squares, ndof, R2
 
 def vanKrevelen_OS(ax, rotation):
-    O_C_ratio = np.linspace(0, 1, 100)
+    O_C_ratio = np.linspace(0, 1.5, 100)
 
     for OS in np.linspace(-2, 2, 9): # Oxidation states from -2 to 2
         H_C_ratio = 2*O_C_ratio-OS
         ax.plot(O_C_ratio, H_C_ratio, color = 'lightgray', lw = 0.75, ls = '--', zorder = -10)
     
-    OS_labels = ['OS = -1.5', 'OS = -1', 'OS = -0.5', 'OS = 0', 'OS = 0.5']
-    OS_placement = [[0.001, 1.57], [0.005, 1.08], [0.22, 1.01], [0.48, 1.03], [0.715, 1.002]]
+    OS_labels = ['OS = -2', 'OS = -1', 'OS = 0', 'OS = 1']
+    OS_placement = [[0.003, 2.13], [0.003, 1.12], [0.465, 1.05], [0.955, 1.03]]
     for label, placement in zip(OS_labels, OS_placement):
         ax.text(placement[0], placement[1], label, rotation = rotation, fontsize = 7, color = 'darkgray')
 
     # Organic compound lines
-    x = np.linspace(0, 1, 100)
+    x = np.linspace(0, 1.5, 100)
     y1 = linear(x, 0, 2) # Alcohol/peroxide
     y2 = linear(x, -1, 2) # Carboxylic acid
     y3 = linear(x, -2, 2) # Carbonyls (aldehyde/ketone)
 
     compound_labels = ['slope = 0 \n + alcohol/peroxide', 'slope = -1 \n + carboxylic acid', 'slope = -2 \n + carbonyls']
-    compound_placements = [[0.6, 1.96], [0.6, 1.22], [0.25, 1.25]]
+    compound_placements = [[0.9, 1.96], [0.66, 1.28], [0.2, 1.31]]
 
     for i, y in enumerate([y1, y2, y3]):
         ax.plot(x, y, color = 'darkgray', lw = 0.75, zorder = -10)
@@ -319,7 +319,7 @@ def vanKrevelen_OS(ax, rotation):
                 bbox=dict(ec = 'gray', fc = 'white', lw = 0.5, pad = 0.5),
                 color = 'gray', fontsize = 6)
 
-    ax.set(xlim = (0,1), ylim = (1,2.05), xlabel = 'O:C', ylabel = 'H:C')
+    ax.set(xlim = (0,1.5), ylim = (1,2.55), xlabel = 'O:C', ylabel = 'H:C')
     return ax
 
 def vanKrevelen_ts(df, df_keys, timestamps, run_length):
