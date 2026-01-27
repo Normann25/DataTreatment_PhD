@@ -323,7 +323,7 @@ def vanKrevelen_OS(ax, rotation):
     return ax
 
 def vanKrevelen_ts(df, df_keys, timestamps, run_length):
-    conc_mask = df[df_keys[2]] >= 0.03 # Based on AMS detection limit for organics
+    conc_mask = df[df_keys[2]] >= 0.03 # Based on AMS detection limit for organics (in V-mode)
     df = df[conc_mask]
 
     new_df = time_filtered_conc(df, df_keys, timestamps)
@@ -359,7 +359,7 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
     markers = ['o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X']
 
     for i, key in enumerate(dict_keys):
-        conc_mask = data_dict[key][df_keys[2]] >= 0.03 # Based on AMS detection limit for organics
+        conc_mask = data_dict[key][df_keys[2]] >= 0.03 # Based on AMS detection limit for organics (in V-mode)
         df = data_dict[key][conc_mask]
 
         new_df = time_filtered_conc(df, df_keys, timestamps[i])
