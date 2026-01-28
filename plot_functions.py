@@ -451,6 +451,52 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, run_length,
 
     return axes_number, axes_mass
 
+def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, save_path):
+    date = t_zero.split(' ')[0]
+
+    VK_keys = ['Ratio_H_C', 'Ratio_O_C', 'HROrg']
+    species_keys = ['HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl']
+    family_keys = ['HROrg', 'familyCHO1', 'familyCH', 'familyCHN', 'familyCHO1N']
+    if bg_timestamps is not None:
+        bg_df = time_filtered_conc(df, species_keys+family_keys[1:], bg_timestamps)
+        for key in species_keys+family_keys[1:]:
+            df[key] = df[key] - bg_df[key].mean()
+    
+    new_df = time_filtered_conc(df, species_keys+family_keys[1:]+VK_keys[:-1], timestamps)
+
+    n_species = len(species_keys)
+    cmap = mpl.colormaps['viridis_r']
+    colors = cmap(np.linspace(0, 1, n_species+2))
+
+    fig1, ax1 = plt.subplots(figsize = (6.3, 3))
+    for color, key in zip(colors[1:], species_keys):
+        plot_total(ax1, new_df, key, color, t_zero)
+    ax1.legend(species_keys)
+    ax1.set_ylabel('Concentration ($\mu$g m$^{-3}$)')
+    fig1.tight_layout()
+    fig1.savefig(f'{save_path}{date}_AMS_TS.jpg', dpi = 600)
+
+    fig2, ax2 = plt.subplots(2, 1, figsize = (6.3, 6))
+    for color, key in zip(colors[1:4], family_keys[:3]):
+        plot_total(ax2[0], new_df, key, color, t_zero)
+        ax2[0].set_ylabel('Concentration ($\mu$g m$^{-3}$)')
+        ax2[0].legend(['Total org', 'CHO1', 'CH'])
+    for color, key in zip(colors[4:], family_keys[3:]):
+        plot_total(ax2[1], new_df, key, color, t_zero)
+        ax2[1].set_ylabel('Concentration ($\mu$g m$^{-3}$)')
+        ax2[1].legend(['CHN', 'CHO1N'])
+    fig2.tight_layout()
+    fig2.savefig(f'{save_path}{date}_AMSfamily_TS.jpg', dpi = 600)
+
+    fig3, ax3 = vanKrevelen_ts(new_df, VK_keys, timestamps, runlength)
+    fig3.tight_layout(pad = 0.75)
+    fig3.savefig(f'{save_path}{date}_vanKrevelen.jpg', dpi = 600)
+
+    if PToF_df is not None:
+        # To be continued...
+        pass
+    return
+
 def plot_SASS(df, timestamps, run_length, datatype, name):
 
     def plot_SASS_heatmap(fig, axes, df, datatype):
