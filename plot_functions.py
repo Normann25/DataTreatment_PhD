@@ -375,7 +375,7 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
     return ax
 
 def plot_AURA_overview(daq, smps, ams, timestamps, t_zero, save_path):
-    fig, ax = plt.subplots(3, 1, figsize = (6.3, 9))
+    fig, ax = plt.subplots(3, 1, figsize = (6.3, 8.5))
 
     daq = time_filtered_conc(daq, ['Temp_C', 'RH_Percent'], timestamps)
     smps = time_filtered_conc(smps, ['Mean (nm)', 'Total concentration'], timestamps)
