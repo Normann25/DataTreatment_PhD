@@ -41,7 +41,7 @@ def running_mean(df, concentration, timelabel, interval, wndw, timestamps):
         time = pd.to_datetime(df[timelabel])
 
         time_filter = (time >= start_time) & (time <= end_time)
-
+ 
         filtered_time = pd.to_datetime(np.array(time[time_filter]))
 
         new_df = pd.DataFrame({'Timestamp': filtered_time})
