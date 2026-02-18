@@ -1,3 +1,5 @@
+# Author: August Smart Lykke-Møller
+
 import pandas as pd
 import numpy as np
 from tslearn.metrics import cdist_dtw, cdist_soft_dtw, cdist_gak
@@ -143,11 +145,11 @@ def main():
     # Do clustering and plot the result
     for label, d_mat in distance_matrices.items():
         hdbscan_labels= PerformHDBSCAN(d_mat) # Element x in concentration_cols belongs to cluster i where i is element x in hdbscan_labels
-        PlotClusterRows(data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'hdbscan_clusters_{label}_raw.pdf')
+        PlotClusterRows(data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'hdbscan_clusters_{label}_raw.jpg')
 
     for label, d_mat in smooth_distance_matrices.items():
         hdbscan_labels= PerformHDBSCAN(d_mat)
-        PlotClusterRows(smooth_data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'hdbscan_clusters_{label}_smooth.pdf')
+        PlotClusterRows(smooth_data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'hdbscan_clusters_{label}_smooth.jpg')
 
 
 if __name__ == "__main__":
