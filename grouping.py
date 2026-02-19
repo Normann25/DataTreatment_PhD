@@ -50,7 +50,7 @@ def GetData(df, concentration_cols, normalize=True, smooth=True, window_size=100
     return data_array
 
 
-def ComputeTSDistance(data, metrics=['dtw', 'soft_dtw', 'p4']):
+def ComputeTSDistance(data, metrics=['dtw', 'soft', 'p4']):
     """
     Compute pairwise distances between time series using various metrics.
 
@@ -66,7 +66,7 @@ def ComputeTSDistance(data, metrics=['dtw', 'soft_dtw', 'p4']):
     if 'dtw' in metrics:
         distances['dtw'] = cdist_dtw(data)
 
-    if 'soft_dtw' in metrics:
+    if 'soft' in metrics:
         mat = cdist_soft_dtw(data)
         distances['soft_dtw'] = mat - np.min(mat)
 
