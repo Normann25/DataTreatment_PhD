@@ -4,11 +4,8 @@ import sys
 import os
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib as mpl
 from datetime import datetime
-import linecache
-import xarray as xr
 
 def file_list(path, parent_path): # List files in specified folder
     ParentPath = os.path.abspath(parent_path)
@@ -221,3 +218,7 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, normed, total, ti
             col.set_label('dM/dlogDp ($\mu$g m$^{-3}$)')
             if total != None:
                 ax2.set_ylabel('Total conc. ($\mu$g m$^{-3}$)')
+
+def calc_diurnal_mean():
+    # Maybe use df.groupby() to calculate seasonal diurnal mean
+    return
