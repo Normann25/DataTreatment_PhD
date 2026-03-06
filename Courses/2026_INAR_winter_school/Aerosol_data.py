@@ -50,6 +50,8 @@ for key in NAIS.keys():
     temp = running_mean(NAIS[key], NAIS[key].keys()[:-1], 'Time', '60min', 60, ['2023-12-31 23:59:00', '2026-01-01 00:01:00'])
     temp['Time'] = temp.index + pd.Timedelta(hours = 2)
     NAIS_running[key] = temp.reset_index(drop = True)
+NAIS_mask = NAIS_running['formation_rate_2_2p3_neg']['N2-2.3,-'] < 80
+NAIS_running['formation_rate_2_2p3_neg'] = NAIS_running['formation_rate_2_2p3_neg'][NAIS_mask]
 
 MION_running = running_mean(MION, MION.keys()[1:], 'Time', '60min', 60, None)
 MION_running['Time'] = MION_running.index
@@ -90,8 +92,7 @@ fig.savefig('Figures/NAIS_neg_2024-2025.jpg', dpi = 600)
 # Plot yearly NAIS particle formation rate
 fig, ax = plt.subplots(figsize = (6.3, 4))
 ax, ax2 = plot_total_twinx(ax, NAIS_running['formation_rate_2_2p3_neg'], ['J2-2.3,-/N<2,-', 'N2-2.3,-'], '%Y/%m', ['J$_{2-2.3 nm}$/N$_{<2 nm}$', 'dN/dlogDp (# cm$^{-3}$)'], None)
-ax.set(title = '2024-2025', yscale = 'log')
-ax2.set(yscale = 'log')
+ax.set(title = '2024-2025')
 fig.tight_layout()
 fig.savefig('Figures/NAIS_FR_2024-2025.jpg', dpi = 600)
 
@@ -136,7 +137,7 @@ fig.savefig('Figures/DMPS/Diurnal_mean.jpg', dpi = 600)
 
 # Plot PSM 2024 diurnal mean
 fig, axes = plt.subplots(2, 2, figsize = (6.3, 6.3))
-diurnal_PSM_2025, axes = plot_diurnal_mean(axes, PSM_running['2024'], 'Total conc', 'Total conc. (# cm$^{-3}$)')
+diurnal_PSM_2024, axes = plot_diurnal_mean(axes, PSM_running['2024'], 'Total conc', 'Total conc. (# cm$^{-3}$)')
 fig.tight_layout()
 fig.savefig('Figures/PSM/Diurnal_mean_2024.jpg', dpi = 600)
 
@@ -193,7 +194,7 @@ for year, year_group in Particle_formation.groupby('Year'):
         fig = plt.figure(figsize = (9, 6.3))
         axes = [plt.subplot(2, 1, 1), plt.subplot(2, 3, 4), plt.subplot(2, 3, 5), plt.subplot(2, 3, 6)]
         ax1, ax_twin = plot_correlation_tseries(axes, group, PF_keys, '%m/%d', ['ions/s', 'J$_{2-2.3 nm}$/N$_{<2 nm}$'], labels)
-        ax1.set(title = f'{year}-{month}', yscale = 'linear')
+        ax1.set(title = f'{year}-{month}')
         ax1.legend(labels =labels, ncols = 3)
         fig.tight_layout()
         fig.savefig(f'Figures/NAIS/NAISvsMION/{year}-{month}_NAISvsMION.jpg', dpi = 600)
