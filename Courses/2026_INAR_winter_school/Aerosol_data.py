@@ -89,14 +89,8 @@ fig.savefig('Figures/NAIS_neg_2024-2025.jpg', dpi = 600)
 
 # Plot yearly NAIS particle formation rate
 fig, ax = plt.subplots(figsize = (6.3, 4))
-plot_total(ax, NAIS_running['formation_rate_2_2p3_neg'], 'J2-2.3,-/N<2,-', 'r', '%Y/%m')
-ax.tick_params(axis = 'y', labelcolor='r')
-ax.set_ylabel(ylabel = 'J$_{2-2.3 nm}$/N$_{<2 nm}$', color = 'r')
+ax, ax2 = plot_total_twinx(ax, NAIS_running['formation_rate_2_2p3_neg'], ['J2-2.3,-/N<2,-', 'N2-2.3,-'], '%Y/%m', ['J$_{2-2.3 nm}$/N$_{<2 nm}$', 'dN/dlogDp (# cm$^{-3}$)'], None)
 ax.set(title = '2024-2025', yscale = 'log')
-ax2 = ax.twinx()
-plot_total(ax2, NAIS_running['formation_rate_2_2p3_neg'], 'N2-2.3,-', 'b', '%Y/%m')
-ax2.tick_params(axis = 'y', labelcolor='b')
-ax2.set_ylabel(ylabel = 'dN/dlogDp (# cm$^{-3}$)', color = 'b')
 ax2.set(yscale = 'log')
 fig.tight_layout()
 fig.savefig('Figures/NAIS_FR_2024-2025.jpg', dpi = 600)
@@ -181,25 +175,29 @@ for date, group in merged_NAIS.groupby('Date'):
         pass
     else:
         fig, ax = plt.subplots(figsize = (6.3, 4))
-        plot_total(ax, group, 'J2-2.3,-/N<2,-', 'r', '%H:%M')
+        plot_total_twinx(ax, group, ['J2-2.3,-/N<2,-', 'N2-2.3,-'], '%H:%M', ['J$_{2-2.3 nm}$/N$_{<2 nm}$', 'dN/dlogDp (# cm$^{-3}$)'], None)
         ax.set(title = date)
-        ax.set_ylabel('J$_{2-2.3 nm}$/N$_{<2 nm}$', color = 'r')
-        ax.tick_params(axis = 'y', labelcolor='r')
-        ax2 = ax.twinx()
-        plot_total(ax2, group, 'N2-2.3,-', 'b', '%H:%M')
-        ax2.tick_params(axis = 'y', labelcolor='b')
-        ax2.set_ylabel('dN/dlogDp (# cm$^{-3}$)', color = 'b')
         fig.tight_layout()
         fig.savefig(f'Figures/NAIS/Daily/2024/{date.split('-')[0]}-{date.split('-')[1]}/NAIS_{date}.jpg', dpi = 600)
 merged_NAIS = merged_NAIS.drop(['Date'], axis = 1)
 #%%
+# Plot monthly NAIS MION correlation
 Particle_formation = pd.merge(NAIS_running['formation_rate_2_2p3_neg'], MION_running, on = 'Time', how = 'outer')
+Particle_formation['Month'] = [str(i).split('-')[1] for i in Particle_formation['Time']]
+Particle_formation['Year'] = [str(i).split('-')[0] for i in Particle_formation['Time']]
 
-plt.figure(figsize = (6.3, 6.3))
-ax1 = plt.subplot(2, 1, 1)
-ax2 = plt.subplot(2, 3, 4)
-ax3 = plt.subplot(2, 3, 5)
-ax4 = plt.subplot(2, 3, 6)
+labels = ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$']
+PF_keys = MION_running.keys()[2:5].to_list() + ['J2-2.3,-/N<2,-']
+for year, year_group in Particle_formation.groupby('Year'):
+    for month, group in year_group.groupby('Month'):
+        fig = plt.figure(figsize = (9, 6.3))
+        axes = [plt.subplot(2, 1, 1), plt.subplot(2, 3, 4), plt.subplot(2, 3, 5), plt.subplot(2, 3, 6)]
+        ax1, ax_twin = plot_correlation_tseries(axes, group, PF_keys, '%m/%d', ['ions/s', 'J$_{2-2.3 nm}$/N$_{<2 nm}$'], labels)
+        ax1.set(title = f'{year}-{month}', yscale = 'linear')
+        ax1.legend(labels =labels, ncols = 3)
+        fig.tight_layout()
+        fig.savefig(f'Figures/NAIS/NAISvsMION/{year}-{month}_NAISvsMION.jpg', dpi = 600)
+
 #%%
 # Plot daily PSM
 # for key, binedges in zip(PSM.keys(), bins):

@@ -162,7 +162,7 @@ def plot_multi_total(ax, df, df_keys, labels, time_format):
         plot_total(ax, df, key, color, time_format)
     
     ax.legend(labels = labels)
-    ax.set(ylabel = 'dN/dlogDp (# cm$^{-3}$)', yscale = 'log')
+    ax.set(ylabel = 'dN/dlogDp (# cm$^{-3}$)')
     return ax
 
 def plot_total_twinx(ax, df, df_keys, time_format, ylabels, labels):
@@ -172,20 +172,20 @@ def plot_total_twinx(ax, df, df_keys, time_format, ylabels, labels):
         ax.tick_params(axis = 'y', labelcolor='r')
 
         ax2 = ax.twinx()
-        plot_total(ax, df, df_keys[1], 'b', time_format)
+        plot_total(ax2, df, df_keys[1], 'b', time_format)
         ax2.tick_params(axis = 'y', labelcolor='b')
         ax2.set_ylabel(ylabels[1], color = 'b')
     else:
         plot_multi_total(ax, df, df_keys[:-1], labels, time_format)
         ax.set_ylabel(ylabels[0])
         ax2 = ax.twinx()
-        plot_total(ax, df, df_keys[-1], 'b', time_format)
+        plot_total(ax2, df, df_keys[-1], 'b', time_format)
         ax2.tick_params(axis = 'y', labelcolor='b')
         ax2.set_ylabel(ylabels[1], color = 'b')
     return ax, ax2
 
 def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels):
-    ax1, ax1_twin = plot_total_twinx(axes[0], df, df_keys[:-1], time_format, ax_labels, labels)
+    ax1, ax1_twin = plot_total_twinx(axes[0], df, df_keys, time_format, ax_labels, labels)
 
     for i, ax in enumerate(axes[1:]):
         ax.scatter(df[df_keys[-1]], df[df_keys[i]], color = 'indigo', s = 10)
