@@ -10,6 +10,8 @@ pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 # Import data
 path = '../../../../Courses/2026 - INAR winter school/Data/'
+MION = read_csv(path, '', 'Time', '%d-%b-%Y %H:%M:%S')
+MION = MION['MION_Ambient_WinterSchool']
 PSM24 = read_csv(f'{path}PSM/2024/', '', 'ScanTime', '%d-%b-%Y %H:%M:%S')
 PSM25 = read_csv(f'{path}PSM/2025/', '', 'ScanTime', '%d-%b-%Y %H:%M:%S')
 DMPS_temp = read_csv(f'{path}DMPS/', '', 'Date', '%Y-%m-%d %H:%M:%S')
@@ -42,18 +44,22 @@ for key, binedges in zip(PSM.keys(), bins):
     temp['Time'] = temp.index
     temp = temp.reset_index(drop = True)
     PSM_running[key] = temp
+
 NAIS_running = {}
 for key in NAIS.keys():
     temp = running_mean(NAIS[key], NAIS[key].keys()[:-1], 'Time', '60min', 60, ['2023-12-31 23:59:00', '2026-01-01 00:01:00'])
     temp['Time'] = temp.index + pd.Timedelta(hours = 2)
     NAIS_running[key] = temp.reset_index(drop = True)
+
+MION_running = running_mean(MION, MION.keys()[1:], 'Time', '60min', 60, None)
+MION_running['Time'] = MION_running.index
+MION_running = MION_running.reset_index(drop = True)
 #%%
 # Plot yearly PSM
 for key, binedges in zip(PSM_running.keys(), bins):
     fig, ax = plt.subplots(2, 1, figsize = (6.3, 6))
     plot_timeseries(fig, ax, PSM_running[key], PSM_running[key].keys()[:-2], binedges, 'number', True, 'Total conc', None, '%Y/%m')
     ax[0].set(title = key)
-    ax[1].set(yscale = 'log')
     fig.tight_layout()
     fig.savefig(f'Figures/PSM_{key}.jpg', dpi = 600)
 
@@ -95,6 +101,13 @@ ax2.set(yscale = 'log')
 fig.tight_layout()
 fig.savefig('Figures/NAIS_FR_2024-2025.jpg', dpi = 600)
 
+# Plot yearly MION sulfate cluster
+fig, ax = plt.subplots(figsize = (6.3, 4))
+plot_multi_total(ax, MION_running, MION_running.keys()[2:5], ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$'], '%Y/%m')
+ax.set(title = '2024-2025', ylabel = 'ions/s')
+fig.tight_layout()
+fig.savefig('Figures/MION_sulfate-cluster_2024-2025.jpg', dpi = 600)
+#%%
 # Plot monthly PSM
 for key, binedges in zip(PSM_running.keys(), bins):
     Months = [str(i).split('-')[1] for i in PSM_running[key]['Time']]
@@ -145,7 +158,7 @@ diurnal_NAIS_FR, axes = plot_diurnal_mean(axes, NAIS_running['formation_rate_2_2
 fig.tight_layout()
 fig.savefig('Figures/NAIS/Diurnal_mean_FR.jpg', dpi = 600)
 #%%
-# Plot dayly DMPS
+# Plot daily DMPS
 Dates = [str(i).split(' ')[0] for i in DMPS['Time']]
 DMPS['Date'] = Dates
 for date, group in DMPS.groupby('Date'):
@@ -158,8 +171,37 @@ for date, group in DMPS.groupby('Date'):
         fig.tight_layout()
         fig.savefig(f'Figures/DMPS/Daily/{date.split('-')[0]}-{date.split('-')[1]}/DMPS_{date}.jpg', dpi = 600)
 DMPS = DMPS.drop(['Date'], axis = 1)
+#%%
+# Plot 2024 daily NAIS 
+merged_NAIS = pd.merge(NAIS_running['tvarminne_conc_utc'], NAIS_running['formation_rate_2_2p3_neg'], on = 'Time', how = 'outer')
+Dates = [str(i).split(' ')[0] for i in merged_NAIS['Time']]
+merged_NAIS['Date'] = Dates
+for date, group in merged_NAIS.groupby('Date'):
+    if pd.to_datetime('2024-12-31') < pd.to_datetime(date):
+        pass
+    else:
+        fig, ax = plt.subplots(figsize = (6.3, 4))
+        plot_total(ax, group, 'J2-2.3,-/N<2,-', 'r', '%H:%M')
+        ax.set(title = date)
+        ax.set_ylabel('J$_{2-2.3 nm}$/N$_{<2 nm}$', color = 'r')
+        ax.tick_params(axis = 'y', labelcolor='r')
+        ax2 = ax.twinx()
+        plot_total(ax2, group, 'N2-2.3,-', 'b', '%H:%M')
+        ax2.tick_params(axis = 'y', labelcolor='b')
+        ax2.set_ylabel('dN/dlogDp (# cm$^{-3}$)', color = 'b')
+        fig.tight_layout()
+        fig.savefig(f'Figures/NAIS/Daily/2024/{date.split('-')[0]}-{date.split('-')[1]}/NAIS_{date}.jpg', dpi = 600)
+merged_NAIS = merged_NAIS.drop(['Date'], axis = 1)
+#%%
+Particle_formation = pd.merge(NAIS_running['formation_rate_2_2p3_neg'], MION_running, on = 'Time', how = 'outer')
 
-# Plot dayly PSM
+plt.figure(figsize = (6.3, 6.3))
+ax1 = plt.subplot(2, 1, 1)
+ax2 = plt.subplot(2, 3, 4)
+ax3 = plt.subplot(2, 3, 5)
+ax4 = plt.subplot(2, 3, 6)
+#%%
+# Plot daily PSM
 # for key, binedges in zip(PSM.keys(), bins):
 #     Dates = [str(i).split(' ')[0] for i in PSM[key]['Time']]
 #     PSM[key]['Date'] = Dates
