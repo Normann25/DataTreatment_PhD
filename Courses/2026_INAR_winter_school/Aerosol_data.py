@@ -9,7 +9,7 @@ pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 # Import data
 path = '../../../../Courses/2026 - INAR winter school/Data/'
-data = read_csv(path, '', 'Time', '%d/%m/%Y %H:%M:%S')
+data = read_csv(path, '', 'Time', '%Y-%m-%d %H:%M:%S')
 
 DMPS_bin_means = []
 for key in data['DMPS_2024'].keys()[:-2]:
