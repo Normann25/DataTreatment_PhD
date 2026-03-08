@@ -2,6 +2,7 @@
 import sys
 sys.path.append('../../')
 from Functions import *
+from calculations import linear, linear_fit
 from mpl_axes_aligner import align
 plt.style.use('Style.mplstyle')
 import warnings
@@ -153,11 +154,18 @@ def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels):
 
     for i, ax in enumerate(axes[1:]):
         ax.scatter(df[hour_mask][df_keys[-1]], df[hour_mask][df_keys[i]], color = 'indigo', s = 10)
+
+        # Calculate correlation
+        valuesfit, errorsfit, Ndof_fit, squares_fit, R2 = linear_fit(df.dropna()[hour_mask][df_keys[-1]], df.dropna()[hour_mask][df_keys[i]], linear, a_guess = 1, b_guess = 0)
+        ax.text(0.05, 0.05, f'R2 = {R2:.3f}', transform=ax.transAxes,
+                bbox=dict(ec = 'gray', fc = 'white', lw = 0.5))
+
         # Adjust the plotting range of two y axes
         org1 = 0.0  # Origin of first axis
         org2 = 0.0  # Origin of second axis
-        pos = 0.5  # Position the two origins are aligned
+        pos = 0.05  # Position the two origins are aligned
         align.yaxes(ax1, org1, ax1_twin, org2, pos)
+
         ax.set(xlabel = ax_labels[1], ylabel = labels[i])
     df = df.drop(['Hour'], axis = 1)
 
