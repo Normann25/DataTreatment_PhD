@@ -191,9 +191,12 @@ def plot_total_twinx(ax, df, df_keys, time_format, ylabels, labels):
 def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels):
     ax1, ax1_twin = plot_total_twinx(axes[0], df, df_keys, time_format, ax_labels, labels)
 
+    df['Hour'] = [int(str(i).split(':')[1]) for i in df['Time']]
+    hour_mask = 8 < df['Hour'] < 16
     for i, ax in enumerate(axes[1:]):
-        ax.scatter(df[df_keys[-1]], df[df_keys[i]], color = 'indigo', s = 10)
+        ax.scatter(df[hour_mask][df_keys[-1]], df[hour_mask][df_keys[i]], color = 'indigo', s = 10)
         ax.set(xlabel = ax_labels[1], ylabel = labels[i])
+    df = df.drop(['Hour'], axis = 1)
 
     return ax1, ax1_twin
 

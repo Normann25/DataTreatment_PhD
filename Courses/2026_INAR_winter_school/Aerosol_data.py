@@ -2,6 +2,7 @@
 import sys
 sys.path.append('../../')
 from Functions import *
+from mpl_axes_aligner import align
 plt.style.use('Style.mplstyle')
 import warnings
 warnings.filterwarnings('ignore')
@@ -143,6 +144,25 @@ for date, group in data['NAIS_TZS_1H-avg'].groupby('Date'):
         fig.savefig(f'Figures/NAIS/Daily/2025/{date.split('-')[0]}-{date.split('-')[1]}/NAIS_{date}.jpg', dpi = 600)
 data['NAIS_TZS_1H-avg'] = data['NAIS_TZS_1H-avg'].drop(['Date'], axis = 1)
 #%%
+def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels):
+    ax1, ax1_twin = plot_total_twinx(axes[0], df, df_keys, time_format, ax_labels, labels)
+
+    df['Hour'] = [str(i).split(':')[0] for i in df['Time']]
+    df['Hour'] = [int(i.split(' ')[1]) for i in df['Hour']]
+    hour_mask = (8 < df['Hour']) & (df['Hour'] < 16)
+
+    for i, ax in enumerate(axes[1:]):
+        ax.scatter(df[hour_mask][df_keys[-1]], df[hour_mask][df_keys[i]], color = 'indigo', s = 10)
+        # Adjust the plotting range of two y axes
+        org1 = 0.0  # Origin of first axis
+        org2 = 0.0  # Origin of second axis
+        pos = 0.5  # Position the two origins are aligned
+        align.yaxes(ax1, org1, ax1_twin, org2, pos)
+        ax.set(xlabel = ax_labels[1], ylabel = labels[i])
+    df = df.drop(['Hour'], axis = 1)
+
+    return ax1, ax1_twin
+
 # Plot monthly NAIS MION correlation
 Particle_formation = pd.merge(data['NAIS_formation_rate_neg_1H-avg'], data['MION_TZS_1H-avg'], how = 'outer', on = 'Time')
 Particle_formation['Month'] = [str(i).split('-')[1] for i in Particle_formation['Time']]
@@ -152,49 +172,75 @@ labels = ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$
 PF_keys = data['MION_TZS_1H-avg'].keys()[1:4].to_list() + ['J2-2.3,-/N<2,-']
 for year, year_group in Particle_formation.groupby('Year'):
     for month, group in year_group.groupby('Month'):
-        # group_mask = group['J2-2.3,-/N<2,-'] > 0
+        group_mask = group['J2-2.3,-/N<2,-'] >= 0
 
         fig = plt.figure(figsize = (9, 6.3))
         axes = [plt.subplot(2, 1, 1), plt.subplot(2, 3, 4), plt.subplot(2, 3, 5), plt.subplot(2, 3, 6)]
 
-        ax1, ax_twin = plot_correlation_tseries(axes, group, PF_keys, '%m/%d', ['ions/s', 'J$_{2-2.3 nm}$/N$_{<2 nm}$'], labels)
+        ax1, ax_twin = plot_correlation_tseries(axes, group, PF_keys, '%m/%d', ['Ions s$^{-1}$', 'J$_{2-2.3 nm}$/N$_{<2 nm}$'], labels)
         ax1.set(title = f'{year}-{month}')
         ax1.legend(labels =labels, ncols = 3)
+        for ax in axes[1:]:
+            ax.set(yscale = 'log', xscale = 'log')
         fig.tight_layout()
         fig.savefig(f'Figures/NAIS/NAISvsMION/{year}-{month}_NAISvsMION.jpg', dpi = 600)
 Particle_formation = Particle_formation.drop(['Month', 'Year'], axis = 1)
 #%%
-event_dates = [['2024-03-04 23:59', '2024-03-07 00:00'],
-               ['2024-03-11 23:59', '2024-03-14 00:00'],
-               ['2024-03-17 23:59', '2024-03-20 00:00'],
-               ['2024-04-03 23:59', '2024-04-06 00:00'],
-               ['2024-04-09 23:59', '2024-04-12 00:00'],
-               ['2024-04-13 23:59', '2024-04-17 00:00'],
-               ['2024-04-21 23:59', '2024-04-24 00:00'],
-               ['2024-05-06 23:59', '2024-05-08 00:00'], 
-               ['2024-05-11 23:59', '2024-05-13 00:00'],
-               ['2024-05-15 23:59', '2024-05-18 00:00'],
-               ['2024-06-08 23:59', '2024-06-11 00:00'],
-               ['2024-06-20 23:59', '2024-06-25 00:00'],
-               ['2024-06-28 23:59', '2024-06-30 00:00'], 
-               ['2024-07-04 23:59', '2024-07-06 00:00'],
-               ['2024-08-11 23:59', '2024-08-14 00:00'],
-               ['2024-08-18 23:59', '2024-08-21 00:00'],
-               ['2024-08-24 23:59', '2024-08-27 00:00'],
-               ['2024-09-09 23:59', '2024-09-12 00:00'],
-               ['2024-09-14 23:59', '2024-09-17 00:00'],
-               ['2024-09-18 23:59', '2024-09-22 00:00'],
-               ['2024-09-28 23:59', '2024-10-01 00:00'],
-               ['2024-10-02 23:59', '2024-10-04 00:00'],
-               ['2024-10-13 23:59', '2024-10-17 00:00'],
-               ['2024-10-25 23:59', '2024-10-29 00:00'],
-               ['2024-12-01 23:59', '2024-12-04 00:00'],
-               ['2024-12-09 23:59', '2024-12-13 00:00'],
-               ['2024-12-24 23:59', '2024-12-28 00:00']]
+event_dates = [['2024-03-04 23:59', '2024-03-06 23:30'],
+               ['2024-03-11 23:59', '2024-03-13 23:30'],
+               ['2024-03-17 23:59', '2024-03-19 23:30'],
+               ['2024-04-03 23:59', '2024-04-05 23:30'],
+               ['2024-04-09 23:59', '2024-04-11 23:30'],
+               ['2024-04-13 23:59', '2024-04-16 23:30'],
+               ['2024-04-21 23:59', '2024-04-23 23:30'],
+               ['2024-05-06 23:59', '2024-05-07 23:30'], 
+               ['2024-05-11 23:59', '2024-05-12 23:30'],
+               ['2024-05-15 23:59', '2024-05-17 23:30'],
+               ['2024-06-08 23:59', '2024-06-10 23:30'],
+               ['2024-06-20 23:59', '2024-06-24 23:30'],
+               ['2024-06-28 23:59', '2024-06-29 23:30'], 
+               ['2024-07-04 23:59', '2024-07-05 23:30'],
+               ['2024-08-11 23:59', '2024-08-13 23:30'],
+               ['2024-08-18 23:59', '2024-08-20 23:30'],
+               ['2024-08-24 23:59', '2024-08-26 23:30'],
+               ['2024-09-09 23:59', '2024-09-11 23:30'],
+               ['2024-09-14 23:59', '2024-09-16 23:30'],
+               ['2024-09-18 23:59', '2024-09-21 23:30'],
+               ['2024-09-28 23:59', '2024-09-30 23:30'],
+               ['2024-10-02 23:59', '2024-10-03 23:30'],
+               ['2024-10-13 23:59', '2024-10-16 23:30'],
+               ['2024-10-25 23:59', '2024-10-28 23:30'],
+               ['2024-12-01 23:59', '2024-12-03 23:30'],
+               ['2024-12-09 23:59', '2024-12-12 23:30'],
+               ['2024-12-24 23:59', '2024-12-27 23:30']]
 
 merged = pd.merge(data['NAIS_formation_rate_neg_1H-avg'], data['MION_TZS_1H-avg'], on = 'Time', how = 'outer')
 merged = pd.merge(merged, data['MION_NO3_1H-avg'], on = 'Time', how = 'outer')
 merged_keys = ['J2-2.3,-/N<2,-', 'HSO4-', '(H2SO4)HSO4-', '(H2SO4)2HSO4-', 'SA', 'IA', 'MSA']
+
+for timestamps in event_dates:
+    temp = time_filtered_conc(merged, merged_keys, timestamps)
+    start_date, end_date = str(temp.iloc[0]['Time']).split(' ')[0], str(temp.iloc[-1]['Time']).split(' ')[0]
+
+    fig, ax = plt.subplots(3, 1, figsize = (6.3, 10), sharex = True)
+    # NAIS formation rate
+    plot_total(ax[0], temp, merged_keys[0], 'indigo', '%m/%d %H:%M')
+    ax[0].set(ylabel = 'J$_{2-2.3 nm}$/N$_{<2 nm}$') #, xlabel = 'Time (mm/dd HH:MM)')
+    # MION H2SO4 cluster
+    plot_multi_total(ax[1], temp, merged_keys[1:4], ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$'], '%m/%d %H:%M')
+    ax[1].set(ylabel = 'Ions s$^{-1}$') #, xlabel = 'Time (mm/dd HH:MM)')
+    # MION SA, IA, MSA
+    plot_multi_total(ax[2], temp, merged_keys[4:], ['SA', 'IA', 'MSA'], '%m/%d %H:%M')
+    ax[2].set(ylabel = 'Molecules cm$^{-3}$', xlabel = 'Time (mm/dd HH:MM)')
+
+    if start_date == end_date:
+        fig.suptitle(start_date, size = 14)
+    else:
+        fig.suptitle(f'{start_date} - {end_date}', size = 14)
+    
+    fig.tight_layout()
+    fig.savefig(f'Figures/Event dates/PF_event_{start_date}.jpg', dpi = 600)
+#%%
 
 #%%
 # Plot daily PSM
