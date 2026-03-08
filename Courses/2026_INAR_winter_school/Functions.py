@@ -32,20 +32,12 @@ def read_csv(path, parent_path, timelabel, time_format):
     files = file_list(path, parent_path)
 
     for file in files:
-        if file.endswith('.csv') or file.endswith('.CSV'):
-            separations = [',', ';']
+        if file.endswith('.csv'):
             name = file.split('.')[0]
-            for sep in separations:
-                try:
-                    with open(os.path.join(path, file), 'r') as f:
-                        df = pd.read_csv(f, sep = sep)
-                    df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
-                    data_dict[name] = df
-
-                except KeyError:
-                    pass
-                except ValueError:
-                    pass
+            with open(os.path.join(path, file), 'r') as f:
+                df = pd.read_csv(f)
+            df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
+            data_dict[name] = df
 
     return data_dict
 

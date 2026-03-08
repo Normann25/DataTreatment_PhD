@@ -1,8 +1,31 @@
 import numpy as np
 import pandas as pd
+import os
 import sys
 sys.path.append('../../')
-from Functions import read_csv, calc_total, running_mean
+from Functions import file_list, format_timestamps, calc_total, running_mean
+
+def read_csv(path, parent_path, timelabel, time_format):
+    data_dict = {}
+    files = file_list(path, parent_path)
+
+    for file in files:
+        if file.endswith('.csv') or file.endswith('.CSV'):
+            separations = [',', ';']
+            name = file.split('.')[0]
+            for sep in separations:
+                try:
+                    with open(os.path.join(path, file), 'r') as f:
+                        df = pd.read_csv(f, sep = sep)
+                    df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
+                    data_dict[name] = df
+
+                except KeyError:
+                    pass
+                except ValueError:
+                    pass
+
+    return data_dict
 
 path = '../../../../Courses/2026 - INAR winter school/Data/'
 MION = read_csv(f'{path}MION/', '', 'Time', '%d-%b-%Y %H:%M:%S')
