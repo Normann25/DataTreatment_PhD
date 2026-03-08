@@ -5,7 +5,7 @@ sys.path.append('../../')
 from Functions import read_csv, calc_total, running_mean
 
 path = '../../../../Courses/2026 - INAR winter school/Data/'
-MION = read_csv(path, '', 'Time', '%d-%b-%Y %H:%M:%S')
+MION = read_csv(f'{path}MION/', '', 'Time', '%d-%b-%Y %H:%M:%S')
 MION = MION['MION_Ambient_WinterSchool']
 
 DMPS_temp = read_csv(f'{path}DMPS/', '', 'Date', '%Y-%m-%d %H:%M:%S')
