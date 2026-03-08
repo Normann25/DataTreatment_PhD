@@ -97,6 +97,23 @@ def time_filtered_conc(df, df_keys, timestamps):
 
     return new_df
 
+def running_mean(df, concentration, timelabel, interval, timestamps):
+
+    if timestamps == None:      
+        df = df.set_index(timelabel)
+
+        # Resample the data to bins 
+        new_df = df[concentration].resample(interval).mean() 
+
+    else:
+        new_df = time_filtered_conc(df, concentration, timestamps)
+        new_df = new_df.set_index('Time')
+
+        # Resample the data to bins 
+        new_df = new_df.resample(interval).mean() 
+
+    return new_df
+
 def plot_heatmap(ax, df, df_keys, time, bin_edges, normed, time_format):
 
     data = np.array(df[df_keys])
@@ -113,14 +130,8 @@ def plot_heatmap(ax, df, df_keys, time, bin_edges, normed, time_format):
     # generate 2d meshgrid for the x, y, and z data of the 3D color plot
     y, x = np.meshgrid(bin_edges, new_time)
     
-    # Set the upper and/or lower limit of the color scale based on input
-    y_min = np.nanmin(data)
-    # y_max = np.nanmax(data)
-    
     # Fill the generated mesh with particle concentration data
-    if y_min < 1:
-        y_min = 1
-    p1 = ax.pcolormesh(x, y, data, cmap='viridis', shading='flat', norm=mpl.colors.LogNorm(vmin = y_min)) # ,vmin=y_min, vmax=y_max
+    p1 = ax.pcolormesh(x, y, data, cmap='viridis', shading='flat', norm=mpl.colors.LogNorm(vmin = 1)) # ,vmin=y_min, vmax=y_max
 
     ax.xaxis.set_major_formatter(mdates.DateFormatter(time_format))
     ax.set_xticklabels(ax.get_xticklabels(), rotation=-45, ha="left")
@@ -175,6 +186,7 @@ def plot_total_twinx(ax, df, df_keys, time_format, ylabels, labels):
         plot_total(ax2, df, df_keys[1], 'b', time_format)
         ax2.tick_params(axis = 'y', labelcolor='b')
         ax2.set_ylabel(ylabels[1], color = 'b')
+
     else:
         plot_multi_total(ax, df, df_keys[:-1], labels, time_format)
         ax.set_ylabel(ylabels[0])
@@ -248,67 +260,47 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, normed, total, ti
                 ax2.set_ylabel('Total conc. ($\mu$g m$^{-3}$)')
 
 def calc_diurnal_mean(df, conc_key):
-    new_df = df
+    new_df = df.dropna()
     new_df['Month'] = [str(i).split('-')[1] for i in new_df['Time']]
     new_df['Date'] = [str(i).split(' ')[0] for i in new_df['Time']]
 
-    winter = pd.DataFrame(columns = np.arange(0, 24, 1))
-    spring = pd.DataFrame(columns = np.arange(0, 24, 1))
-    summer = pd.DataFrame(columns = np.arange(0, 24, 1))
-    fall = pd.DataFrame(columns = np.arange(0, 24, 1))
-    for month, month_group in new_df.groupby('Month'):        
-        if month in ['12', '01', '02']:
-            for date, date_group in month_group.groupby('Date'):
-                try:
-                    date_temp = pd.DataFrame([date_group[conc_key].values], columns = np.arange(0, 24, 1))
-                    winter = pd.concat([winter, date_temp], ignore_index = True)
-                except ValueError:
-                    pass
-        if month in ['03', '04', '05']:
-            for date, date_group in month_group.groupby('Date'):
-                try:
-                    date_temp = pd.DataFrame([date_group[conc_key].values], columns = np.arange(0, 24, 1))
-                    spring = pd.concat([spring, date_temp], ignore_index = True) 
-                except ValueError:
-                    pass
-        if month in ['06', '07', '08']:
-            for date, date_group in month_group.groupby('Date'):
-                try:
-                    date_temp = pd.DataFrame([date_group[conc_key].values], columns = np.arange(0, 24, 1))
-                    summer = pd.concat([summer, date_temp], ignore_index = True)
-                except ValueError:
-                    pass
-        if month in ['09', '10', '11']:
-            for date, date_group in month_group.groupby('Date'):
-                try:
-                    date_temp = pd.DataFrame([date_group[conc_key].values], columns = np.arange(0, 24, 1))
-                    fall = pd.concat([fall, date_temp], ignore_index = True)  
-                except ValueError:
-                    pass              
-    seasonal_dict = {'Winter': winter, 'Spring': spring, 'Summer': summer, 'Fall': fall}
-
+    month_of_the_year = [['12', '01', '02'],
+                         ['03', '04', '05'],
+                         ['06', '07', '08'],
+                         ['09', '10', '11']]
+    season_names = ['Winter', 'Spring', 'Summer', 'Fall']
     diurnal_df = pd.DataFrame({'Time': np.arange(0, 24, 1)})
-    for key in seasonal_dict.keys():
-        temp = seasonal_dict[key]
+
+    for months_of_season, season in zip(month_of_the_year, season_names):
+        temp = pd.DataFrame(columns = np.arange(0, 24, 1))
+        for month, month_group in new_df.groupby('Month'):        
+            if month in months_of_season:
+                for date, date_group in month_group.groupby('Date'):
+                    try:
+                        date_temp = pd.DataFrame([date_group[conc_key].values], columns = np.arange(0, 24, 1))
+                        temp = pd.concat([temp, date_temp], ignore_index = True)
+                    except ValueError:
+                        pass         
+
         mean = []
-        std = []
+        percentile_90 = []
+        percentile_10 = []
         for temp_key in temp.keys():
             mean.append(temp[temp_key].mean())
-            std.append(temp[temp_key].std())
-        diurnal_df[f'{key} mean'] = mean
-        diurnal_df[f'{key} std'] = std
+            percentile_90.append(np.percentile(np.array(temp[temp_key]), 90))
+            percentile_10.append(np.percentile(np.array(temp[temp_key]), 10))
+        diurnal_df[f'{season} mean'] = mean
+        diurnal_df[f'{season} 90%'] = percentile_90
+        diurnal_df[f'{season} 10%'] = percentile_10
         
     return diurnal_df
 
 def plot_diurnal_mean(axes, df, conc_key, ylabel):
     diurnal_df = calc_diurnal_mean(df, conc_key)
 
-    for ax, key in zip(axes.flatten(), diurnal_df.keys()[1::2]):
-        # print(key)
-        min_std = [m - std for m, std in zip(diurnal_df[key], diurnal_df[f'{key.split(' ')[0]} std'])]
-        max_std = [m + std for m, std in zip(diurnal_df[key], diurnal_df[f'{key.split(' ')[0]} std'])]
+    for ax, key in zip(axes.flatten(), diurnal_df.keys()[1::3]):
 
-        ax.fill_between(diurnal_df['Time'], min_std, max_std, alpha = 0.2, color = 'tab:blue', linewidth=0)
+        ax.fill_between(diurnal_df['Time'], diurnal_df[f'{key.split(' ')[0]} 10%'], diurnal_df[f'{key.split(' ')[0]} 90%'], alpha = 0.2, color = 'tab:blue', linewidth=0)
         ax.plot(diurnal_df['Time'], diurnal_df[key], color = 'tab:blue', lw = 1.2)
         ax.scatter(diurnal_df['Time'], diurnal_df[key], color = 'tab:blue', s = 10)
 

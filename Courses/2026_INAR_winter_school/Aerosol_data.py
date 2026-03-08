@@ -2,7 +2,6 @@
 import sys
 sys.path.append('../../')
 from Functions import *
-from calculations import running_mean
 plt.style.use('Style.mplstyle')
 import warnings
 warnings.filterwarnings('ignore')
@@ -40,22 +39,34 @@ bins = [[1.17, 1.3, 1.5, 1.7, 2.5, 3.0, 3.92],
 PSM_running = {}
 for key, binedges in zip(PSM.keys(), bins):
     PSM[key]['Total conc'] = calc_total(PSM[key], PSM[key].keys()[1:-2], binedges)
-    temp = running_mean(PSM[key], PSM[key].keys()[1:-3].to_list()+['Total conc'], 'Time', '60min', 60, None)
+    temp = running_mean(PSM[key].fillna(0), PSM[key].keys()[1:-3].to_list()+['Total conc'], 'Time', '1H', 60, None)
     temp['Time'] = temp.index
     temp = temp.reset_index(drop = True)
     PSM_running[key] = temp
 
 NAIS_running = {}
 for key in NAIS.keys():
-    temp = running_mean(NAIS[key], NAIS[key].keys()[:-1], 'Time', '60min', 60, ['2023-12-31 23:59:00', '2026-01-01 00:01:00'])
+    temp = running_mean(NAIS[key].fillna(0), NAIS[key].keys()[:-1], 'Time', '1H', 60, ['2023-12-31 23:59:00', '2026-01-01 00:01:00'])
     temp['Time'] = temp.index + pd.Timedelta(hours = 2)
     NAIS_running[key] = temp.reset_index(drop = True)
 NAIS_mask = NAIS_running['formation_rate_2_2p3_neg']['N2-2.3,-'] < 80
 NAIS_running['formation_rate_2_2p3_neg'] = NAIS_running['formation_rate_2_2p3_neg'][NAIS_mask]
 
-MION_running = running_mean(MION, MION.keys()[1:], 'Time', '60min', 60, None)
+MION_running = running_mean(MION.fillna(0), MION.keys()[1:], 'Time', '1H', 60, None)
 MION_running['Time'] = MION_running.index
 MION_running = MION_running.reset_index(drop = True)
+#%%
+fig, ax = plt.subplots(2, 1)
+temp = time_filtered_conc(MION_running, MION.keys()[1:], ['2024-07-01 00:00', '2024-07-08 23:59'])
+plot_multi_total(ax[0], MION_running, MION.keys()[2:5], MION.keys()[2:], '%Y/%m')
+plot_multi_total(ax[1], temp, MION.keys()[2:5], MION.keys()[2:], '%m/%d')
+fig.tight_layout()
+
+fig, ax = plt.subplots(2, 1)
+temp = time_filtered_conc(MION, MION.keys()[1:], ['2024-07-01 00:00', '2024-07-08 23:59'])
+plot_multi_total(ax[0], MION, MION.keys()[2:5], MION.keys()[2:], '%Y/%m')
+plot_multi_total(ax[1], temp, MION.keys()[2:5], MION.keys()[2:], '%m/%d')
+fig.tight_layout()
 #%%
 # Plot yearly PSM
 for key, binedges in zip(PSM_running.keys(), bins):
@@ -91,14 +102,14 @@ fig.savefig('Figures/NAIS_neg_2024-2025.jpg', dpi = 600)
 
 # Plot yearly NAIS particle formation rate
 fig, ax = plt.subplots(figsize = (6.3, 4))
-ax, ax2 = plot_total_twinx(ax, NAIS_running['formation_rate_2_2p3_neg'], ['J2-2.3,-/N<2,-', 'N2-2.3,-'], '%Y/%m', ['J$_{2-2.3 nm}$/N$_{<2 nm}$', 'dN/dlogDp (# cm$^{-3}$)'], None)
+ax, ax2 = plot_total_twinx(ax, NAIS_running['formation_rate_2_2p3_neg'], NAIS_running['formation_rate_2_2p3_neg'], ['J2-2.3,-/N<2,-', 'N2-2.3,-'], '%Y/%m', ['J$_{2-2.3 nm}$/N$_{<2 nm}$', 'dN/dlogDp (# cm$^{-3}$)'], None)
 ax.set(title = '2024-2025')
 fig.tight_layout()
 fig.savefig('Figures/NAIS_FR_2024-2025.jpg', dpi = 600)
 
 # Plot yearly MION sulfate cluster
 fig, ax = plt.subplots(figsize = (6.3, 4))
-plot_multi_total(ax, MION_running, MION_running.keys()[2:5], ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$'], '%Y/%m')
+plot_multi_total(ax, MION, MION.keys()[2:5], ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$'], '%Y/%m')
 ax.set(title = '2024-2025', ylabel = 'ions/s')
 fig.tight_layout()
 fig.savefig('Figures/MION_sulfate-cluster_2024-2025.jpg', dpi = 600)
@@ -176,28 +187,34 @@ for date, group in merged_NAIS.groupby('Date'):
         pass
     else:
         fig, ax = plt.subplots(figsize = (6.3, 4))
-        plot_total_twinx(ax, group, ['J2-2.3,-/N<2,-', 'N2-2.3,-'], '%H:%M', ['J$_{2-2.3 nm}$/N$_{<2 nm}$', 'dN/dlogDp (# cm$^{-3}$)'], None)
+        plot_total_twinx(ax, group, group, ['J2-2.3,-/N<2,-', 'N2-2.3,-'], '%H:%M', ['J$_{2-2.3 nm}$/N$_{<2 nm}$', 'dN/dlogDp (# cm$^{-3}$)'], None)
         ax.set(title = date)
         fig.tight_layout()
         fig.savefig(f'Figures/NAIS/Daily/2024/{date.split('-')[0]}-{date.split('-')[1]}/NAIS_{date}.jpg', dpi = 600)
 merged_NAIS = merged_NAIS.drop(['Date'], axis = 1)
 #%%
 # Plot monthly NAIS MION correlation
-Particle_formation = pd.merge(NAIS_running['formation_rate_2_2p3_neg'], MION_running, on = 'Time', how = 'outer')
-Particle_formation['Month'] = [str(i).split('-')[1] for i in Particle_formation['Time']]
-Particle_formation['Year'] = [str(i).split('-')[0] for i in Particle_formation['Time']]
+NAIS['formation_rate_2_2p3_neg']['Month'] = [str(i).split('-')[1] for i in NAIS['formation_rate_2_2p3_neg']['Time']]
+NAIS['formation_rate_2_2p3_neg']['Year'] = [str(i).split('-')[0] for i in NAIS['formation_rate_2_2p3_neg']['Time']]
 
 labels = ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$']
-PF_keys = MION_running.keys()[2:5].to_list() + ['J2-2.3,-/N<2,-']
-for year, year_group in Particle_formation.groupby('Year'):
-    for month, group in year_group.groupby('Month'):
-        fig = plt.figure(figsize = (9, 6.3))
-        axes = [plt.subplot(2, 1, 1), plt.subplot(2, 3, 4), plt.subplot(2, 3, 5), plt.subplot(2, 3, 6)]
-        ax1, ax_twin = plot_correlation_tseries(axes, group, PF_keys, '%m/%d', ['ions/s', 'J$_{2-2.3 nm}$/N$_{<2 nm}$'], labels)
-        ax1.set(title = f'{year}-{month}')
-        ax1.legend(labels =labels, ncols = 3)
-        fig.tight_layout()
-        fig.savefig(f'Figures/NAIS/NAISvsMION/{year}-{month}_NAISvsMION.jpg', dpi = 600)
+PF_keys = MION.keys()[2:5].to_list() + ['J2-2.3,-/N<2,-']
+for year, year_group in NAIS['formation_rate_2_2p3_neg'].groupby('Year'):
+    if year in ['2024', '2025']:
+        for month, group in year_group.groupby('Month'):
+            start_date, end_date = str(group.iloc[0]['Time']).split(' ')[0], str(group.iloc[-1]['Time']).split(' ')[0]
+            MION_month = time_filtered_conc(MION, PF_keys[:-1], [f'{start_date} 00:00', f'{end_date} 23:59'])
+            group_mask = group['J2-2.3,-/N<2,-'] > 0
+
+            fig = plt.figure(figsize = (9, 6.3))
+            axes = [plt.subplot(2, 1, 1), plt.subplot(2, 3, 4), plt.subplot(2, 3, 5), plt.subplot(2, 3, 6)]
+
+            ax1, ax_twin = plot_correlation_tseries(axes, MION_month, group[group_mask], PF_keys, '%m/%d', ['ions/s', 'J$_{2-2.3 nm}$/N$_{<2 nm}$'], labels)
+            ax1.set(title = f'{year}-{month}')
+            ax1.legend(labels =labels, ncols = 3)
+            fig.tight_layout()
+            fig.savefig(f'Figures/NAIS/NAISvsMION/{year}-{month}_NAISvsMION.jpg', dpi = 600)
+NAIS['formation_rate_2_2p3_neg'] = NAIS['formation_rate_2_2p3_neg'].drop(['Month', 'Year'], axis = 1)
 
 #%%
 # Plot daily PSM
