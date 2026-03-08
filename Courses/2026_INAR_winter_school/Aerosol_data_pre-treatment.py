@@ -31,6 +31,9 @@ path = '../../../../Courses/2026 - INAR winter school/Data/'
 MION = read_csv(f'{path}MION/', '', 'Time', '%d-%b-%Y %H:%M:%S')
 MION = MION['MION_Ambient_WinterSchool']
 
+MION_NO3 = read_csv(f'{path}MION_NO3/', '', 'Time', '%Y-%m-%d %H:%M')
+MION_NO3['MION_NO3_1H-avg'].to_csv(f'{path}MION_NO3_1H-avg.csv', index = False)
+
 DMPS_temp = read_csv(f'{path}DMPS/', '', 'Date', '%Y-%m-%d %H:%M:%S')
 DMPS = pd.merge(DMPS_temp['DMPS_TZS_2024'], DMPS_temp['Particle number conc_TZS_2024'], on = 'Time', how = 'outer').drop(['Date_x', 'Date_y'], axis = 1)
 DMPS.to_csv(f'{path}DMPS_2024.csv', index = False)
