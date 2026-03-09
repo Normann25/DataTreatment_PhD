@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib as mpl
 from datetime import datetime
+sys.path.append('../../')
+from calculations import linear, linear_fit
+from mpl_axes_aligner import align
 
 def file_list(path, parent_path): # List files in specified folder
     ParentPath = os.path.abspath(parent_path)
@@ -188,15 +191,33 @@ def plot_total_twinx(ax, df, df_keys, time_format, ylabels, labels):
         ax2.set_ylabel(ylabels[1], color = 'b')
     return ax, ax2
 
+def plot_correlation(axes, df, df_keys, ax_labels):
+    df['Hour'] = [str(i).split(':')[0] for i in df['Time']]
+    df['Hour'] = [int(i.split(' ')[1]) for i in df['Hour']]
+    hour_mask = (8 < df['Hour']) & (df['Hour'] < 16)
+
+    for i, ax in enumerate(axes):
+        ax.scatter(df[hour_mask][df_keys[-1]], df[hour_mask][df_keys[i]], color = 'indigo', s = 10)
+
+        # Calculate correlation
+        valuesfit, errorsfit, Ndof_fit, squares_fit, R2 = linear_fit(df.dropna()[hour_mask][df_keys[-1]], df.dropna()[hour_mask][df_keys[i]], linear, a_guess = 1, b_guess = 0)
+        ax.text(0.55, 0.05, f'R2 = {R2:.3f}', transform=ax.transAxes)
+                #, bbox=dict(ec = 'gray', fc = 'white', lw = 0.5))
+
+        ax.set(xlabel = ax_labels[0], ylabel = ax_labels[i+1])
+    df = df.drop(['Hour'], axis = 1)
+
+    return
+
 def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels):
     ax1, ax1_twin = plot_total_twinx(axes[0], df, df_keys, time_format, ax_labels, labels)
+    # Adjust the plotting range of two y axes
+    org1 = 0.0  # Origin of first axis
+    org2 = 0.0  # Origin of second axis
+    pos = 0.05  # Position the two origins are aligned
+    align.yaxes(ax1, org1, ax1_twin, org2, pos)
 
-    df['Hour'] = [int(str(i).split(':')[1]) for i in df['Time']]
-    hour_mask = 8 < df['Hour'] < 16
-    for i, ax in enumerate(axes[1:]):
-        ax.scatter(df[hour_mask][df_keys[-1]], df[hour_mask][df_keys[i]], color = 'indigo', s = 10)
-        ax.set(xlabel = ax_labels[1], ylabel = labels[i])
-    df = df.drop(['Hour'], axis = 1)
+    plot_correlation(axes[1:], df, df_keys, [ax_labels[1]]+labels)
 
     return ax1, ax1_twin
 
