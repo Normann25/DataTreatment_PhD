@@ -157,7 +157,7 @@ for year, year_group in Particle_formation.groupby('Year'):
         fig = plt.figure(figsize = (9, 6.3))
         axes = [plt.subplot(2, 1, 1), plt.subplot(2, 3, 4), plt.subplot(2, 3, 5), plt.subplot(2, 3, 6)]
 
-        ax1, ax_twin = plot_correlation_tseries(axes, group, PF_keys, '%m/%d', ['Ions s$^{-1}$', 'J$_{2-2.3 nm}$/N$_{<2 nm}$'], labels)
+        ax1, ax_twin = plot_correlation_tseries(axes, group, PF_keys, '%m/%d', ['Ions s$^{-1}$', 'J$_{2-2.3 nm}$/N$_{<2 nm}$'], labels, 'Day')
         ax1.set(title = f'{year}-{month}')
         ax1.legend(labels =labels, ncols = 3)
         for ax in axes[1:]:
@@ -224,14 +224,13 @@ for timestamps in event_dates:
 
 fig, axes = plt.subplots(1, 3, figsize = (9, 3.3))
 labels = ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$']
-y_label = 'ions s$^{-1}$'
 
-plot_correlation(axes, event_dates_df, merged_keys[1:4]+['J2-2.3,-/N<2,-'], 'indigo', ['J$_{2-2.3 nm}$/N$_{<2 nm}$']+labels)
+plot_correlation(axes, event_dates_df, merged_keys[1:4]+['J2-2.3,-/N<2,-'], 'indigo', ['J$_{2-2.3 nm}$/N$_{<2 nm}$']+labels, 'Night')
+plot_correlation(axes, event_dates_df, merged_keys[1:4]+['J2-2.3,-/N<2,-'], 'cyan', ['J$_{2-2.3 nm}$/N$_{<2 nm}$']+labels, 'Day')
 for ax in axes:
     ax.set(yscale = 'log', xscale = 'log')
 fig.tight_layout()
 fig.savefig('Figures/Event dates/Event_dates_scatter.jpg', dpi = 600)
-
 #%%
 # Plot daily PSM
 # for key, binedges in zip(PSM.keys(), bins):
