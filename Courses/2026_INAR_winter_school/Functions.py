@@ -191,16 +191,21 @@ def plot_total_twinx(ax, df, df_keys, time_format, ylabels, labels):
         ax2.set_ylabel(ylabels[1], color = 'b')
     return ax, ax2
 
-def plot_correlation(axes, df, df_keys, color, ax_labels):
+def plot_correlation(axes, df, df_keys, color, ax_labels, time_of_day):
     df['Hour'] = [str(i).split(':')[0] for i in df['Time']]
     df['Hour'] = [int(i.split(' ')[1]) for i in df['Hour']]
-    hour_mask = (8 < df['Hour']) & (df['Hour'] < 16)
+    if time_of_day == 'Day':
+        hour_mask = (8 < df['Hour']) & (df['Hour'] < 16)
+        new_df = df[hour_mask]
+    if time_of_day == 'Night':
+        hour_mask1 = 20 < df['Hour']
+        hour_mask2 = 4 > df['Hour']
+        new_df = pd.merge(df[hour_mask1], df[hour_mask2], on = 'Time', how = 'outer')
 
     for i, ax in enumerate(axes):
-        ax.scatter(df[hour_mask][df_keys[-1]], df[hour_mask][df_keys[i]], color = color, s = 10)
-
+        ax.scatter(new_df[df_keys[-1]], new_df[df_keys[i]], color = color, s = 10)
         # Calculate correlation
-        valuesfit, errorsfit, Ndof_fit, squares_fit, R2 = linear_fit(df.dropna()[hour_mask][df_keys[-1]], df.dropna()[hour_mask][df_keys[i]], linear, a_guess = 1, b_guess = 0)
+        valuesfit, errorsfit, Ndof_fit, squares_fit, R2 = linear_fit(new_df.dropna()[df_keys[-1]], new_df.dropna()[df_keys[i]], linear, a_guess = 1, b_guess = 0)
         ax.text(0.55, 0.05, f'R2 = {R2:.3f}', transform=ax.transAxes)
                 #, bbox=dict(ec = 'gray', fc = 'white', lw = 0.5))
 
@@ -209,7 +214,7 @@ def plot_correlation(axes, df, df_keys, color, ax_labels):
 
     return
 
-def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels):
+def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels, time_of_day):
     ax1, ax1_twin = plot_total_twinx(axes[0], df, df_keys, time_format, ax_labels, labels)
     # Adjust the plotting range of two y axes
     org1 = 0.0  # Origin of first axis
@@ -217,7 +222,7 @@ def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels):
     pos = 0.05  # Position the two origins are aligned
     align.yaxes(ax1, org1, ax1_twin, org2, pos)
 
-    plot_correlation(axes[1:], df, df_keys, 'indigo', [ax_labels[1]]+labels)
+    plot_correlation(axes[1:], df, df_keys, 'indigo', [ax_labels[1]]+labels, time_of_day)
 
     return ax1, ax1_twin
 
