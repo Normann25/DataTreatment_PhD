@@ -114,7 +114,7 @@ event_dates = [['2024-03-04 23:59', '2024-03-06 23:30'],
 merged = pd.merge(NAIS_running['formation_rate_2_2p3_neg'], MION_running, on = 'Time', how = 'outer')
 merged = pd.merge(merged, MION_NO3['MION_NO3_1H-avg'], on = 'Time', how = 'outer')
 merged = pd.merge(merged, DMPS, on = 'Time', how = 'outer')
-event_dates = pd.DataFrame()
+event_dates_df = pd.DataFrame()
 merged_keys = ['J2-2.3,-/N<2,-', 'HSO4-', '(H2SO4)HSO4-', '(H2SO4)2HSO4-', 'SA', 'IA', 'MSA']
 particle_formation_events = pd.DataFrame()
 for timestamps in event_dates:

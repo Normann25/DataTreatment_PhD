@@ -41,9 +41,9 @@ def read_csv(path, parent_path, timelabel, time_format):
                 df = pd.read_csv(f)
             try:
                 df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
-                data_dict[name] = df
             except KeyError:
                 pass
+            data_dict[name] = df
 
     return data_dict
 
