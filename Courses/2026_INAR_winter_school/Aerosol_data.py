@@ -2,8 +2,6 @@
 import sys
 sys.path.append('../../')
 from Functions import *
-from calculations import linear, linear_fit
-from mpl_axes_aligner import align
 plt.style.use('Style.mplstyle')
 import warnings
 warnings.filterwarnings('ignore')
@@ -60,7 +58,7 @@ fig.savefig('Figures/NAIS_FR_2024-2025.jpg', dpi = 600)
 # Plot yearly MION sulfate cluster
 fig, ax = plt.subplots(figsize = (6.3, 4))
 plot_multi_total(ax, data['MION_TZS_1H-avg'], data['MION_TZS_1H-avg'].keys()[1:4], ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$'], '%Y/%m')
-ax.set(title = '2024-2025', ylabel = 'ions/s')
+ax.set(title = '2024-2025', ylabel = 'Ions s$^{-1}$')
 fig.tight_layout()
 fig.savefig('Figures/MION_sulfate-cluster_2024-2025.jpg', dpi = 600)
 #%%
@@ -145,32 +143,6 @@ for date, group in data['NAIS_TZS_1H-avg'].groupby('Date'):
         fig.savefig(f'Figures/NAIS/Daily/2025/{date.split('-')[0]}-{date.split('-')[1]}/NAIS_{date}.jpg', dpi = 600)
 data['NAIS_TZS_1H-avg'] = data['NAIS_TZS_1H-avg'].drop(['Date'], axis = 1)
 #%%
-def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels):
-    ax1, ax1_twin = plot_total_twinx(axes[0], df, df_keys, time_format, ax_labels, labels)
-
-    df['Hour'] = [str(i).split(':')[0] for i in df['Time']]
-    df['Hour'] = [int(i.split(' ')[1]) for i in df['Hour']]
-    hour_mask = (8 < df['Hour']) & (df['Hour'] < 16)
-
-    for i, ax in enumerate(axes[1:]):
-        ax.scatter(df[hour_mask][df_keys[-1]], df[hour_mask][df_keys[i]], color = 'indigo', s = 10)
-
-        # Calculate correlation
-        valuesfit, errorsfit, Ndof_fit, squares_fit, R2 = linear_fit(df.dropna()[hour_mask][df_keys[-1]], df.dropna()[hour_mask][df_keys[i]], linear, a_guess = 1, b_guess = 0)
-        ax.text(0.05, 0.05, f'R2 = {R2:.3f}', transform=ax.transAxes,
-                bbox=dict(ec = 'gray', fc = 'white', lw = 0.5))
-
-        # Adjust the plotting range of two y axes
-        org1 = 0.0  # Origin of first axis
-        org2 = 0.0  # Origin of second axis
-        pos = 0.05  # Position the two origins are aligned
-        align.yaxes(ax1, org1, ax1_twin, org2, pos)
-
-        ax.set(xlabel = ax_labels[1], ylabel = labels[i])
-    df = df.drop(['Hour'], axis = 1)
-
-    return ax1, ax1_twin
-
 # Plot monthly NAIS MION correlation
 Particle_formation = pd.merge(data['NAIS_formation_rate_neg_1H-avg'], data['MION_TZS_1H-avg'], how = 'outer', on = 'Time')
 Particle_formation['Month'] = [str(i).split('-')[1] for i in Particle_formation['Time']]
@@ -189,7 +161,7 @@ for year, year_group in Particle_formation.groupby('Year'):
         ax1.set(title = f'{year}-{month}')
         ax1.legend(labels =labels, ncols = 3)
         for ax in axes[1:]:
-            ax.set(yscale = 'log', xscale = 'log')
+            ax.set(yscale = 'log')
         fig.tight_layout()
         fig.savefig(f'Figures/NAIS/NAISvsMION/{year}-{month}_NAISvsMION.jpg', dpi = 600)
 Particle_formation = Particle_formation.drop(['Month', 'Year'], axis = 1)
@@ -225,12 +197,13 @@ event_dates = [['2024-03-04 23:59', '2024-03-06 23:30'],
 merged = pd.merge(data['NAIS_formation_rate_neg_1H-avg'], data['MION_TZS_1H-avg'], on = 'Time', how = 'outer')
 merged = pd.merge(merged, data['MION_NO3_1H-avg'], on = 'Time', how = 'outer')
 merged_keys = ['J2-2.3,-/N<2,-', 'HSO4-', '(H2SO4)HSO4-', '(H2SO4)2HSO4-', 'SA', 'IA', 'MSA']
-
+event_dates_df = pd.DataFrame()
 for timestamps in event_dates:
     temp = time_filtered_conc(merged, merged_keys, timestamps)
+    event_dates_df = pd.concat([event_dates_df, temp], ignore_index = True)
     start_date, end_date = str(temp.iloc[0]['Time']).split(' ')[0], str(temp.iloc[-1]['Time']).split(' ')[0]
 
-    fig, ax = plt.subplots(3, 1, figsize = (6.3, 10), sharex = True)
+    fig, ax = plt.subplots(3, 1, figsize = (6.3, 8), sharex = True)
     # NAIS formation rate
     plot_total(ax[0], temp, merged_keys[0], 'indigo', '%m/%d %H:%M')
     ax[0].set(ylabel = 'J$_{2-2.3 nm}$/N$_{<2 nm}$') #, xlabel = 'Time (mm/dd HH:MM)')
@@ -248,7 +221,16 @@ for timestamps in event_dates:
     
     fig.tight_layout()
     fig.savefig(f'Figures/Event dates/PF_event_{start_date}.jpg', dpi = 600)
-#%%
+
+fig, axes = plt.subplots(1, 3, figsize = (9, 3.3))
+labels = ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$']
+y_label = 'ions s$^{-1}$'
+
+plot_correlation(axes, event_dates_df, merged_keys[1:4]+['J2-2.3,-/N<2,-'], 'indigo', ['J$_{2-2.3 nm}$/N$_{<2 nm}$']+labels)
+for ax in axes:
+    ax.set(yscale = 'log', xscale = 'log')
+fig.tight_layout()
+fig.savefig('Figures/Event dates/Event_dates_scatter.jpg', dpi = 600)
 
 #%%
 # Plot daily PSM
