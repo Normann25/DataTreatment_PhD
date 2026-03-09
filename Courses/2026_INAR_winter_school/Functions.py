@@ -39,8 +39,11 @@ def read_csv(path, parent_path, timelabel, time_format):
             name = file.split('.')[0]
             with open(os.path.join(path, file), 'r') as f:
                 df = pd.read_csv(f)
-            df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
-            data_dict[name] = df
+            try:
+                df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
+                data_dict[name] = df
+            except KeyError:
+                pass
 
     return data_dict
 
@@ -160,11 +163,11 @@ def plot_total(ax, df, conc_key, clr, time_format):
     return ax
 
 def plot_multi_total(ax, df, df_keys, labels, time_format):
-    n_lines = len(df_keys)
+    n_lines = len(df_keys)+1
     cmap = mpl.colormaps['viridis']
     colors = cmap(np.linspace(0, 1, n_lines))
 
-    for key, color in zip(df_keys, colors):
+    for key, color in zip(df_keys, colors[:-1]):
         plot_total(ax, df, key, color, time_format)
     
     ax.legend(labels = labels)
@@ -200,19 +203,15 @@ def plot_correlation(axes, df, df_keys, color, ax_labels, time_of_day):
     if time_of_day == 'Night':
         hour_mask1 = 20 < df['Hour']
         hour_mask2 = 4 > df['Hour']
-        new_df = pd.merge(df[hour_mask1], df[hour_mask2], on = 'Time', how = 'outer')
+        new_df = pd.concat([df[hour_mask1], df[hour_mask2]])
 
     for i, ax in enumerate(axes):
         ax.scatter(new_df[df_keys[-1]], new_df[df_keys[i]], color = color, s = 10)
-        # Calculate correlation
-        valuesfit, errorsfit, Ndof_fit, squares_fit, R2 = linear_fit(new_df.dropna()[df_keys[-1]], new_df.dropna()[df_keys[i]], linear, a_guess = 1, b_guess = 0)
-        ax.text(0.55, 0.05, f'R2 = {R2:.3f}', transform=ax.transAxes)
-                #, bbox=dict(ec = 'gray', fc = 'white', lw = 0.5))
 
         ax.set(xlabel = ax_labels[0], ylabel = ax_labels[i+1])
     df = df.drop(['Hour'], axis = 1)
 
-    return
+    return new_df
 
 def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels, time_of_day):
     ax1, ax1_twin = plot_total_twinx(axes[0], df, df_keys, time_format, ax_labels, labels)
@@ -222,7 +221,12 @@ def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels, 
     pos = 0.05  # Position the two origins are aligned
     align.yaxes(ax1, org1, ax1_twin, org2, pos)
 
-    plot_correlation(axes[1:], df, df_keys, 'indigo', [ax_labels[1]]+labels, time_of_day)
+    new_df = plot_correlation(axes[1:], df, df_keys, 'indigo', [ax_labels[1]]+labels, time_of_day)
+    for i, ax in enumerate(axes[1:]):
+        # Calculate correlation
+        valuesfit, errorsfit, Ndof_fit, squares_fit, R2 = linear_fit(new_df.dropna()[df_keys[-1]], new_df.dropna()[df_keys[i]], linear, a_guess = 1, b_guess = 0)
+        ax.text(0.55, 0.05, f'R2 = {R2:.3f}', transform=ax.transAxes)
+                #, bbox=dict(ec = 'gray', fc = 'white', lw = 0.5))
 
     return ax1, ax1_twin
 
