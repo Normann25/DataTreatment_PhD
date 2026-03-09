@@ -191,13 +191,13 @@ def plot_total_twinx(ax, df, df_keys, time_format, ylabels, labels):
         ax2.set_ylabel(ylabels[1], color = 'b')
     return ax, ax2
 
-def plot_correlation(axes, df, df_keys, ax_labels):
+def plot_correlation(axes, df, df_keys, color, ax_labels):
     df['Hour'] = [str(i).split(':')[0] for i in df['Time']]
     df['Hour'] = [int(i.split(' ')[1]) for i in df['Hour']]
     hour_mask = (8 < df['Hour']) & (df['Hour'] < 16)
 
     for i, ax in enumerate(axes):
-        ax.scatter(df[hour_mask][df_keys[-1]], df[hour_mask][df_keys[i]], color = 'indigo', s = 10)
+        ax.scatter(df[hour_mask][df_keys[-1]], df[hour_mask][df_keys[i]], color = color, s = 10)
 
         # Calculate correlation
         valuesfit, errorsfit, Ndof_fit, squares_fit, R2 = linear_fit(df.dropna()[hour_mask][df_keys[-1]], df.dropna()[hour_mask][df_keys[i]], linear, a_guess = 1, b_guess = 0)
@@ -217,7 +217,7 @@ def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels):
     pos = 0.05  # Position the two origins are aligned
     align.yaxes(ax1, org1, ax1_twin, org2, pos)
 
-    plot_correlation(axes[1:], df, df_keys, [ax_labels[1]]+labels)
+    plot_correlation(axes[1:], df, df_keys, 'indigo', [ax_labels[1]]+labels)
 
     return ax1, ax1_twin
 
