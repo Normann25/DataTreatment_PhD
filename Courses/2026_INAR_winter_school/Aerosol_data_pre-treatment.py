@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import sys
 sys.path.append('../../')
-from Functions import file_list, format_timestamps, calc_total, running_mean
+from Functions import file_list, format_timestamps, calc_total, running_mean, time_filtered_conc
 
 def read_csv(path, parent_path, timelabel, time_format):
     data_dict = {}
@@ -82,3 +82,45 @@ MION_running = running_mean(MION, MION.keys()[1:], 'Time', '60min', None)
 MION_running['Time'] = MION_running.index
 MION_running = MION_running.reset_index(drop = True)
 MION_running.to_csv(f'{path}MION_TZS_1H-avg.csv', index = False)
+
+event_dates = [['2024-03-04 23:59', '2024-03-06 23:30'],
+               ['2024-03-11 23:59', '2024-03-13 23:30'],
+               ['2024-03-17 23:59', '2024-03-19 23:30'],
+               ['2024-04-03 23:59', '2024-04-05 23:30'],
+               ['2024-04-09 23:59', '2024-04-11 23:30'],
+               ['2024-04-13 23:59', '2024-04-16 23:30'],
+               ['2024-04-21 23:59', '2024-04-23 23:30'],
+               ['2024-05-06 23:59', '2024-05-07 23:30'], 
+               ['2024-05-11 23:59', '2024-05-12 23:30'],
+               ['2024-05-15 23:59', '2024-05-17 23:30'],
+               ['2024-06-08 23:59', '2024-06-10 23:30'],
+               ['2024-06-20 23:59', '2024-06-24 23:30'],
+               ['2024-06-28 23:59', '2024-06-29 23:30'], 
+               ['2024-07-04 23:59', '2024-07-05 23:30'],
+               ['2024-08-11 23:59', '2024-08-13 23:30'],
+               ['2024-08-18 23:59', '2024-08-20 23:30'],
+               ['2024-08-24 23:59', '2024-08-26 23:30'],
+               ['2024-09-09 23:59', '2024-09-11 23:30'],
+               ['2024-09-14 23:59', '2024-09-16 23:30'],
+               ['2024-09-18 23:59', '2024-09-21 23:30'],
+               ['2024-09-28 23:59', '2024-09-30 23:30'],
+               ['2024-10-02 23:59', '2024-10-03 23:30'],
+               ['2024-10-13 23:59', '2024-10-16 23:30'],
+               ['2024-10-25 23:59', '2024-10-28 23:30'],
+               ['2024-12-01 23:59', '2024-12-03 23:30'],
+               ['2024-12-09 23:59', '2024-12-12 23:30'],
+               ['2024-12-24 23:59', '2024-12-27 23:30']]
+
+merged = pd.merge(NAIS_running['formation_rate_2_2p3_neg'], MION_running, on = 'Time', how = 'outer')
+merged = pd.merge(merged, MION_NO3['MION_NO3_1H-avg'], on = 'Time', how = 'outer')
+merged = pd.merge(merged, DMPS, on = 'Time', how = 'outer')
+event_dates = pd.DataFrame()
+merged_keys = ['J2-2.3,-/N<2,-', 'HSO4-', '(H2SO4)HSO4-', '(H2SO4)2HSO4-', 'SA', 'IA', 'MSA']
+particle_formation_events = pd.DataFrame()
+for timestamps in event_dates:
+    temp = time_filtered_conc(merged, merged_keys, timestamps)
+    particle_formation_events = pd.concat([particle_formation_events, temp], ignore_index = True)
+particle_formation_events.to_csv(f'{path}NAIS-MION_PF_dates.csv', index = False)
+event_dates_df = pd.DataFrame({'Start time': [i[0] for i in event_dates],
+                               'End time': [i[1] for i in event_dates]})
+event_dates_df.to_csv(f'{path}Event_dates.csv', index = False)
