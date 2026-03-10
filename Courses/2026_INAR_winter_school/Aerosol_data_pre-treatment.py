@@ -32,7 +32,7 @@ MION = read_csv(f'{path}MION/', '', 'Time', '%d-%b-%Y %H:%M:%S')
 MION = MION['MION_Ambient_WinterSchool']
 
 MION_NO3 = read_csv(f'{path}MION_NO3/', '', 'Time', '%Y-%m-%d %H:%M')
-MION_NO3['MION_NO3_1H-avg'].to_csv(f'{path}MION_NO3_1H-avg.csv', index = False)
+MION_NO3['MION_NO3_1H-avg'].to_csv(f'{path}1H-avg/MION_NO3_1H-avg.csv', index = False)
 
 DMPS_temp = read_csv(f'{path}DMPS/', '', 'Date', '%Y-%m-%d %H:%M:%S')
 DMPS = pd.merge(DMPS_temp['DMPS_TZS_2024'], DMPS_temp['Particle number conc_TZS_2024'], on = 'Time', how = 'outer').drop(['Date_x', 'Date_y'], axis = 1)
@@ -67,7 +67,7 @@ for key, binedges in zip(PSM.keys(), bins):
     temp = running_mean(PSM[key], PSM[key].keys()[1:-3].to_list()+['Total conc'], 'Time', '60min', None)
     temp['Time'] = temp.index
     temp = temp.reset_index(drop = True)
-    temp.to_csv(f'{path}PSM_{key}.csv', index = False)
+    temp.to_csv(f'{path}1H-avg/PSM_{key}.csv', index = False)
     PSM_running[key] = temp
 
 NAIS_running = {}
@@ -75,13 +75,13 @@ for key in NAIS.keys():
     temp = running_mean(NAIS[key], NAIS[key].keys()[:-1], 'Time', '60min', ['2023-12-31 23:59:00', '2026-01-01 00:01:00'])
     temp['Time'] = temp.index + pd.Timedelta(hours = 2)
     NAIS_running[key] = temp.reset_index(drop = True)
-NAIS_running['formation_rate_2_2p3_neg'].to_csv(f'{path}NAIS_formation_rate_neg_1H-avg.csv', index = False)
-NAIS_running['tvarminne_conc_utc'].to_csv(f'{path}NAIS_TZS_1H-avg.csv', index = False)
+NAIS_running['formation_rate_2_2p3_neg'].to_csv(f'{path}1H-avg/NAIS_formation_rate_neg_1H-avg.csv', index = False)
+NAIS_running['tvarminne_conc_utc'].to_csv(f'{path}1H-avg/NAIS_TZS_1H-avg.csv', index = False)
 
 MION_running = running_mean(MION, MION.keys()[1:], 'Time', '60min', None)
 MION_running['Time'] = MION_running.index
 MION_running = MION_running.reset_index(drop = True)
-MION_running.to_csv(f'{path}MION_TZS_1H-avg.csv', index = False)
+MION_running.to_csv(f'{path}1H-avg/MION_TZS_1H-avg.csv', index = False)
 
 event_dates = [['2024-03-04 23:59', '2024-03-06 23:30'],
                ['2024-03-11 23:59', '2024-03-13 23:30'],
@@ -120,7 +120,7 @@ particle_formation_events = pd.DataFrame()
 for timestamps in event_dates:
     temp = time_filtered_conc(merged, merged_keys, timestamps)
     particle_formation_events = pd.concat([particle_formation_events, temp], ignore_index = True)
-particle_formation_events.to_csv(f'{path}NAIS-MION_PF_dates.csv', index = False)
+particle_formation_events.to_csv(f'{path}1H-avg/NAIS-MION_PF_dates.csv', index = False)
 event_dates_df = pd.DataFrame({'Start time': [i[0] for i in event_dates],
                                'End time': [i[1] for i in event_dates]})
-event_dates_df.to_csv(f'{path}Event_dates.csv', index = False)
+event_dates_df.to_csv(f'{path}1H-avg/Event_dates.csv', index = False)
