@@ -39,7 +39,7 @@ def read_csv(path, parent_path, timelabel, time_format):
         if file.endswith('.csv'):
             name = file.split('.')[0]
             with open(os.path.join(path, file), 'r') as f:
-                df = pd.read_csv(f)
+                df = pd.read_csv(f, sep  = ',')
             try:
                 df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
             except KeyError:

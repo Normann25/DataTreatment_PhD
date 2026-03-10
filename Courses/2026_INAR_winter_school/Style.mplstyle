@@ -17,4 +17,4 @@ legend.handlelength : 1.5
 legend.handletextpad : 0.6
 legend.borderaxespad : 0.2
 legend.columnspacing : 1.0
-legend.labelsize : 10
+legend.fontsize : 10
