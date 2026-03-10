@@ -408,6 +408,9 @@ def plot_seasonal_scatter(data_dict, dict_keys, df_keys, timestamps, colors, ax_
                         bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
         axes[0][1].legend(labels = dict_keys, bbox_to_anchor = (1, 1, 0, 0))
         fig.tight_layout()
-        fig.savefig(f'{save_path}{time_of_day}_{key}_corr.jpg', dpi = 600)
+        if '/' in df_keys[0]:
+            fig.savefig(f'{save_path}{time_of_day}_{key}_corr.jpg', dpi = 600)
+        else:
+            fig.savefig(f'{save_path}{time_of_day}_{df_keys[0]}_{key}_corr.jpg', dpi = 600)
 
     return new_dict
