@@ -65,22 +65,17 @@ PSM_running = {}
 for key, binedges in zip(PSM.keys(), bins):
     PSM[key]['Total conc'] = calc_total(PSM[key], PSM[key].keys()[1:-2], binedges)
     temp = running_mean(PSM[key], PSM[key].keys()[1:-3].to_list()+['Total conc'], 'Time', '60min', None)
-    temp['Time'] = temp.index
-    temp = temp.reset_index(drop = True)
     temp.to_csv(f'{path}1H-avg/PSM_{key}.csv', index = False)
     PSM_running[key] = temp
 
 NAIS_running = {}
 for key in NAIS.keys():
     temp = running_mean(NAIS[key], NAIS[key].keys()[:-1], 'Time', '60min', ['2023-12-31 23:59:00', '2026-01-01 00:01:00'])
-    temp['Time'] = temp.index + pd.Timedelta(hours = 2)
-    NAIS_running[key] = temp.reset_index(drop = True)
+    temp['Time'] = temp['Time'] + pd.Timedelta(hours = 2)
 NAIS_running['formation_rate_2_2p3_neg'].to_csv(f'{path}1H-avg/NAIS_formation_rate_neg_1H-avg.csv', index = False)
 NAIS_running['tvarminne_conc_utc'].to_csv(f'{path}1H-avg/NAIS_TZS_1H-avg.csv', index = False)
 
 MION_running = running_mean(MION, MION.keys()[1:], 'Time', '60min', None)
-MION_running['Time'] = MION_running.index
-MION_running = MION_running.reset_index(drop = True)
 MION_running.to_csv(f'{path}1H-avg/MION_TZS_1H-avg.csv', index = False)
 
 event_dates = [['2024-03-04 23:59', '2024-03-06 23:30'],

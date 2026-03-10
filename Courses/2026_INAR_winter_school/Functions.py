@@ -28,9 +28,6 @@ def format_timestamps(timestamps, old_format, new_format): # Change format of ti
         new_timestamps.append(new_datetime)
     return pd.to_datetime(new_timestamps, format=new_format)
 
-def read_NAIS(path, parent_path):
-    return
-
 def read_csv(path, parent_path, timelabel, time_format):
     data_dict = {}
     files = file_list(path, parent_path)
