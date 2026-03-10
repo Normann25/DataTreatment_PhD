@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib as mpl
 from datetime import datetime
+from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 sys.path.append('../../')
 from calculations import linear, linear_fit
 from mpl_axes_aligner import align
@@ -206,9 +207,9 @@ def plot_correlation(axes, df, df_keys, color, ax_labels, time_of_day):
         new_df = pd.concat([df[hour_mask1], df[hour_mask2]])
 
     for i, ax in enumerate(axes):
-        ax.scatter(new_df[df_keys[-1]], new_df[df_keys[i]], color = color, s = 10)
+        ax.scatter(new_df[df_keys[i]], new_df[df_keys[-1]], color = color, s = 10)
 
-        ax.set(xlabel = ax_labels[0], ylabel = ax_labels[i+1])
+        ax.set(xlabel = ax_labels[i+1], ylabel = ax_labels[0])
     df = df.drop(['Hour'], axis = 1)
 
     return new_df
@@ -224,7 +225,7 @@ def plot_correlation_tseries(axes, df, df_keys, time_format, ax_labels, labels, 
     new_df = plot_correlation(axes[1:], df, df_keys, 'indigo', [ax_labels[1]]+labels, time_of_day)
     for i, ax in enumerate(axes[1:]):
         # Calculate correlation
-        valuesfit, errorsfit, Ndof_fit, squares_fit, R2 = linear_fit(new_df.dropna()[df_keys[-1]], new_df.dropna()[df_keys[i]], linear, a_guess = 1, b_guess = 0)
+        valuesfit, errorsfit, Ndof_fit, squares_fit, R2 = linear_fit(new_df.dropna()[df_keys[i]], new_df.dropna()[df_keys[-1]], linear, a_guess = 1, b_guess = 0)
         ax.text(0.55, 0.05, f'R2 = {R2:.3f}', transform=ax.transAxes)
                 #, bbox=dict(ec = 'gray', fc = 'white', lw = 0.5))
 
@@ -254,12 +255,21 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, normed, total, ti
             ax1, p1 = plot_heatmap(ax[0], df_number, df_keys, np.array(df_number['Time']), bin_edges, normed, time_format)
             ax2, p2 = plot_heatmap(ax[1], df_mass, df_keys, np.array(df_mass['Time']), bin_edges, normed, time_format)
 
-        # Insert coloarbar and label it
-        col1 = fig.colorbar(p1, ax=ax1)
-        col2 = fig.colorbar(p2, ax=ax2)
+        ax1_divider = make_axes_locatable(ax1)
+        # Add an Axes above the main Axes.
+        cax1 = ax1_divider.append_axes("top", size="7%", pad="2%")
+        cb1 = fig.colorbar(p1, cax=cax1, orientation="horizontal", label = 'dN/dlogDp (# cm$^{-3}$)')
+         # Change tick position to top (with the default tick position "bottom", ticks overlap the image).
+        cax1.xaxis.set_ticks_position("top")
+        cax1.xaxis.set_label_position("top")
 
-        col1.set_label('dN/dlogDp (# cm$^{-3}$)')
-        col2.set_label('dM/dlogDp ($\mu$g m$^{-3}$)')
+        ax2_divider = make_axes_locatable(ax2)
+        # Add an Axes above the main Axes.
+        cax2 = ax2_divider.append_axes("top", size="7%", pad="2%")
+        cb2 = fig.colorbar(p2, cax=cax2, orientation="horizontal", label = 'dM/dlogDp ($\mu$g m$^{-3}$)')
+        # Change tick position to top (with the default tick position "bottom", ticks overlap the image).
+        cax2.xaxis.set_ticks_position("top")
+        cax2.xaxis.set_label_position("top")
 
     else:
         if total is not None:
@@ -273,16 +283,22 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, normed, total, ti
                 df = time_filtered_conc(df, df_keys, timestamps)
             ax1, p1 = plot_heatmap(ax, df, df_keys, np.array(df['Time']), bin_edges, normed, time_format)
 
-        # Insert coloarbar and label it
-        col = fig.colorbar(p1, ax=ax1)
+        ax1_divider = make_axes_locatable(ax1)
+        # Add an Axes above the main Axes.
+        cax1 = ax1_divider.append_axes("top", size="7%", pad="2%")
+        cb1 = fig.colorbar(p1, cax=cax1, orientation="horizontal")
+
         if datatype == "number":
-            col.set_label('dN/dlogDp (# cm$^{-3}$)')
+            cb1 = fig.colorbar(p1, cax=cax1, orientation="horizontal", label = 'dN/dlogDp (# cm$^{-3}$)')
             if total != None:
                 ax2.set_ylabel('Total conc. (# cm$^{-3}$)')
         elif datatype == "mass":
-            col.set_label('dM/dlogDp ($\mu$g m$^{-3}$)')
+            cb1 = fig.colorbar(p1, cax=cax1, orientation="horizontal", label = 'dM/dlogDp ($\mu$g m$^{-3}$)')
             if total != None:
                 ax2.set_ylabel('Total conc. ($\mu$g m$^{-3}$)')
+        # Change tick position to top (with the default tick position "bottom", ticks overlap the image).
+        cax1.xaxis.set_ticks_position("top")
+        cax1.xaxis.set_label_position("top")
 
 def calc_diurnal_mean(df, conc_key):
     new_df = df.dropna()
