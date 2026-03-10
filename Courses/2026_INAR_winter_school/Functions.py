@@ -106,7 +106,10 @@ def running_mean(df, concentration, timelabel, interval, timestamps):
         new_df = new_df.set_index('Time')
 
         # Resample the data to bins 
-        new_df = new_df.resample(interval).mean() 
+        new_df = new_df.resample(interval).mean()
+
+    new_df['Time'] = new_df.index
+    new_df = new_df.reset_index(drop = True) 
 
     return new_df
 
