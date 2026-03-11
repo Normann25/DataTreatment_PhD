@@ -372,7 +372,7 @@ def split_season(df, df_keys, timestamps):
         seasonal_df = pd.concat([seasonal_df, temp], ignore_index = True)
     return seasonal_df
 
-def plot_seasonal_scatter(data_dict, dict_keys, df_keys, timestamps, colors, ax_labels, time_of_day, y_text, save_path):
+def plot_seasonal_scatter(data_dict, dict_keys, df_keys, timestamps, colors, ax_labels, time_of_day, x_text, y_text, save_path):
     new_dict = {}
     for key in data_dict.keys():
         df = data_dict[key]
@@ -404,7 +404,7 @@ def plot_seasonal_scatter(data_dict, dict_keys, df_keys, timestamps, colors, ax_
                 pvalues.append(statistic)
             for j, s in enumerate(pvalues):
                 s = f'p = {s:.3f}'
-                ax.text(0.05, y_text+j*0.1, s, c=colors[j], transform=ax.transAxes,
+                ax.text(x_text, y_text+j*0.1, s, c=colors[j], transform=ax.transAxes,
                         bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
         axes[0][1].legend(labels = dict_keys, bbox_to_anchor = (1, 1, 0, 0))
         fig.tight_layout()

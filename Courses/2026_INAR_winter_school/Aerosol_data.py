@@ -182,7 +182,7 @@ for i, row in data['Event_dates'].iterrows():
     plot_total(ax[1][0], temp, merged_keys[0], 'indigo', '%m/%d %H:%M')
     ax[1][0].set(ylabel = 'J$_{2-2.3 nm}$/N$_{<2 nm}$', xlabel = 'Time (mm/dd HH:MM)')
     # MION H2SO4 cluster
-    plot_multi_total(ax[0][1], temp, merged_keys[1:6], ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$', 'IO$_{3}^{-}$', '(HIO$_{3}$)', 'HSO$_{4}^{-}$'], '%m/%d %H:%M')
+    plot_multi_total(ax[0][1], temp, merged_keys[1:6], ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$', 'IO$_{3}^{-}$', '(HIO$_{3}$)HSO$_{4}^{-}$'], '%m/%d %H:%M')
     ax[0][1].set(ylabel = 'Ions s$^{-1}$') #, xlabel = 'Time (mm/dd HH:MM)')
     # MION SA, IA, MSA
     plot_multi_total(ax[1][1], temp, merged_keys[6:], ['SA', 'IA', 'MSA'], '%m/%d %H:%M')
