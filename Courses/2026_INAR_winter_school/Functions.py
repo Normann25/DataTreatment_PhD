@@ -5,6 +5,7 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib as mpl
+import matplotlib.patches as patches
 from datetime import datetime
 from scipy import stats
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
@@ -45,6 +46,23 @@ def read_csv(path, parent_path, timelabel, time_format):
             data_dict[name] = df
 
     return data_dict
+
+def add_multicolored_text(fig, ax, strings, x_cord, y_cord, colors):
+    textobjs = []
+    for j, s in enumerate(strings):
+        text = ax.text(x_cord, y_cord+j*0.1, s, c=colors[j], transform=ax.transAxes)
+                # bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
+        textobjs.append(text)
+    fig.canvas.draw()
+    xmin = min([t.get_window_extent().xmin for t in textobjs])
+    xmax = max([t.get_window_extent().xmax for t in textobjs])
+    ymin = min([t.get_window_extent().ymin for t in textobjs])
+    ymax = max([t.get_window_extent().ymax for t in textobjs])
+    xmin, ymin = ax.transAxes.inverted().transform((xmin, ymin))
+    xmax, ymax = ax.transAxes.inverted().transform((xmax, ymax))
+    rect = patches.Rectangle((xmin, ymin),xmax+0.1*xmin,ymax+0.1*ymin, edgecolor = 'white', facecolor='white', alpha=0.9, transform=ax.transAxes)
+    ax.add_patch(rect)
+    return
 
 def calc_total(df, df_keys, bins):
     temp = pd.DataFrame()
@@ -208,7 +226,7 @@ def plot_correlation(axes, df, df_keys, color, ax_labels, time_of_day):
         new_df = pd.concat([df[hour_mask1], df[hour_mask2]])
 
     for i, ax in enumerate(axes):
-        ax.scatter(new_df[df_keys[i]], new_df[df_keys[-1]], color = color, s = 10)
+        ax.scatter(new_df[df_keys[i]], new_df[df_keys[-1]], color = color, s = 1)
 
         ax.set(xlabel = ax_labels[i+1], ylabel = ax_labels[0])
     df = df.drop(['Hour'], axis = 1)
@@ -372,9 +390,9 @@ def split_season(df, df_keys, timestamps):
         seasonal_df = pd.concat([seasonal_df, temp], ignore_index = True)
     return seasonal_df
 
-def plot_seasonal_scatter(data_dict, dict_keys, df_keys, timestamps, colors, ax_labels, time_of_day, x_text, y_text, save_path):
+def plot_seasonal_scatter(data_dict, dict_keys, df_keys, timestamps, colors, ax_labels, time_of_day, x_text, y_text, xlim, ylim, save_path):
     new_dict = {}
-    for key in data_dict.keys():
+    for key in dict_keys:
         df = data_dict[key]
         df['Hour'] = [str(i).split(':')[0] for i in df['Time']]
         df['Hour'] = [int(i.split(' ')[1]) for i in df['Hour']]
@@ -393,24 +411,53 @@ def plot_seasonal_scatter(data_dict, dict_keys, df_keys, timestamps, colors, ax_
 
         season_names = ['Winter', 'Spring', 'Summer', 'Autumn']
         for ax, season in zip(axes.flatten(), season_names):
+            rho = r'$\rho$'
             pvalues = []
             for j, dict_key in enumerate(dict_keys):
                 mask = new_dict[dict_key]['Season'] == season
                 temp = new_dict[dict_key][mask]
-                ax.scatter(temp[key], temp[df_keys[0]], color = colors[j], s = 10)
+                ax.scatter(temp[key], temp[df_keys[0]], color = colors[j], s = 5)
                 ax.set(xscale = 'log', yscale = 'log', title = season,
                     xlabel = ax_labels[i+1], ylabel = ax_labels[0])
+                if xlim is not None:
+                    ax.set_xlim(xlim)
+                if ylim is not None:
+                    ax.set_ylim(ylim)
                 statistic, pvalue = stats.spearmanr(temp.dropna()[key], temp.dropna()[df_keys[0]])
-                pvalues.append(statistic)
-            for j, s in enumerate(pvalues):
-                s = f'p = {s:.3f}'
-                ax.text(x_text, y_text+j*0.1, s, c=colors[j], transform=ax.transAxes,
-                        bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
+                pvalues.append(f'{rho} = {statistic:.3f}')
+            add_multicolored_text(fig, ax, pvalues, x_text, y_text, colors)
+
         axes[0][1].legend(labels = dict_keys, bbox_to_anchor = (1, 1, 0, 0))
         fig.tight_layout()
         if '/' in df_keys[0]:
-            fig.savefig(f'{save_path}{time_of_day}_{key}_corr.jpg', dpi = 600)
+            name = f'{df_keys[0].split('/')[0]}{df_keys[0].split('/')[1].split('<')[0]}'
+            fig.savefig(f'{save_path}{time_of_day}_{name}_vs_{key}_corr.jpg', dpi = 600)
         else:
-            fig.savefig(f'{save_path}{time_of_day}_{df_keys[0]}_{key}_corr.jpg', dpi = 600)
+            fig.savefig(f'{save_path}{time_of_day}_{df_keys[0]}_vs_{key}_corr.jpg', dpi = 600)
 
     return new_dict
+
+# import matplotlib.patches as patches
+# import matplotlib.pyplot as plt
+
+# fig, axs = plt.subplots(1,1)
+
+# t1 = axs.text(0.4,0.6, 'Hello world line 1', ha='center', color='red', weight='bold', transform=axs.transAxes)
+# t2 = axs.text(0.5,0.5, 'Hello world line 2', ha='center', color='green', weight='bold', transform=axs.transAxes)
+# t3 = axs.text(0.6,0.4, 'Hello world line 3', ha='center', color='blue', weight='bold', transform=axs.transAxes)
+
+# fig.canvas.draw()
+
+# textobjs = [t1,t2,t3]
+
+# xmin = min([t.get_window_extent().xmin for t in textobjs])
+# xmax = max([t.get_window_extent().xmax for t in textobjs])
+# ymin = min([t.get_window_extent().ymin for t in textobjs])
+# ymax = max([t.get_window_extent().ymax for t in textobjs])
+
+# xmin, ymin = fig.transFigure.inverted().transform((xmin, ymin))
+# xmax, ymax = fig.transFigure.inverted().transform((xmax, ymax))
+
+# rect = patches.Rectangle((xmin,ymin),xmax-xmin,ymax-ymin, facecolor='grey', alpha=0.2, transform=fig.transFigure)
+
+# axs.add_patch(rect)
