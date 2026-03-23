@@ -39,6 +39,22 @@ Land_mask = TZS_data['Land'] == 1
 comparison_dict = {'HYDE': HYDE_data, 'TZS Marine': TZS_data[Marine_mask], 'TZS Land': TZS_data[Land_mask]}
 colors = ['orange', 'mediumblue', 'red']
 #%%
+fig, ax = plt.subplots()
+
+temp = time_filtered_conc(TZS_data, ['WD', 'Marine', 'Land'], ['2024-09-18 23:59', '2024-09-20 23:30'])
+plot_multi_total(ax, temp, ['Marine', 'Land'], ['Marine', 'Land'], '%H:%M')
+ax.set(ylabel = None)
+ax2 = ax.twinx()
+ax2.hlines(30, temp.iloc[0]['Time'], temp.iloc[-1]['Time'], color = 'purple', ls = '--')
+ax2.hlines(60, temp.iloc[0]['Time'], temp.iloc[-1]['Time'], color = 'green', ls = '--')
+ax2.hlines(120, temp.iloc[0]['Time'], temp.iloc[-1]['Time'], color = 'green', ls = '--')
+ax2.hlines(210, temp.iloc[0]['Time'], temp.iloc[-1]['Time'], color = 'green', ls = '--')
+ax2.hlines(270, temp.iloc[0]['Time'], temp.iloc[-1]['Time'], color = 'green', ls = '--')
+ax2.hlines(330, temp.iloc[0]['Time'], temp.iloc[-1]['Time'], color = 'purple', ls = '--')
+plot_total(ax2, temp, 'WD', 'r', '%H:%M')
+ax2.set_ylabel('Wind direction', color = 'r')
+
+#%%
 def plot_seasonal_scatter(data_dict, dict_keys, df_keys, timestamps, colors, ax_labels, time_of_day, x_text, y_text, xlim, ylim, save_path):
     new_dict = {}
     for key in dict_keys:
