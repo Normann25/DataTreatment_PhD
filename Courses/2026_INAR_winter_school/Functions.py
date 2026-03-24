@@ -320,7 +320,7 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, normed, total, ti
         cax1.xaxis.set_label_position("top")
 
 def calc_diurnal_mean(df, conc_key):
-    new_df = df.dropna()
+    new_df = df
     new_df['Month'] = [str(i).split('-')[1] for i in new_df['Time']]
     new_df['Date'] = [str(i).split(' ')[0] for i in new_df['Time']]
 
@@ -328,7 +328,7 @@ def calc_diurnal_mean(df, conc_key):
                          ['03', '04', '05'],
                          ['06', '07', '08'],
                          ['09', '10', '11']]
-    season_names = ['Winter', 'Spring', 'Summer', 'Fall']
+    season_names = ['Winter', 'Spring', 'Summer', 'Autumn']
     diurnal_df = pd.DataFrame({'Time': np.arange(0, 24, 1)})
 
     for months_of_season, season in zip(month_of_the_year, season_names):
@@ -336,22 +336,23 @@ def calc_diurnal_mean(df, conc_key):
         for month, month_group in new_df.groupby('Month'):        
             if month in months_of_season:
                 for date, date_group in month_group.groupby('Date'):
-                    try:
-                        date_temp = pd.DataFrame([date_group[conc_key].values], columns = np.arange(0, 24, 1))
-                        temp = pd.concat([temp, date_temp], ignore_index = True)
-                    except ValueError:
-                        pass         
+                    timestamps = [f'{date} 0{i}:00:00' for i in np.arange(0, 10, 1)] + [f'{date} {i}:00:00' for i in np.arange(10, 24, 1)]
+                    time_df = pd.DataFrame({'Time': pd.to_datetime(timestamps), 'Hour': np.arange(0, 24, 1)})
+                    date_temp = pd.DataFrame({'Time': date_group['Time'], 'Conc': date_group[conc_key]})
+                    date_temp = pd.merge(time_df, date_temp, on = 'Time', how = 'outer').drop(['Time'], axis = 1)
+                    date_temp = date_temp.T.reset_index(drop = True).drop([0])
+                    temp = pd.concat([temp, date_temp], ignore_index = True)
 
         mean = []
-        percentile_90 = []
-        percentile_10 = []
+        percentile_75 = []
+        percentile_25 = []
         for temp_key in temp.keys():
-            mean.append(temp[temp_key].mean())
-            percentile_90.append(np.percentile(np.array(temp[temp_key]), 90))
-            percentile_10.append(np.percentile(np.array(temp[temp_key]), 10))
+            mean.append(temp[temp_key].dropna().median())
+            percentile_75.append(np.percentile(np.array(temp[temp_key].dropna()), 75))
+            percentile_25.append(np.percentile(np.array(temp[temp_key].dropna()), 25))
         diurnal_df[f'{season} mean'] = mean
-        diurnal_df[f'{season} 90%'] = percentile_90
-        diurnal_df[f'{season} 10%'] = percentile_10
+        diurnal_df[f'{season} 75%'] = percentile_75
+        diurnal_df[f'{season} 25%'] = percentile_25
         
     return diurnal_df
 
