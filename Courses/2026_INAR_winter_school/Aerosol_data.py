@@ -88,30 +88,6 @@ for month, group in data['DMPS_2024'].groupby('Month'):
     fig.savefig(f'Figures/DMPS/Monthly/DMPS_{year}-{month}.jpg', dpi = 600)
 data['DMPS_2024'] = data['DMPS_2024'].drop(['Month'], axis = 1)
 #%%
-# Plot DMPS diurnal mean
-fig, axes = plt.subplots(2, 2, figsize = (6.3, 6.3))
-diurnal_DMPS, axes = plot_diurnal_mean(axes, data['DMPS_2024'], 'TZS (PNC)', 'Total conc. (# cm$^{-3}$)')
-fig.tight_layout()
-fig.savefig('Figures/DMPS/Diurnal_mean.jpg', dpi = 600)
-
-# Plot PSM 2024 diurnal mean
-fig, axes = plt.subplots(2, 2, figsize = (6.3, 6.3))
-diurnal_PSM_2024, axes = plot_diurnal_mean(axes, data['PSM_2024'], 'Total conc', 'Total conc. (# cm$^{-3}$)')
-fig.tight_layout()
-fig.savefig('Figures/PSM/Diurnal_mean_2024.jpg', dpi = 600)
-
-# Plot PSM 2025 diurnal mean
-fig, axes = plt.subplots(2, 2, figsize = (6.3, 6.3))
-diurnal_PSM_2025, axes = plot_diurnal_mean(axes, data['PSM_2025'], 'Total conc', 'Total conc. (# cm$^{-3}$)')
-fig.tight_layout()
-fig.savefig('Figures/PSM/Diurnal_mean_2025.jpg', dpi = 600)
-
-# Plot NAIS diurnal mean
-fig, axes = plt.subplots(2, 2, figsize = (6.3, 6.3))
-diurnal_NAIS_FR, axes = plot_diurnal_mean(axes, data['NAIS_formation_rate_neg_1H-avg'], 'J2-2.3,-/N<2,-', 'J$_{2-2.3 nm}$/N$_{<2 nm}$')
-fig.tight_layout()
-fig.savefig('Figures/NAIS/Diurnal_mean_FR.jpg', dpi = 600)
-#%%
 # Plot daily DMPS and NAIS 2024
 temp = time_filtered_conc(data['NAIS_formation_rate_neg_1H-avg'], ['J2-2.3,-/N<2,-', 'N2-2.3,-'], ['2024-01-31 23:59', '2025-01-01 00:00'])
 DMPS_NAIS = pd.merge(data['DMPS_2024'], temp, on = 'Time', how = 'outer')
