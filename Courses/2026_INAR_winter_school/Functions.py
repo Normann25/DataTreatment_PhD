@@ -361,7 +361,7 @@ def plot_diurnal_mean(axes, df, conc_key, ylabel):
 
     for ax, key in zip(axes.flatten(), diurnal_df.keys()[1::3]):
 
-        ax.fill_between(diurnal_df['Time'], diurnal_df[f'{key.split(' ')[0]} 10%'], diurnal_df[f'{key.split(' ')[0]} 90%'], alpha = 0.2, color = 'tab:blue', linewidth=0)
+        ax.fill_between(diurnal_df['Time'], diurnal_df[f'{key.split(' ')[0]} 25%'], diurnal_df[f'{key.split(' ')[0]} 75%'], alpha = 0.2, color = 'tab:blue', linewidth=0)
         ax.plot(diurnal_df['Time'], diurnal_df[key], color = 'tab:blue', lw = 1.2)
         ax.scatter(diurnal_df['Time'], diurnal_df[key], color = 'tab:blue', s = 10)
 
