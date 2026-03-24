@@ -32,12 +32,12 @@ for i, keys in enumerate(equator_keys):
         ax[i].plot(wavelength, data[key]['TOTAL'], label = altitudes[j], color = colors[j], lw = 1)
 
     ax[i].legend()
-    ax[i].set(title = dates[i], xlabel = 'Wavelength (nm)', ylabel = 'Actinic flux (photon s$^{-1}$cm$^{-2}$nm$^{-1}$)')
+    ax[i].set(title = dates[i], xlabel = 'Wavelength (nm)', ylabel = 'Actinic flux (photon s$^{-1}$cm$^{-2}$nm$^{-1}$)', yscale = 'log')
 
-fig.suptitle('Equator')
+# fig.suptitle('Equator')
 fig.tight_layout()
 fig.savefig('Solar_spectrum_equator.jpg', dpi = 600)
-#%%
+
 fig, ax = plt.subplots(2, 1, figsize = (6.3, 6))
 for i, keys in enumerate(arktis_keys):
     n_lines = len(keys)+1
@@ -50,10 +50,10 @@ for i, keys in enumerate(arktis_keys):
     ax[i].legend()
     ax[i].set(title = dates[i], xlabel = 'Wavelength (nm)', ylabel = 'Actinic flux (photon s$^{-1}$cm$^{-2}$nm$^{-1}$)')
 
-fig.suptitle('Arctic')
+# fig.suptitle('Arctic')
 fig.tight_layout()
 fig.savefig('Solar_spectrum_arctic.jpg', dpi = 600)
-#%%
+
 fig, ax = plt.subplots(2, 1, figsize = (6.3, 6))
 for i, keys in enumerate(marselis_keys):
     n_lines = len(keys)+1
@@ -66,6 +66,6 @@ for i, keys in enumerate(marselis_keys):
     ax[i].legend()
     ax[i].set(title = dates[i], xlabel = 'Wavelength (nm)', ylabel = 'Actinic flux (photon s$^{-1}$cm$^{-2}$nm$^{-1}$)')
 
-fig.suptitle('Marselis Forrest')
+# fig.suptitle('Marselis Forrest')
 fig.tight_layout()
 fig.savefig('Solar_spectrum_marselis.jpg', dpi = 600)
