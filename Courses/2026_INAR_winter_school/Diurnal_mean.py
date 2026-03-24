@@ -40,43 +40,6 @@ diurnal_NAIS_FR, axes = plot_diurnal_mean(axes, TZS_data, 'J2-2.3-/N<2-', 'J$_{2
 fig.tight_layout()
 fig.savefig('Figures/NAIS/Diurnal_mean_FR.jpg', dpi = 600)
 #%%
-def calc_diurnal_mean(df, conc_key):
-    new_df = df
-    new_df['Month'] = [str(i).split('-')[1] for i in new_df['Time']]
-    new_df['Date'] = [str(i).split(' ')[0] for i in new_df['Time']]
-
-    month_of_the_year = [['12', '01', '02'],
-                         ['03', '04', '05'],
-                         ['06', '07', '08'],
-                         ['09', '10', '11']]
-    season_names = ['Winter', 'Spring', 'Summer', 'Autumn']
-    diurnal_df = pd.DataFrame({'Time': np.arange(0, 24, 1)})
-
-    for months_of_season, season in zip(month_of_the_year, season_names):
-        temp = pd.DataFrame(columns = np.arange(0, 24, 1))
-        for month, month_group in new_df.groupby('Month'):        
-            if month in months_of_season:
-                for date, date_group in month_group.groupby('Date'):
-                    timestamps = [f'{date} 0{i}:00:00' for i in np.arange(0, 10, 1)] + [f'{date} {i}:00:00' for i in np.arange(10, 24, 1)]
-                    time_df = pd.DataFrame({'Time': pd.to_datetime(timestamps), 'Hour': np.arange(0, 24, 1)})
-                    date_temp = pd.DataFrame({'Time': date_group['Time'], 'Conc': date_group[conc_key]})
-                    date_temp = pd.merge(time_df, date_temp, on = 'Time', how = 'outer').drop(['Time'], axis = 1)
-                    date_temp = date_temp.T.reset_index(drop = True).drop([0])
-                    temp = pd.concat([temp, date_temp], ignore_index = True)
-
-        mean = []
-        percentile_75 = []
-        percentile_25 = []
-        for temp_key in temp.keys():
-            mean.append(temp[temp_key].dropna().median())
-            percentile_75.append(np.percentile(np.array(temp[temp_key].dropna()), 75))
-            percentile_25.append(np.percentile(np.array(temp[temp_key].dropna()), 25))
-        diurnal_df[f'{season} mean'] = mean
-        diurnal_df[f'{season} 75%'] = percentile_75
-        diurnal_df[f'{season} 25%'] = percentile_25
-        
-    return diurnal_df
-
 def plot_multiparameter_diurnal(axes, dictionary, df_keys, colors, season, ylabels):
     for color, dict_key in zip(colors, dictionary.keys()):
         for j, ax, in enumerate(axes):
