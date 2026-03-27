@@ -28,11 +28,12 @@ for i, keys in enumerate(equator_keys):
     cmap = mpl.colormaps['viridis']
     colors = cmap(np.linspace(0, 1, n_lines))
     for j, key in enumerate(keys):
-        wavelength = (data[key]['LOWER WVL'] + data[key]['UPPER WVL']) / 2
-        ax[i].plot(wavelength, data[key]['TOTAL'], label = altitudes[j], color = colors[j], lw = 1)
+        mask = data[key]['UPPER WVL'] <= 400
+        wavelength = (data[key]['LOWER WVL'][mask] + data[key]['UPPER WVL'][mask]) / 2
+        ax[i].plot(wavelength, data[key]['TOTAL'][mask], label = altitudes[j], color = colors[j], lw = 1)
 
     ax[i].legend()
-    ax[i].set(title = dates[i], xlabel = 'Wavelength (nm)', ylabel = 'Actinic flux (photon s$^{-1}$cm$^{-2}$nm$^{-1}$)', yscale = 'log')
+    ax[i].set(title = dates[i], xlabel = 'Wavelength (nm)', ylabel = 'Actinic flux (photon s$^{-1}$cm$^{-2}$nm$^{-1}$)')
 
 # fig.suptitle('Equator')
 fig.tight_layout()
@@ -44,8 +45,9 @@ for i, keys in enumerate(arktis_keys):
     cmap = mpl.colormaps['viridis']
     colors = cmap(np.linspace(0, 1, n_lines))
     for j, key in enumerate(keys):
-        wavelength = (data[key]['LOWER WVL'] + data[key]['UPPER WVL']) / 2
-        ax[i].plot(wavelength, data[key]['TOTAL'], label = altitudes[j], color = colors[j], lw = 1)
+        mask = data[key]['UPPER WVL'] <= 400
+        wavelength = (data[key]['LOWER WVL'][mask] + data[key]['UPPER WVL'][mask]) / 2
+        ax[i].plot(wavelength, data[key]['TOTAL'][mask], label = altitudes[j], color = colors[j], lw = 1)
 
     ax[i].legend()
     ax[i].set(title = dates[i], xlabel = 'Wavelength (nm)', ylabel = 'Actinic flux (photon s$^{-1}$cm$^{-2}$nm$^{-1}$)')
@@ -60,8 +62,9 @@ for i, keys in enumerate(marselis_keys):
     cmap = mpl.colormaps['viridis']
     colors = cmap(np.linspace(0, 1, n_lines))
     for j, key in enumerate(keys):
-        wavelength = (data[key]['LOWER WVL'] + data[key]['UPPER WVL']) / 2
-        ax[i].plot(wavelength, data[key]['TOTAL'], label = altitudes[j], color = colors[j], lw = 1)
+        mask = data[key]['UPPER WVL'] <= 400
+        wavelength = (data[key]['LOWER WVL'][mask] + data[key]['UPPER WVL'][mask]) / 2
+        ax[i].plot(wavelength, data[key]['TOTAL'][mask], label = altitudes[j], color = colors[j], lw = 1)
 
     ax[i].legend()
     ax[i].set(title = dates[i], xlabel = 'Wavelength (nm)', ylabel = 'Actinic flux (photon s$^{-1}$cm$^{-2}$nm$^{-1}$)')
@@ -69,3 +72,20 @@ for i, keys in enumerate(marselis_keys):
 # fig.suptitle('Marselis Forrest')
 fig.tight_layout()
 fig.savefig('Solar_spectrum_marselis.jpg', dpi = 600)
+
+
+fig, ax = plt.subplots(2, 1, figsize = (6.3, 6))
+for i, keys in enumerate(marselis_keys):
+    n_lines = len(keys)+1
+    cmap = mpl.colormaps['viridis']
+    colors = cmap(np.linspace(0, 1, n_lines))
+    for j, key in enumerate(keys):
+        mask = (data[key]['UPPER WVL'] > 290) & (data[key]['UPPER WVL'] < 310)
+        wavelength = (data[key]['LOWER WVL'][mask] + data[key]['UPPER WVL'][mask]) / 2
+        ax[i].plot(wavelength, data[key]['TOTAL'][mask], label = altitudes[j], color = colors[j], lw = 1)
+
+    ax[i].legend()
+    ax[i].set(title = dates[i], xlabel = 'Wavelength (nm)', ylabel = 'Actinic flux (photon s$^{-1}$cm$^{-2}$nm$^{-1}$)')
+
+# fig.suptitle('Marselis Forrest')
+fig.tight_layout()

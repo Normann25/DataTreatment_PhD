@@ -16,6 +16,9 @@ for key in data['DMPS_2024'].keys()[:-2]:
     DMPS_bin_means.append(float(key))
 DMPS_bins = calc_bin_edges(np.array(DMPS_bin_means)) / 10**(-9)
 
+print(DMPS_bins[0], DMPS_bins[-1])
+print(DMPS_bin_means[0], DMPS_bin_means[-1])
+
 PSM_bins = [[1.17, 1.3, 1.5, 1.7, 2.5, 3.0, 3.92],
             [1.1, 1.3, 1.5, 1.7, 2.5, 3.0],
             [1.17, 1.3, 1.4, 1.5, 1.7, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0, 6.5, 8.0, 10.0, 12.0]]

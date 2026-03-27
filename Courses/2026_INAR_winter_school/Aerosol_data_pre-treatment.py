@@ -36,7 +36,7 @@ MION_NO3['MION_NO3_1H-avg'].to_csv(f'{path}1H-avg/MION_NO3_1H-avg.csv', index = 
 
 DMPS_temp = read_csv(f'{path}DMPS/', '', 'Date', '%Y-%m-%d %H:%M:%S')
 DMPS = pd.merge(DMPS_temp['DMPS_TZS_2024'], DMPS_temp['Particle number conc_TZS_2024'], on = 'Time', how = 'outer').drop(['Date_x', 'Date_y'], axis = 1)
-DMPS.to_csv(f'{path}DMPS_2024.csv', index = False)
+DMPS.to_csv(f'{path}1H-avg/DMPS_2024.csv', index = False)
 
 NAIS = read_csv(f'{path}NAIS/', '', 'time', '%Y-%m-%d %H:%M:%S')
 for key in NAIS.keys():
@@ -79,9 +79,9 @@ MION_running = running_mean(MION, MION.keys()[1:], 'Time', '60min', None)
 MION_running.to_csv(f'{path}1H-avg/MION_TZS_1H-avg.csv', index = False)
 
 event_dates = [['2024-03-04 23:59', '2024-03-06 23:30'],
-               ['2024-03-11 23:59', '2024-03-13 23:30'],
-               ['2024-03-17 23:59', '2024-03-19 23:30'],
-               ['2024-04-03 23:59', '2024-04-05 23:30'],
+               ['2024-03-11 23:59', '2024-03-13 12:00'],
+               ['2024-03-17 23:59', '2024-03-19 18:00'],
+               ['2024-04-03 23:59', '2024-04-05 12:00'],
                ['2024-04-09 23:59', '2024-04-11 23:30'],
                ['2024-04-13 23:59', '2024-04-16 23:30'],
                ['2024-04-21 23:59', '2024-04-23 23:30'],
@@ -96,21 +96,21 @@ event_dates = [['2024-03-04 23:59', '2024-03-06 23:30'],
                ['2024-08-18 23:59', '2024-08-20 23:30'],
                ['2024-08-24 23:59', '2024-08-26 23:30'],
                ['2024-09-09 23:59', '2024-09-11 23:30'],
-               ['2024-09-14 23:59', '2024-09-16 23:30'],
-               ['2024-09-18 23:59', '2024-09-21 23:30'],
-               ['2024-09-28 23:59', '2024-09-30 23:30'],
+               ['2024-09-15 06:00', '2024-09-16 23:30'],
+               ['2024-09-19 06:00', '2024-09-21 23:30'],
+               ['2024-09-29 06:00', '2024-09-30 23:30'],
                ['2024-10-02 23:59', '2024-10-03 23:30'],
                ['2024-10-13 23:59', '2024-10-16 23:30'],
-               ['2024-10-25 23:59', '2024-10-28 23:30'],
+               ['2024-10-26 12:00', '2024-10-28 23:30'],
                ['2024-12-01 23:59', '2024-12-03 23:30'],
                ['2024-12-09 23:59', '2024-12-12 23:30'],
-               ['2024-12-24 23:59', '2024-12-27 23:30']]
+               ['2024-12-25 18:00', '2024-12-27 03:00']]
 
 merged = pd.merge(NAIS_running['formation_rate_2_2p3_neg'], MION_running, on = 'Time', how = 'outer')
 merged = pd.merge(merged, MION_NO3['MION_NO3_1H-avg'], on = 'Time', how = 'outer')
 merged = pd.merge(merged, DMPS, on = 'Time', how = 'outer')
 event_dates_df = pd.DataFrame()
-merged_keys = ['J2-2.3,-/N<2,-', 'HSO4-', '(H2SO4)HSO4-', '(H2SO4)2HSO4-', 'SO3-', 'NO3-', '(HNO3)NO3-', '(H2SO4)NO3-', 'IO3-', '(HIO3)NO3-', '(HIO3)HSO4-', 'SA', 'IA', 'MSA']
+merged_keys = ['J2-2.3,-/N<2,-', 'HSO4-', '(H2SO4)HSO4-', '(H2SO4)2HSO4-', 'SO3-', 'NO3-', '(HNO3)NO3-', '(H2SO4)NO3-', 'IO3-', '(HIO3)NO3-', '(HIO3)HSO4-', 'SA', 'IA', 'MSA'] + DMPS.keys()[:-2]
 particle_formation_events = pd.DataFrame()
 for timestamps in event_dates:
     temp = time_filtered_conc(merged, merged_keys, timestamps)
