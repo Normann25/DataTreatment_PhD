@@ -40,6 +40,7 @@ DMPS.to_csv(f'{path}1H-avg/DMPS_2024.csv', index = False)
 
 NAIS = read_csv(f'{path}NAIS/', '', 'time', '%Y-%m-%d %H:%M:%S')
 for key in NAIS.keys():
+    print(key)
     NAIS[key] = NAIS[key].drop(['time'], axis = 1)
 
 PSM24 = read_csv(f'{path}PSM/2024/', '', 'ScanTime', '%d-%b-%Y %H:%M:%S')
@@ -72,6 +73,7 @@ NAIS_running = {}
 for key in NAIS.keys():
     temp = running_mean(NAIS[key], NAIS[key].keys()[:-1], 'Time', '60min', ['2023-12-31 23:59:00', '2026-01-01 00:01:00'])
     temp['Time'] = temp['Time'] + pd.Timedelta(hours = 2)
+    NAIS_running[key] = temp
 NAIS_running['formation_rate_2_2p3_neg'].to_csv(f'{path}1H-avg/NAIS_formation_rate_neg_1H-avg.csv', index = False)
 NAIS_running['tvarminne_conc_utc'].to_csv(f'{path}1H-avg/NAIS_TZS_1H-avg.csv', index = False)
 
@@ -106,11 +108,12 @@ event_dates = [['2024-03-04 23:59', '2024-03-06 23:30'],
                ['2024-12-09 23:59', '2024-12-12 23:30'],
                ['2024-12-25 18:00', '2024-12-27 03:00']]
 
-merged = pd.merge(NAIS_running['formation_rate_2_2p3_neg'], MION_running, on = 'Time', how = 'outer')
+merged = pd.merge(NAIS_running['formation_rate_2_2p3_neg'], NAIS_running['tvarminne_conc_utc'], on = 'Time', how = 'outer')
+merged = pd.merge(merged, MION_running, on = 'Time', how = 'outer')
 merged = pd.merge(merged, MION_NO3['MION_NO3_1H-avg'], on = 'Time', how = 'outer')
 merged = pd.merge(merged, DMPS, on = 'Time', how = 'outer')
 event_dates_df = pd.DataFrame()
-merged_keys = ['J2-2.3,-/N<2,-', 'HSO4-', '(H2SO4)HSO4-', '(H2SO4)2HSO4-', 'SO3-', 'NO3-', '(HNO3)NO3-', '(H2SO4)NO3-', 'IO3-', '(HIO3)NO3-', '(HIO3)HSO4-', 'SA', 'IA', 'MSA'] + DMPS.keys()[:-2]
+merged_keys = ['J2-2.3,-/N<2,-', 'neg 2-7', 'HSO4-', '(H2SO4)HSO4-', '(H2SO4)2HSO4-', 'SO3-', 'NO3-', '(HNO3)NO3-', '(H2SO4)NO3-', 'IO3-', '(HIO3)NO3-', '(HIO3)HSO4-', 'SA', 'IA', 'MSA'] + DMPS.keys()[:-2].to_list()
 particle_formation_events = pd.DataFrame()
 for timestamps in event_dates:
     temp = time_filtered_conc(merged, merged_keys, timestamps)
