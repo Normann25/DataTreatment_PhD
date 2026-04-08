@@ -39,22 +39,6 @@ Land_mask = TZS_data['Land'] == 1
 comparison_dict = {'HYDE': HYDE_data, 'TZS Marine': TZS_data[Marine_mask], 'TZS Land': TZS_data[Land_mask]}
 colors = ['orange', 'mediumblue', 'red']
 #%%
-fig, ax = plt.subplots()
-
-temp = time_filtered_conc(TZS_data, ['WD', 'Marine', 'Land'], ['2024-09-18 23:59', '2024-09-20 23:30'])
-plot_multi_total(ax, temp, ['Marine', 'Land'], ['Marine', 'Land'], '%H:%M')
-ax.set(ylabel = None)
-ax2 = ax.twinx()
-ax2.hlines(30, temp.iloc[0]['Time'], temp.iloc[-1]['Time'], color = 'purple', ls = '--')
-ax2.hlines(60, temp.iloc[0]['Time'], temp.iloc[-1]['Time'], color = 'green', ls = '--')
-ax2.hlines(120, temp.iloc[0]['Time'], temp.iloc[-1]['Time'], color = 'green', ls = '--')
-ax2.hlines(210, temp.iloc[0]['Time'], temp.iloc[-1]['Time'], color = 'green', ls = '--')
-ax2.hlines(270, temp.iloc[0]['Time'], temp.iloc[-1]['Time'], color = 'green', ls = '--')
-ax2.hlines(330, temp.iloc[0]['Time'], temp.iloc[-1]['Time'], color = 'purple', ls = '--')
-plot_total(ax2, temp, 'WD', 'r', '%H:%M')
-ax2.set_ylabel('Wind direction', color = 'r')
-
-#%%
 def plot_seasonal_scatter(data_dict, dict_keys, df_keys, timestamps, colors, ax_labels, time_of_day, x_text, y_text, xlim, ylim, save_path):
     new_dict = {}
     for key in dict_keys:
@@ -104,8 +88,12 @@ def plot_seasonal_scatter(data_dict, dict_keys, df_keys, timestamps, colors, ax_
             ymax = max([t.get_window_extent().ymax for t in textobjs])
             xmin, ymin = ax.transAxes.inverted().transform((xmin, ymin))
             xmax, ymax = ax.transAxes.inverted().transform((xmax, ymax))
-            rect = patches.Rectangle((xmin, ymin),xmax+0.1*xmin,ymax+0.001*ymin, facecolor='white', alpha=0.9, transform=ax.transAxes)
+            rect = patches.Rectangle((xmin, ymin),xmax+0.15*xmax,ymax, facecolor='white', alpha=0.9, transform=ax.transAxes)
             ax.add_patch(rect)
+
+        sublabels = ['a)', 'b)', 'c)', 'd)']
+        for ax, l in zip(axes.flatten(), sublabels):
+            ax.text(-0.35, 1.05, l, transform = ax.transAxes, fontsize = 12)
 
         axes[0][1].legend(labels = dict_keys, bbox_to_anchor = (1, 1, 0, 0))
         fig.tight_layout()
@@ -124,7 +112,16 @@ ax_labels_org = ['J$_{2-2.3 nm}$/N$_{<2 nm}$ (# s$^{-1}$)', 'Monomers (# cm$^{-3
 seasonal_corr_org = plot_seasonal_scatter(comparison_dict, ['HYDE', 'TZS Marine', 'TZS Land'], ['J2-2.3-/N<2-']+OVOC_keys, 
                       ['2024-01-01 00:00', '2025-12-31 23:59'], colors, ax_labels_org, 'Day', 0.05, 0.07, None, (10**(-7), 3*10**(-3)), 'Figures/Correlations/')
 
+# Plot NAIS vs cluster correlation
+ax_labels_cluster = ['J$_{2-2.3 nm}$/N$_{<2 nm}$ (# s$^{-1}$)', 'HSO$_{4}^{-}$ (ions s$^{-1}$)', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$ (ions s$^{-1}$)', 
+                     '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$ (ions s$^{-1}$)', 'IO$_{3}^{-}$ (ions s$^{-1}$)', '(HIO$_{3}$)HSO$_{4}^{-}$ (ions s$^{-1}$)']
+seasonal_corr_cluser1 = plot_seasonal_scatter(comparison_dict, ['TZS Marine', 'TZS Land'], ['J2-2.3-/N<2-']+cluster_keys, 
+                      ['2024-01-01 00:00', '2025-12-31 23:59'], colors[1:], ax_labels_cluster, 'Day', 0.05, 0.07, None, (10**(-7), 3*10**(-3)), 'Figures/Correlations/')
+#%%
 # Plot VOC vs OVOC correlation
+ax_labels_org = ['J$_{2-2.3 nm}$/N$_{<2 nm}$ (# s$^{-1}$)', 'Monomers (# cm$^{-3}$)', 'N monomers (# cm$^{-3}$)', 
+             'Dimers (# cm$^{-3}$)', 'N dimers (# cm$^{-3}$)', 'Total org. (# cm$^{-3}$)', 
+             'DMS (ppb)', 'Isoprene (ppb)', 'Monoterpenes (ppb)']
 for label, key in zip(ax_labels_org[1:6], OVOC_keys[:5]):
     DMS_vs_OVOC = plot_seasonal_scatter(comparison_dict, ['HYDE', 'TZS Marine', 'TZS Land'], [key]+[OVOC_keys[5]], 
                                 ['2024-01-01 00:00', '2025-12-31 23:59'], colors, [label, ax_labels_org[6]], 'Day', 0.05, 0.07, None, None, 'Figures/Correlations/')
@@ -134,8 +131,6 @@ for label, key in zip(ax_labels_org[1:6], OVOC_keys[:5]):
 # Plot NAIS vs cluster correlation
 ax_labels_cluster = ['J$_{2-2.3 nm}$/N$_{<2 nm}$ (# s$^{-1}$)', 'HSO$_{4}^{-}$ (ions s$^{-1}$)', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$ (ions s$^{-1}$)', 
                      '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$ (ions s$^{-1}$)', 'IO$_{3}^{-}$ (ions s$^{-1}$)', '(HIO$_{3}$)HSO$_{4}^{-}$ (ions s$^{-1}$)']
-seasonal_corr_cluser1 = plot_seasonal_scatter(comparison_dict, ['TZS Marine', 'TZS Land'], ['J2-2.3-/N<2-']+cluster_keys, 
-                      ['2024-01-01 00:00', '2025-12-31 23:59'], colors[1:], ax_labels_cluster, 'Day', 0.05, 0.07, None, (10**(-7), 3*10**(-3)), 'Figures/Correlations/')
 seasonal_corr_cluser2 = plot_seasonal_scatter(comparison_dict, ['TZS Marine', 'TZS Land'], ['J2-2.3-']+cluster_keys, 
                       ['2024-01-01 00:00', '2025-12-31 23:59'], colors[1:], ['J$_{2-2.3 nm}$'] + ax_labels_cluster[1:], 'Day', 0.05, 0.07, None, None, 'Figures/Correlations/')
 #%%
