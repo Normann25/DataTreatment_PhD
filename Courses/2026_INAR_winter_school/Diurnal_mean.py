@@ -63,7 +63,9 @@ for season in ['Winter', 'Spring', 'Summer', 'Autumn']:
     axes = [plt.subplot(2, 3, 1), plt.subplot(2, 3, 2), plt.subplot(2, 3, 3),
             plt.subplot(2, 3, 4), plt.subplot(2, 3, 5)]
     plot_multiparameter_diurnal(axes, comparison_dict, cluster_keys, colors, season, cluster_ylabels)
-    for ax in axes:
+    sublabels = ['a)', 'b)', 'c)', 'd)', 'e)']
+    for ax, l in zip(axes, sublabels):
+        ax.text(-0.2, 1.05, l, transform = ax.transAxes, fontsize = 12)
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles = handles, labels = labels)
     fig.tight_layout()
