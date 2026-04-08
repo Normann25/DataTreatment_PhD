@@ -148,24 +148,33 @@ Particle_formation = Particle_formation.drop(['Month', 'Year'], axis = 1)
 print(data['NAIS-MION_PF_dates'].keys())
 #%%
 # Plot DMPS, NAIS, MION (ambient ions and inorganic acids) event dates
-merged_keys = ['J2-2.3,-/N<2,-', 'HSO4-', '(H2SO4)HSO4-', '(H2SO4)2HSO4-', 'IO3-', '(HIO3)HSO4-', 'SA', 'IA', 'MSA']
+merged_keys = ['J2-2.3,-/N<2,-', 'neg 2-7', 'HSO4-', '(H2SO4)HSO4-', '(H2SO4)2HSO4-', 'IO3-', '(HIO3)HSO4-', 'SA', 'IA', 'MSA'] + data['DMPS_2024'].keys()[:-2].to_list()
 for i, row in data['Event_dates'].iterrows():
     temp = time_filtered_conc(data['NAIS-MION_PF_dates'], merged_keys, [row['Start time'], row['End time']])
-    DMPS_temp = time_filtered_conc(data['DMPS_2024'], data['DMPS_2024'].keys()[:-2], [row['Start time'], row['End time']])
     start_date, end_date = str(temp.iloc[0]['Time']).split(' ')[0], str(temp.iloc[-1]['Time']).split(' ')[0]
 
-    fig, ax = plt.subplots(2, 2, figsize = (10, 6.3), sharex = True)
+    fig, axes = plt.subplots(2, 2, figsize = (10, 6.3), sharex = True)
     # DMPS size distribution
-    plot_timeseries(fig, ax[0][0], DMPS_temp, data['DMPS_2024'].keys()[:-2], DMPS_bins, 'number', True, None, None, '%m/%d %H:%M')
+    plot_timeseries(fig, axes[0][0], temp, data['DMPS_2024'].keys()[:-2], DMPS_bins, 'number', True, None, None, '%m/%d %H:%M')
     # NAIS formation rate
-    plot_total(ax[1][0], temp, merged_keys[0], 'indigo', '%m/%d %H:%M')
-    ax[1][0].set(ylabel = 'J$_{2-2.3 nm}$/N$_{<2 nm}$', xlabel = 'Time (mm/dd HH:MM)')
+    plot_total(axes[1][0], temp, merged_keys[0], 'indigo', '%m/%d %H:%M')
+    axes[1][0].set(ylabel = 'J$_{2-2.3 nm}$/N$_{<2 nm}$ (s$^{-1}$)', xlabel = 'Time (mm/dd HH:MM)')   # , color = 'indigo')
+    # ax[1][0].tick_params(axis = 'y', labelcolor = 'indigo')
+    # ax[1][0].set(xlabel = 'Time (mm/dd HH:MM)')
+    # ax2 = ax[1][0].twinx()
+    # plot_total(ax2, temp, merged_keys[1], 'seagreen', '%m/%d %H:%M')
+    # ax2.set_ylabel(ylabel = 'N$_{2-7 nm}$ (# cm$^{-3}$)', color = 'seagreen')
+    # ax2.tick_params(axis = 'y', labelcolor = 'seagreen')
     # MION H2SO4 cluster
-    plot_multi_total(ax[0][1], temp, merged_keys[1:6], ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$', 'IO$_{3}^{-}$', '(HIO$_{3}$)HSO$_{4}^{-}$'], '%m/%d %H:%M')
-    ax[0][1].set(ylabel = 'Ions s$^{-1}$') #, xlabel = 'Time (mm/dd HH:MM)')
+    plot_multi_total(axes[0][1], temp, merged_keys[2:7], ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$', 'IO$_{3}^{-}$', '(HIO$_{3}$)HSO$_{4}^{-}$'], '%m/%d %H:%M')
+    axes[0][1].set(ylabel = 'Ions s$^{-1}$') #, xlabel = 'Time (mm/dd HH:MM)')
     # MION SA, IA, MSA
-    plot_multi_total(ax[1][1], temp, merged_keys[6:], ['SA', 'IA', 'MSA'], '%m/%d %H:%M')
-    ax[1][1].set(ylabel = 'Molecules cm$^{-3}$', xlabel = 'Time (mm/dd HH:MM)')
+    plot_multi_total(axes[1][1], temp, merged_keys[7:10], ['SA', 'IA', 'MSA'], '%m/%d %H:%M')
+    axes[1][1].set(ylabel = 'Molecules cm$^{-3}$', xlabel = 'Time (mm/dd HH:MM)')
+
+    sublabels = ['a)', 'b)', 'c)', 'd)']
+    for ax, l in zip(axes.flatten(), sublabels):
+        ax.text(-0.15, 1.05, l, transform = ax.transAxes, fontsize = 12)
 
     if start_date == end_date:
         fig.suptitle(start_date, size = 14)
@@ -173,7 +182,7 @@ for i, row in data['Event_dates'].iterrows():
         fig.suptitle(f'{start_date} - {end_date}', size = 14)
     
     fig.tight_layout()
-    fig.savefig(f'Figures/Event dates/PF_event_{start_date}.jpg', dpi = 600)
+    fig.savefig(f'Figures/Event dates/PF_event_{start_date}.png', dpi = 600)
 #%%
 fig, axes = plt.subplots(1, 3, figsize = (9, 3.3))
 labels = ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$']
