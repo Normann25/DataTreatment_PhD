@@ -431,12 +431,12 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, run_length,
 
     for i, time in enumerate(timestamps):
         if datatype == 'number and mass':
-            fig1, ax1 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig1, ax1, data[dictkeys[0][i]], df_keys, bin_edges, 'number', time, True, total_key, None, t_zero)
+            fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
+            plot_timeseries(fig1, axes1, data[dictkeys[0][i]], df_keys, bin_edges, 'number', time, True, total_key, None, t_zero)
             fig1.tight_layout()
             fig1.savefig(f'{save_path}Timeseries_{dictkeys[0][i]}.jpg', dpi = 600)
-            fig2, ax2 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig2, ax2, data[dictkeys[1][i]], df_keys, bin_edges, 'mass', time, True, total_key, None, t_zero)
+            fig2, axes2 = plt.subplots(2, 1, figsize = (6.3, 6))
+            plot_timeseries(fig2, axes2, data[dictkeys[1][i]], df_keys, bin_edges, 'mass', time, True, total_key, None, t_zero)
             fig2.tight_layout()
             fig2.savefig(f'{save_path}Timeseries_{dictkeys[1][i]}.jpg', dpi = 600)
 
@@ -460,8 +460,8 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, run_length,
             fig_run_mass.savefig(f'{save_path}Running_SizeDist_{dictkeys[1][i]}.jpg', dpi = 600)
 
         else:
-            fig1, ax1 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig1, ax1, data[dictkeys[i]], df_keys, bin_edges, datatype, time, True, total_key, None, t_zero)
+            fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
+            plot_timeseries(fig1, axes1, data[dictkeys[i]], df_keys, bin_edges, datatype, time, True, total_key, None, t_zero)
             fig1.tight_layout()
             fig1.savefig(f'{save_path}Timeseries_{dictkeys[i]}.jpg', dpi = 600)
 
