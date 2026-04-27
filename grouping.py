@@ -129,28 +129,28 @@ def PlotClusterRows(data, concentration_cols, labels, title, filename):
     plt.close()
 
 
-def main():
-    # Load data
-    df = LoadData('260113_Vanillin+UV.txt')
+# def main():
+#     # Load data
+#     df = LoadData('260113_Vanillin+UV.txt')
 
-    # Identify concentration columns
-    concentration_cols = [col for col in df.columns if col.startswith('m') and '(' in col] # The name of the time series
-    data_array = GetData(df, concentration_cols, smooth=False, window_size=100)
-    smooth_data_array = GetData(df, concentration_cols, smooth=True, window_size=100)
+#     # Identify concentration columns
+#     concentration_cols = [col for col in df.columns if col.startswith('m') and '(' in col] # The name of the time series
+#     data_array = GetData(df, concentration_cols, smooth=False, window_size=100)
+#     smooth_data_array = GetData(df, concentration_cols, smooth=True, window_size=100)
 
-    # Compute Distance measures
-    distance_matrices = ComputeTSDistance(data_array)
-    smooth_distance_matrices = ComputeTSDistance(smooth_data_array)
+#     # Compute Distance measures
+#     distance_matrices = ComputeTSDistance(data_array)
+#     smooth_distance_matrices = ComputeTSDistance(smooth_data_array)
 
-    # Do clustering and plot the result
-    for label, d_mat in distance_matrices.items():
-        hdbscan_labels= PerformHDBSCAN(d_mat) # Element x in concentration_cols belongs to cluster i where i is element x in hdbscan_labels
-        PlotClusterRows(data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'hdbscan_clusters_{label}_raw.jpg')
+#     # Do clustering and plot the result
+#     for label, d_mat in distance_matrices.items():
+#         hdbscan_labels= PerformHDBSCAN(d_mat) # Element x in concentration_cols belongs to cluster i where i is element x in hdbscan_labels
+#         PlotClusterRows(data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'hdbscan_clusters_{label}_raw.jpg')
 
-    for label, d_mat in smooth_distance_matrices.items():
-        hdbscan_labels= PerformHDBSCAN(d_mat)
-        PlotClusterRows(smooth_data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'hdbscan_clusters_{label}_smooth.jpg')
+#     for label, d_mat in smooth_distance_matrices.items():
+#         hdbscan_labels= PerformHDBSCAN(d_mat)
+#         PlotClusterRows(smooth_data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'hdbscan_clusters_{label}_smooth.jpg')
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

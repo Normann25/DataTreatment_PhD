@@ -20,17 +20,13 @@ def time_filtered_conc(df, df_keys, timestamps):
 
     return new_df
 
-def running_mean(df, concentration, timelabel, interval, wndw, timestamps):
+def running_mean(df, concentration, timelabel, interval, timestamps):
 
     if timestamps == None:      
         df = df.set_index(timelabel)
 
         # Resample the data to bins 
         new_df = df[concentration].resample(interval).mean() 
-        
-        for key in concentration:
-            # Now, apply the rolling mean
-            new_df[key] = new_df[key].rolling(window = wndw, min_periods = 1).mean()
 
     else:
         new_df = pd.DataFrame()
@@ -63,10 +59,6 @@ def running_mean(df, concentration, timelabel, interval, wndw, timestamps):
 
         # Resample the data to bins 
         new_df = new_df.resample(interval).mean() 
-        
-        for key in concentration:
-            # Now, apply the rolling mean
-            new_df[key] = new_df[key].rolling(window = wndw, min_periods = 1).mean()
 
     return new_df
 
