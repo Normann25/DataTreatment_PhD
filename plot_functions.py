@@ -415,12 +415,12 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, run_length,
     running_SMPS = {}
     for i, time in enumerate(timestamps):
         if datatype == 'number and mass':
-            temp_number = running_mean(data[dictkeys[0][i]], df_keys, 'Time', f'{run_length}T', run_length, [t_zero, time[1]])
+            temp_number = running_mean(data[dictkeys[0][i]], df_keys, 'Time', f'{run_length}min', [t_zero, time[1]])
             running_SMPS[dictkeys[0][i]] = temp_number
-            temp_mass = running_mean(data[dictkeys[1][i]], df_keys, 'Time', f'{run_length}T', run_length, [t_zero, time[1]])
+            temp_mass = running_mean(data[dictkeys[1][i]], df_keys, 'Time', f'{run_length}min', [t_zero, time[1]])
             running_SMPS[dictkeys[1][i]] = temp_mass
         else:
-            temp = running_mean(data[dictkeys[i]], df_keys, 'Time', f'{run_length}T', run_length, [t_zero, time[1]])
+            temp = running_mean(data[dictkeys[i]], df_keys, 'Time', f'{run_length}min', [t_zero, time[1]])
             running_SMPS[dictkeys[i]] = temp
         
     fig_run_number, ax_run_number = plt.subplots(nrows, ncols, figsize = (3.5*ncols, 3*nrows))
