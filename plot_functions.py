@@ -72,7 +72,7 @@ def plot_heatmap(ax, df, df_keys, time, bin_means, cutpoint, t_zero):
     y_max = np.nanmax(data)
     
     # Fill the generated mesh with particle concentration data
-    p1 = ax.pcolormesh(x, y, data, cmap='viridis', shading='nearest',vmin=y_min, vmax=y_max)
+    p1 = ax.pcolormesh(x, y, data, cmap='viridis', shading='nearest', vmin=y_min, vmax=y_max)
 
     if cutpoint != None:
         ax.hlines(cutpoint, time[0], time[-1], colors = 'white', linestyles = '--')
@@ -219,11 +219,11 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
         # Explicitly set ylabel color for secondary axis
         ax2.set_ylabel('dM/dlogDp ($\mu$g m$^{-3}$)', color='red')  # Use axis_labels[2] for clarity
 
-        # Adjust the plotting range of two y axes
-        org1 = 0.0  # Origin of first axis
-        org2 = 0.0  # Origin of second axis
-        pos = 0.05  # Position the two origins are aligned
-        align.yaxes(ax, org1, ax2, org2, pos)
+        # # Adjust the plotting range of two y axes
+        # org1 = 0.0  # Origin of first axis
+        # org2 = 0.0  # Origin of second axis
+        # pos = 0.05  # Position the two origins are aligned
+        # align.yaxes(ax, org1, ax2, org2, pos)
     
     else:
         ax2, mean_mass = 0, 0
