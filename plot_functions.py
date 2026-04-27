@@ -2,9 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
+from matplotlib.colors import BoundaryNorm
 import sys
 import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from mpl_axes_aligner import align
 sys.path.append('..')
 from calculations import *
 #%%
@@ -55,34 +57,25 @@ def plot_multi_barchart(axes, means, stds, xticks, ax_label):
 
     return
 
-def plot_heatmap(ax, df, df_keys, time, bin_edges, cutpoint, normed, t_zero):
+def plot_heatmap(ax, df, df_keys, time, bin_means, cutpoint, t_zero):
 
     data = np.array(df[df_keys])
-
-    if normed == False:
-        dlogDp = np.log10(bin_edges[1:])-np.log10(bin_edges[:-1])
-        data=data/dlogDp
     
     if t_zero is not None:
         time = (pd.to_datetime(time) - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
-        
-    # Generate an extra time bin, which is needed for the meshgrid
-    dt = time[1]-time[0]
-    new_time = time - dt
-    new_time = np.append(new_time, new_time[-1]+dt)
 
     # generate 2d meshgrid for the x, y, and z data of the 3D color plot
-    y, x = np.meshgrid(bin_edges, new_time)
+    y, x = np.meshgrid(bin_means, time)
     
     # Set the upper and/or lower limit of the color scale based on input
     y_min = np.nanmin(data)
     y_max = np.nanmax(data)
     
     # Fill the generated mesh with particle concentration data
-    p1 = ax.pcolormesh(x, y, data, cmap='jet',vmin=y_min, vmax=y_max,shading='flat')
+    p1 = ax.pcolormesh(x, y, data, cmap='viridis', shading='nearest',vmin=y_min, vmax=y_max)
 
     if cutpoint != None:
-        ax.hlines(cutpoint, new_time[0], new_time[-1], colors = 'white', linestyles = '--')
+        ax.hlines(cutpoint, time[0], time[-1], colors = 'white', linestyles = '--')
 
     if t_zero is not None:
         ax.set_xlabel('Time (min)')
@@ -113,7 +106,7 @@ def plot_total(ax, df, conc_key, clr, t_zero):
         plt.subplots_adjust(hspace=0.05)
     return ax
 
-def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, normed, total, cutpoint, t_zero):
+def plot_timeseries(fig, ax, df, df_keys, bin_means, datatype, timestamps, total, cutpoint, t_zero):
 
     if datatype == 'number and mass':
         df_number, df_mass = df[0], df[1]
@@ -122,8 +115,8 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
         new_df_mass = time_filtered_conc(df_mass, df_keys, timestamps)
 
         if total is not None:
-            ax1, p1 = plot_heatmap(ax[0][0], new_df_number, df_keys, np.array(new_df_number['Time']), bin_edges, cutpoint, normed, t_zero)
-            ax2, p2 = plot_heatmap(ax[0][1], new_df_mass, df_keys, np.array(new_df_mass['Time']), bin_edges, cutpoint, normed, t_zero)
+            ax1, p1 = plot_heatmap(ax[0][0], new_df_number, df_keys, np.array(new_df_number['Time']), bin_means, cutpoint, t_zero)
+            ax2, p2 = plot_heatmap(ax[0][1], new_df_mass, df_keys, np.array(new_df_mass['Time']), bin_means, cutpoint, t_zero)
 
             total_df_number = time_filtered_conc(df_number, [total], timestamps)
             ax3 = plot_total(ax[1], total_df_number, total, 'r', t_zero)
@@ -135,8 +128,8 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
             ax4.set_ylabel('Total mass conc. ($\mu$g m$^{-3}$)')
 
         else:
-            ax1, p1 = plot_heatmap(ax[0], new_df_number, df_keys, np.array(new_df_number['Time']), bin_edges, cutpoint, normed, t_zero)
-            ax2, p2 = plot_heatmap(ax[1], new_df_mass, df_keys, np.array(new_df_mass['Time']), bin_edges, cutpoint, normed, t_zero)
+            ax1, p1 = plot_heatmap(ax[0], new_df_number, df_keys, np.array(new_df_number['Time']), bin_means, cutpoint, t_zero)
+            ax2, p2 = plot_heatmap(ax[1], new_df_mass, df_keys, np.array(new_df_mass['Time']), bin_means, cutpoint, t_zero)
 
         # Insert coloarbar and label it
         col1 = fig.colorbar(p1, ax=ax1)
@@ -149,13 +142,13 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
         new_df = time_filtered_conc(df, df_keys, timestamps)
 
         if total is not None:
-            ax1, p1 = plot_heatmap(ax[0], new_df, df_keys, np.array(new_df['Time']), bin_edges, cutpoint, normed, t_zero)
+            ax1, p1 = plot_heatmap(ax[0], new_df, df_keys, np.array(new_df['Time']), bin_means, cutpoint, t_zero)
 
             total_df = time_filtered_conc(df, [total], timestamps)             
             ax2 = plot_total(ax[1], total_df, total, 'r', t_zero)
 
         else:
-            ax1, p1 = plot_heatmap(ax, new_df, df_keys, np.array(new_df['Time']), bin_edges, cutpoint, normed, t_zero)
+            ax1, p1 = plot_heatmap(ax, new_df, df_keys, np.array(new_df['Time']), bin_means, cutpoint, t_zero)
 
         # Insert coloarbar and label it
         col = fig.colorbar(p1, ax=ax1)
@@ -169,13 +162,8 @@ def plot_timeseries(fig, ax, df, df_keys, bin_edges, datatype, timestamps, norme
                 ax2.set_ylabel('Total concentration ($\mu$g m$^{-3}$)')
 
 
-def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp, bin_edges, cut_point, mass):
+def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp, cut_point, mass):
     mean_number, std_number = bin_mean(timestamps, df_number, df_keys, timelabel)
-
-    if bin_edges != None:   # bin_egdes should only be different from None when the dataset is not normalized
-        dlogDp = np.log10(bin_edges[1:])-np.log10(bin_edges[:-1])
-        mean_number=mean_number/dlogDp
-        std_number=std_number/dlogDp
 
     min_std_number = [m - std for m, std in zip(mean_number, std_number)]
     max_std_number = [m + std for m, std in zip(mean_number, std_number)]
@@ -204,11 +192,6 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
     if mass:
         mean_mass, std_mass = bin_mean(timestamps, df_mass, df_keys, timelabel)
 
-        if bin_edges != None:
-            dlogDp = np.log10(bin_edges[1:])-np.log10(bin_edges[:-1])
-            mean_mass=mean_mass/dlogDp
-            std_mass=std_mass/dlogDp
-
         min_std_mass = [m - std for m, std in zip(mean_mass, std_mass)]
         max_std_mass = [m + std for m, std in zip(mean_mass, std_mass)]
 
@@ -225,32 +208,34 @@ def plot_bin_mean(ax, timestamps, df_number, df_mass, df_keys, timelabel, bin_Dp
             lower_cut = df_mass['Bin mean'] < cut_point
             upper_cut = df_mass['Bin mean'] > cut_point
 
-            ax.fill_between(df_mass['Bin mean'][lower_cut], df_mass['Std min'][lower_cut], df_mass['Std max'][lower_cut], alpha=0.2, color='red', linewidth=0)
-            ax.plot(df_mass['Bin mean'][lower_cut], df_mass['Concentration'][lower_cut], color='red', lw = 1.2)
+            ax2.fill_between(df_mass['Bin mean'][lower_cut], df_mass['Std min'][lower_cut], df_mass['Std max'][lower_cut], alpha=0.2, color='red', linewidth=0)
+            ax2.plot(df_mass['Bin mean'][lower_cut], df_mass['Concentration'][lower_cut], color='red', lw = 1.2)
 
-            ax.fill_between(df_mass['Bin mean'][upper_cut], df_mass['Std min'][upper_cut], df_mass['Std max'][upper_cut], alpha=0.2, color='red', linewidth=0)
-            ax.plot(df_mass['Bin mean'][upper_cut], df_mass['Concentration'][upper_cut], color='red', lw = 1.2)
+            ax2.fill_between(df_mass['Bin mean'][upper_cut], df_mass['Std min'][upper_cut], df_mass['Std max'][upper_cut], alpha=0.2, color='red', linewidth=0)
+            ax2.plot(df_mass['Bin mean'][upper_cut], df_mass['Concentration'][upper_cut], color='red', lw = 1.2)
 
         ax2.tick_params(axis = 'y', labelcolor='red')
 
         # Explicitly set ylabel color for secondary axis
         ax2.set_ylabel('dM/dlogDp ($\mu$g m$^{-3}$)', color='red')  # Use axis_labels[2] for clarity
+
+        # Adjust the plotting range of two y axes
+        org1 = 0.0  # Origin of first axis
+        org2 = 0.0  # Origin of second axis
+        pos = 0.05  # Position the two origins are aligned
+        align.yaxes(ax, org1, ax2, org2, pos)
     
     else:
         ax2, mean_mass = 0, 0
     
     return mean_number, mean_mass, ax, ax2
 
-def plot_running_sizedist(fig, ax, df, bins, bin_edges, axis_labels, run_length):
+def plot_running_sizedist(fig, ax, df, bins, axis_labels, run_length):
     
     data = np.array(df[df.keys()])
     n_lines = len(data)
     cmap = mpl.colormaps['plasma_r']
     colors = cmap(np.linspace(0, 1, n_lines))
-    
-    if bin_edges is not None:
-        dlogDp = np.log10(bin_edges[1:]) - np.log10(bin_edges[:-1])
-        data = data / dlogDp
     
     for i in range(n_lines):
         ax.plot(bins, data[i], color=colors[i], lw=1.2)
@@ -407,10 +392,10 @@ def plot_AURA_overview(daq, smps, ams, timestamps, t_zero, save_path):
 
     return fig, ax
 
-def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, run_length, total_key, t_zero, nrows, ncols, save_path):
-    bin_edges = [min_DP]
+def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_key, t_zero, nrows, ncols, save_path):
+    bin_means = []
     for key in df_keys:
-        bin_edges.append(float(key))
+        bin_means.append(float(key))
     
     running_SMPS = {}
     for i, time in enumerate(timestamps):
@@ -432,11 +417,11 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, run_length,
     for i, time in enumerate(timestamps):
         if datatype == 'number and mass':
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig1, axes1, data[dictkeys[0][i]], df_keys, bin_edges, 'number', time, True, total_key, None, t_zero)
+            plot_timeseries(fig1, axes1, data[dictkeys[0][i]], df_keys, bin_means, 'number', time, total_key, None, t_zero)
             fig1.tight_layout()
             fig1.savefig(f'{save_path}Timeseries_{dictkeys[0][i]}.jpg', dpi = 600)
             fig2, axes2 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig2, axes2, data[dictkeys[1][i]], df_keys, bin_edges, 'mass', time, True, total_key, None, t_zero)
+            plot_timeseries(fig2, axes2, data[dictkeys[1][i]], df_keys, bin_means, 'mass', time, total_key, None, t_zero)
             fig2.tight_layout()
             fig2.savefig(f'{save_path}Timeseries_{dictkeys[1][i]}.jpg', dpi = 600)
 
@@ -446,22 +431,22 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, run_length,
             else:
                 ax = ax_mean
                 ax_number, ax_mass = ax_run_number, ax_run_mass
-            number, mass, ax3, ax3_2 = plot_bin_mean(ax, [t_zero, time[1]], data[dictkeys[0][i]], data[dictkeys[1][i]], df_keys, 'Time', bin_edges[1:], None, None, True)
+            number, mass, ax3, ax3_2 = plot_bin_mean(ax, [t_zero, time[1]], data[dictkeys[0][i]], data[dictkeys[1][i]], df_keys, 'Time', bin_means, None, True)
             fig_mean.tight_layout()
             fig_mean.savefig(f'{save_path}SizeDist_{dictkeys[0][i]}.jpg', dpi = 600)
             axes_number.append(ax3)
             axes_mass.append(ax3_2)
 
-            plot_running_sizedist(fig_run_number, ax_number, running_SMPS[dictkeys[0][i]], bin_edges[1:], None, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
+            plot_running_sizedist(fig_run_number, ax_number, running_SMPS[dictkeys[0][i]], bin_means, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
             fig_run_number.tight_layout()
             fig_run_number.savefig(f'{save_path}Running_SizeDist_{dictkeys[0][i]}.jpg', dpi = 600)
-            plot_running_sizedist(fig_run_mass, ax_mass, running_SMPS[dictkeys[1][i]], bin_edges[1:], None, ['Diameter (nm)', 'dM/dlogDp ($\mu$g m$^{-3}$)'], run_length)
+            plot_running_sizedist(fig_run_mass, ax_mass, running_SMPS[dictkeys[1][i]], bin_means, ['Diameter (nm)', 'dM/dlogDp ($\mu$g m$^{-3}$)'], run_length)
             fig_run_mass.tight_layout()
             fig_run_mass.savefig(f'{save_path}Running_SizeDist_{dictkeys[1][i]}.jpg', dpi = 600)
 
         else:
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig1, axes1, data[dictkeys[i]], df_keys, bin_edges, datatype, time, True, total_key, None, t_zero)
+            plot_timeseries(fig1, axes1, data[dictkeys[i]], df_keys, bin_means, datatype, time, total_key, None, t_zero)
             fig1.tight_layout()
             fig1.savefig(f'{save_path}Timeseries_{dictkeys[i]}.jpg', dpi = 600)
 
@@ -473,16 +458,16 @@ def plot_SMPS(data, dictkeys, df_keys, min_DP, datatype, timestamps, run_length,
                     ax = ax_mean
                     ax_number = ax_run_number
 
-                number, mass, ax2, ax2_2 = plot_bin_mean(ax, [t_zero, time[1]], data[dictkeys[i]], None, df_keys, 'Time', bin_edges[1:], None, None, False)
+                number, mass, ax2, ax2_2 = plot_bin_mean(ax, [t_zero, time[1]], data[dictkeys[i]], None, df_keys, 'Time', bin_means, None, False)
                 fig_mean.tight_layout()
                 fig_mean.savefig(f'{save_path}SizeDist_{dictkeys[i]}.jpg', dpi = 600)
                 axes_number.append(ax2)
 
-                plot_running_sizedist(fig_run_number, ax_number, running_SMPS[dictkeys[i]], bin_edges[1:], None, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
+                plot_running_sizedist(fig_run_number, ax_number, running_SMPS[dictkeys[i]], bin_means, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
                 fig_run_number.tight_layout()
                 fig_run_number.savefig(f'{save_path}Running_SizeDist_{dictkeys[i]}.jpg', dpi = 600)
 
-    return axes_number, axes_mass
+    return axes_number, axes_mass if axes_mass else None
 
 def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, save_path):
     date = t_zero.split(' ')[0]
