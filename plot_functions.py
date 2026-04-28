@@ -119,10 +119,10 @@ def plot_timeseries(fig, ax, df, df_keys, bin_means, datatype, timestamps, total
             ax2, p2 = plot_heatmap(ax[0][1], new_df_mass, df_keys, np.array(new_df_mass['Time']), bin_means, cutpoint, t_zero)
 
             total_df_number = time_filtered_conc(df_number, [total], timestamps)
-            ax3 = plot_total(ax[1], total_df_number, total, 'r', t_zero)
+            ax3 = plot_total(ax[1], total_df_number, total, 'purple', t_zero)
 
             total_df_mass = time_filtered_conc(df_mass, [total], timestamps)    
-            ax4 = plot_total(ax[1], total_df_mass, total, 'r', t_zero)
+            ax4 = plot_total(ax[1], total_df_mass, total, 'purple', t_zero)
 
             ax3.set_ylabel('Total number conc. (# cm$^{-3}$)')
             ax4.set_ylabel('Total mass conc. ($\mu$g m$^{-3}$)')
@@ -145,7 +145,7 @@ def plot_timeseries(fig, ax, df, df_keys, bin_means, datatype, timestamps, total
             ax1, p1 = plot_heatmap(ax[0], new_df, df_keys, np.array(new_df['Time']), bin_means, cutpoint, t_zero)
 
             total_df = time_filtered_conc(df, [total], timestamps)             
-            ax2 = plot_total(ax[1], total_df, total, 'r', t_zero)
+            ax2 = plot_total(ax[1], total_df, total, 'purple', t_zero)
 
         else:
             ax1, p1 = plot_heatmap(ax, new_df, df_keys, np.array(new_df['Time']), bin_means, cutpoint, t_zero)
@@ -400,12 +400,12 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_k
     running_SMPS = {}
     for i, time in enumerate(timestamps):
         if datatype == 'number and mass':
-            temp_number = running_mean(data[dictkeys[0][i]], df_keys, 'Time', f'{run_length}min', [t_zero, time[1]])
+            temp_number = running_mean(data[dictkeys[0][i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
             running_SMPS[dictkeys[0][i]] = temp_number
-            temp_mass = running_mean(data[dictkeys[1][i]], df_keys, 'Time', f'{run_length}min', [t_zero, time[1]])
+            temp_mass = running_mean(data[dictkeys[1][i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
             running_SMPS[dictkeys[1][i]] = temp_mass
         else:
-            temp = running_mean(data[dictkeys[i]], df_keys, 'Time', f'{run_length}min', [t_zero, time[1]])
+            temp = running_mean(data[dictkeys[i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
             running_SMPS[dictkeys[i]] = temp
         
     fig_run_number, ax_run_number = plt.subplots(nrows, ncols, figsize = (3.5*ncols, 3*nrows))
@@ -414,14 +414,28 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_k
     fig_mean, ax_mean = plt.subplots(nrows, ncols, figsize = (3.5*ncols, 3*nrows))
     axes_number, axes_mass = [], []
 
+#'Total number conc. (# cm$^{-3}$)')('Total mass conc. ($\mu$g m$^{-3}$)')
+
     for i, time in enumerate(timestamps):
         if datatype == 'number and mass':
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig1, axes1, data[dictkeys[0][i]], df_keys, bin_means, 'number', time, total_key, None, t_zero)
+            plot_timeseries(fig1, axes1, data[dictkeys[0][i]], df_keys, bin_means, 'number', time, total_key, None, t_zero[i])
+            axes1[1].set_ylabel('Total number conc. (# cm$^{-3}$)', color = 'purple')
+            axes1[1].tick_params(axis = 'y', labelcolor = 'purple')
+            ax1_twin = axes1[1].twinx()
+            plot_total(ax1_twin, data[dictkeys[0][i]], 'Geo. Mean (nm)', 'green', t_zero[i])
+            ax1_twin.set_ylabel('Geo. mean (nm)', color = 'green')
+            ax1_twin.tick_params(axis = 'y', labelcolor = 'green')
             fig1.tight_layout()
             fig1.savefig(f'{save_path}Timeseries_{dictkeys[0][i]}.jpg', dpi = 600)
             fig2, axes2 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig2, axes2, data[dictkeys[1][i]], df_keys, bin_means, 'mass', time, total_key, None, t_zero)
+            plot_timeseries(fig2, axes2, data[dictkeys[1][i]], df_keys, bin_means, 'mass', time, total_key, None, t_zero[i])
+            axes2[1].set_ylabel('Total mass conc. ($\mu$g m$^{-3}$)', color = 'purple')
+            axes2[1].tick_params(axis = 'y', labelcolor = 'purple')
+            ax2_twin = axes2[1].twinx()
+            plot_total(ax2_twin, data[dictkeys[1][i]], 'Geo. Mean (nm)', 'green', t_zero[i])
+            ax2_twin.set_ylabel('Geo. mean (nm)', color = 'green')
+            ax2_twin.tick_params(axis = 'y', labelcolor = 'green')
             fig2.tight_layout()
             fig2.savefig(f'{save_path}Timeseries_{dictkeys[1][i]}.jpg', dpi = 600)
 
@@ -431,24 +445,27 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_k
             else:
                 ax = ax_mean
                 ax_number, ax_mass = ax_run_number, ax_run_mass
-            number, mass, ax3, ax3_2 = plot_bin_mean(ax, [t_zero, time[1]], data[dictkeys[0][i]], data[dictkeys[1][i]], df_keys, 'Time', bin_means, None, True)
-            fig_mean.tight_layout()
-            fig_mean.savefig(f'{save_path}SizeDist_{dictkeys[0][i]}.jpg', dpi = 600)
+            number, mass, ax3, ax3_2 = plot_bin_mean(ax, [t_zero[i], time[1]], data[dictkeys[0][i]], data[dictkeys[1][i]], df_keys, 'Time', bin_means, None, True)
             axes_number.append(ax3)
             axes_mass.append(ax3_2)
 
             plot_running_sizedist(fig_run_number, ax_number, running_SMPS[dictkeys[0][i]], bin_means, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
-            fig_run_number.tight_layout()
-            fig_run_number.savefig(f'{save_path}Running_SizeDist_{dictkeys[0][i]}.jpg', dpi = 600)
             plot_running_sizedist(fig_run_mass, ax_mass, running_SMPS[dictkeys[1][i]], bin_means, ['Diameter (nm)', 'dM/dlogDp ($\mu$g m$^{-3}$)'], run_length)
-            fig_run_mass.tight_layout()
-            fig_run_mass.savefig(f'{save_path}Running_SizeDist_{dictkeys[1][i]}.jpg', dpi = 600)
 
         else:
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig1, axes1, data[dictkeys[i]], df_keys, bin_means, datatype, time, total_key, None, t_zero)
+            plot_timeseries(fig1, axes1, data[dictkeys[i]], df_keys, bin_means, datatype, time, total_key, None, t_zero[i])
             fig1.tight_layout()
             fig1.savefig(f'{save_path}Timeseries_{dictkeys[i]}.jpg', dpi = 600)
+            if datatype == 'number':
+                axes1[1].set_ylabel('Total number conc. (# cm$^{-3}$)', color = 'purple')
+            if datatype == 'mass':
+                axes1[1].set_ylabel('Total mass conc. ($\mu$g m$^{-3}$)', color = 'purple')
+            axes1[1].tick_params(axis = 'y', labelcolor = 'purple')
+            ax1_twin = axes1[1].twinx()
+            plot_total(ax1_twin, data[dictkeys[0][i]], 'Geo. Mean (nm)', 'green', t_zero[i])
+            ax1_twin.set_ylabel('Geo. mean (nm)', color = 'green')
+            ax1_twin.tick_params(axis = 'y', labelcolor = 'green')
 
             if datatype == 'number':
                 if nrows > 1 or ncols > 1:
@@ -458,14 +475,21 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_k
                     ax = ax_mean
                     ax_number = ax_run_number
 
-                number, mass, ax2, ax2_2 = plot_bin_mean(ax, [t_zero, time[1]], data[dictkeys[i]], None, df_keys, 'Time', bin_means, None, False)
-                fig_mean.tight_layout()
-                fig_mean.savefig(f'{save_path}SizeDist_{dictkeys[i]}.jpg', dpi = 600)
+                number, mass, ax2, ax2_2 = plot_bin_mean(ax, [t_zero[i], time[1]], data[dictkeys[i]], None, df_keys, 'Time', bin_means, None, False)
                 axes_number.append(ax2)
 
                 plot_running_sizedist(fig_run_number, ax_number, running_SMPS[dictkeys[i]], bin_means, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
-                fig_run_number.tight_layout()
-                fig_run_number.savefig(f'{save_path}Running_SizeDist_{dictkeys[i]}.jpg', dpi = 600)
+    
+    fig_mean.tight_layout()
+    fig_mean.savefig(f'{save_path}SizeDist.jpg', dpi = 600)
+
+    if 'number' in datatype:
+        fig_run_number.tight_layout()
+        fig_run_number.savefig(f'{save_path}Running_SizeDist.jpg', dpi = 600)
+
+    if 'mass' in datatype:
+        fig_run_mass.tight_layout()
+        fig_run_mass.savefig(f'{save_path}Running_SizeDist.jpg', dpi = 600)
 
     return axes_number, axes_mass if axes_mass else None
 
