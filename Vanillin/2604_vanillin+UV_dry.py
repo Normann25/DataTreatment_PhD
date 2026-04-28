@@ -12,9 +12,9 @@ pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 parent_path = '../../../Data/2026/'
 paths = ['260421_Vanillin70ppb_UV_dry_v2/', '260422_Vanillin70ppb_UV_dry/']
-bg_timestamps = [['2026-04-21 10:35', '2026-04-21 10:58'],
-                 ['2026-04-22 08:45', '2026-04-22 09:06']]
 
+# bg_timestamps = [['2026-04-21 10:35', '2026-04-21 10:58'],
+#                  ['2026-04-22 08:45', '2026-04-22 09:06']]
 # SMPS = {}
 # for path in paths:
 #     temp = import_SMPS(f'{parent_path}{path}SMPS/', '', 0)
@@ -23,6 +23,7 @@ bg_timestamps = [['2026-04-21 10:35', '2026-04-21 10:58'],
 #         for df_key in [temp[key].keys()[38]]+temp[key].keys()[42:-1].to_list():
 #             temp[key][df_key] = temp[key][df_key] - background[df_key].mean()
 #         SMPS[key] = temp[key]
+
 SMPS = {}
 for path in paths:
     temp = import_SMPS(f'{parent_path}{path}SMPS/', '', 0)
