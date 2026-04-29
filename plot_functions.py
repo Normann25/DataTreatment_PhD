@@ -420,6 +420,7 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_k
         if datatype == 'number and mass':
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
             plot_timeseries(fig1, axes1, data[dictkeys[0][i]], df_keys, bin_means, 'number', time, total_key, None, t_zero[i])
+            axes1[0].set_title(f'{t_zero[i].split(' ')[0]}')
             axes1[1].set_ylabel('Total number conc. (# cm$^{-3}$)', color = 'purple')
             axes1[1].tick_params(axis = 'y', labelcolor = 'purple')
             ax1_twin = axes1[1].twinx()
@@ -430,6 +431,7 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_k
             fig1.savefig(f'{save_path}Timeseries_{dictkeys[0][i]}.jpg', dpi = 600)
             fig2, axes2 = plt.subplots(2, 1, figsize = (6.3, 6))
             plot_timeseries(fig2, axes2, data[dictkeys[1][i]], df_keys, bin_means, 'mass', time, total_key, None, t_zero[i])
+            axes2[0].set_title(f'{t_zero[i].split(' ')[0]}')
             axes2[1].set_ylabel('Total mass conc. ($\mu$g m$^{-3}$)', color = 'purple')
             axes2[1].tick_params(axis = 'y', labelcolor = 'purple')
             ax2_twin = axes2[1].twinx()
@@ -455,6 +457,7 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_k
         else:
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
             plot_timeseries(fig1, axes1, data[dictkeys[i]], df_keys, bin_means, datatype, time, total_key, None, t_zero[i])
+            axes1[0].set_title(f'{t_zero[i].split(' ')[0]}')
             fig1.tight_layout()
             fig1.savefig(f'{save_path}Timeseries_{dictkeys[i]}.jpg', dpi = 600)
             if datatype == 'number':
