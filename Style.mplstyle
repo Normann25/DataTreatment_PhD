@@ -1,12 +1,12 @@
-axes.titlesize : 12
-axes.labelsize : 10
+axes.titlesize : 14
+axes.labelsize : 12
 axes.xmargin : 0
 axes.formatter.limits : -2, 3
 
 lines.linewidth : 1.2
 
-xtick.labelsize : 8
-ytick.labelsize : 8
+xtick.labelsize : 10
+ytick.labelsize : 10
 xtick.minor.visible : True
 ytick.minor.visible : True
 
@@ -17,3 +17,4 @@ legend.handlelength : 1.5
 legend.handletextpad : 0.6
 legend.borderaxespad : 0.2
 legend.columnspacing : 1.0
+legend.fontsize : 10
