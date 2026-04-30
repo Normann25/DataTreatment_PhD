@@ -30,6 +30,11 @@ for path in paths:
     for key in temp.keys():
         SMPS[key] = temp[key]
 
+AMS = import_data(f'{parent_path}{paths[1]}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', 0)
+for key in AMS.keys():            
+    AMS[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
+                        'familyCHN', 'familyCHO1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
+
 save_path = 'Figures/2604_vanillin+UV_dry/'
 timestamps = [['2026-04-21 10:59', '2026-04-21 17:01'],
               ['2026-04-22 09:07', '2026-04-22 16:14']
@@ -45,3 +50,6 @@ SMPS_keys = [['260421_vanillin+UV_dry_number', '260422_vanillin+UV_dry_number'],
              ['260421_vanillin+UV_dry_mass', '260422_vanillin+UV_dry_mass']]
 ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260422_vanillin+UV_dry_mass'].columns[42:-1], 'number and mass', 
                      timestamps, 10, 'Total concentration', t_zero, 1, 2, save_path)
+#%%
+bg_timestamps = ['2026-04-22 08:20', '2026-04-22 08:40']
+plot_AMS(AMS['260422_AMS_vanillin+UV_dry_TS'], None, t_zero[1], timestamps[1], bg_timestamps, 1, save_path)
