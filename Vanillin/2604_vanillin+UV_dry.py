@@ -11,7 +11,13 @@ warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 parent_path = '../../../Data/2026/'
-paths = ['260421_Vanillin70ppb_UV_dry_v2/', '260422_Vanillin70ppb_UV_dry/']
+paths = ['260421_Vanillin70ppb_UV_dry_v2/', '260422_Vanillin70ppb_UV_dry/', '260501_Vanillin70ppb_UV_dry/', '260504_Vanillin70ppb_UV_dry/']
+
+timestamps = [['2026-04-21 09:11', '2026-04-21 17:01'],
+              ['2026-04-22 08:50', '2026-04-22 16:14'],
+              ['2026-05-01 10:17', '2026-05-01 15:38'],
+              ['2026-05-04 08:45', '2026-05-04 15:11']]
+t_zero = ['2026-04-21 11:28', '2026-04-22 10:42', '2026-05-01 10:38', '2026-05-04 10:10']
 
 # bg_timestamps = [['2026-04-21 10:35', '2026-04-21 10:58'],
 #                  ['2026-04-22 08:45', '2026-04-22 09:06']]
@@ -25,9 +31,11 @@ paths = ['260421_Vanillin70ppb_UV_dry_v2/', '260422_Vanillin70ppb_UV_dry/']
 #         SMPS[key] = temp[key]
 
 SMPS = {}
-for path in paths:
+for t, path in zip(t_zero, paths):
     temp = import_SMPS(f'{parent_path}{path}SMPS/', '', 0)
     for key in temp.keys():
+        temp[key].loc[temp[key]['Time'] < pd.to_datetime(t), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+        temp[key].loc[temp[key]['Geo. Mean (nm)'] > 80, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
         SMPS[key] = temp[key]
 
 AMS = import_data(f'{parent_path}{paths[1]}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', 0)
@@ -36,20 +44,15 @@ for key in AMS.keys():
                         'familyCHN', 'familyCHO1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
 
 save_path = 'Figures/2604_vanillin+UV_dry/'
-timestamps = [['2026-04-21 10:59', '2026-04-21 17:01'],
-              ['2026-04-22 09:07', '2026-04-22 16:14']
-              ]
-t_zero = ['2026-04-21 11:28', '2026-04-22 10:42'
-]
 
 for key in SMPS.keys():
     SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
     SMPS[key] = SMPS[key].fillna(0)
 #%%
-SMPS_keys = [['260421_vanillin+UV_dry_number', '260422_vanillin+UV_dry_number'], 
-             ['260421_vanillin+UV_dry_mass', '260422_vanillin+UV_dry_mass']]
+SMPS_keys = [['260421_vanillin+UV_dry_number', '260422_vanillin+UV_dry_number', '260501_vanillin+UV_dry_number', '260504_vanillin+UV_dry_number'], 
+             ['260421_vanillin+UV_dry_mass', '260422_vanillin+UV_dry_mass', '260501_vanillin+UV_dry_mass', '260504_vanillin+UV_dry_mass']]
 ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260422_vanillin+UV_dry_mass'].columns[42:-1], 'number and mass', 
-                     timestamps, 10, 'Total concentration', t_zero, 1, 2, save_path)
+                     timestamps, 10, ['Dry']*len(t_zero), 'Total concentration', t_zero, 2, 2, save_path)
 #%%
-bg_timestamps = ['2026-04-22 08:20', '2026-04-22 08:40']
+bg_timestamps = ['2026-04-22 08:25', '2026-04-22 08:40']
 plot_AMS(AMS['260422_AMS_vanillin+UV_dry_TS'], None, t_zero[1], timestamps[1], bg_timestamps, 1, save_path)
