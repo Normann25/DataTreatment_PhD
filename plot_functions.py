@@ -359,12 +359,63 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
 
     return ax
 
+def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, ts_exp_end, RH):
+    fig = plt.figure(figsize = (6.5,6.3))
+    axes = [plt.subplot(2, 1, 1), plt.subplot(2, 2, 3), plt.subplot(2, 2, 4)]
+
+    if fragments != None:
+        n_lines = len(labels) + 1
+        cmap = mpl.colormaps['viridis']
+        colors = cmap(np.linspace(0, 1, n_lines))
+        scatter_color = colors[0]
+        for color, compound in zip(colors[:-1], [parent_compound] + fragments):
+            plot_total(axes[0], df, compound, color, t_zero)
+        axes[0].legend(labels = labels)
+    else:
+        scatter_color = 'indigo'
+        plot_total(axes[0], df, parent_compound, 'indigo', t_zero)
+    axes[0].set(title = f'{t_zero.split(' ')[0]}, {RH}', ylabel = 'Concentration (ppb)')
+    
+    UV_on_df = running_mean(df, [parent_compound], 'Time', '1min', [t_zero, ts_UV_off])
+    UV_on_df['Time'] = (UV_on_df.index - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+    UV_on_df = UV_on_df.reset_index(drop = True)
+    UV_off_df = running_mean(df, [parent_compound], 'Time', '1min', [ts_UV_off, ts_exp_end])
+    UV_off_df['Time'] = (UV_off_df.index - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+    UV_off_df = UV_off_df.reset_index(drop = True)
+
+    axes[1].scatter(UV_on_df['Time'], np.log(UV_on_df[parent_compound]), color = scatter_color, s = 10)
+    on_values, on_errors, on_ndof, on_squares, on_R2 = linear_fit(UV_on_df['Time'], np.log(UV_on_df[parent_compound]), linear, a = 1, b = 10)
+    on_fit = linear(UV_on_df['Time'], *on_values)
+    axes[1].plot(UV_on_df['Time'], on_fit, color = 'k', lw = 1.2, ls = '--')
+    axes[1].text(0.05, 0.075, f'ln[{labels[0]}] = {on_values[0]:.3f}t + {on_values[1]:.3f}', transform = axes[1].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
+    axes[1].set_title('UV on', fontsize = 12)
+    print(f'{t_zero.split(' ')[0]}, {RH}, UV on: ln[{labels[0]}] = {on_values[0]}t + {on_values[1]}')
+
+    axes[2].scatter(UV_off_df['Time'], np.log(UV_off_df[parent_compound]), color = scatter_color, s = 10)
+    off_values, off_errors, off_ndof, off_squares, off_R2 = linear_fit(UV_off_df['Time'], np.log(UV_off_df[parent_compound]), linear, a = 1, b = 10)
+    off_fit = linear(UV_off_df['Time'], *off_values)
+    axes[2].plot(UV_off_df['Time'], off_fit, color = 'k', lw = 1.2, ls = '--')
+    axes[2].text(0.05, 0.075, f'ln[{labels[0]}] = {off_values[0]:.3f}t + {off_values[1]:.3f}', transform = axes[2].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
+    axes[2].set_title('UV off', fontsize = 12)
+    print(f'{t_zero.split(' ')[0]}, {RH}, UV off: ln[{labels[0]}] = {off_values[0]}t + {off_values[1]}')
+
+    for ax in axes[1:]:
+        ax.set(xlabel = 'Time (min)', ylabel = f'ln[{labels[0]}]')
+
+    return fig, axes
+
 def plot_AURA_overview(daq, smps, ams, timestamps, t_zero, save_path):
-    fig, ax = plt.subplots(3, 1, figsize = (6.3, 8.5))
+    if ams != None:
+        fig, ax = plt.subplots(3, 1, figsize = (6.3, 8.5))
+        ams = time_filtered_conc(ams, ['Ratio_H_C', 'Ratio_O_C'], timestamps)
+        plot_total(ax[2], ams, 'Ratio_O_C', 'tab:cyan', t_zero)
+        ax[2].tick_params(axis = 'y', labelcolor = 'tab:cyan')
+        ax[2].set_ylabel('O:C', color = 'tab:cyan')
+    else:
+        fig, ax = plt.subplots(2, 1, figsize = (6.3, 6.3))
 
     daq = time_filtered_conc(daq, ['Temp_C', 'RH_Percent'], timestamps)
-    smps = time_filtered_conc(smps, ['Mean (nm)', 'Total concentration'], timestamps)
-    ams = time_filtered_conc(ams, ['Ratio_H_C', 'Ratio_O_C'], timestamps)
+    smps = time_filtered_conc(smps, ['Geo. Mean (nm)', 'Total concentration'], timestamps)
     date = timestamps[0].split(' ')[0]
 
     plot_total(ax[0], daq, 'Temp_C', 'tab:red', t_zero)
@@ -375,24 +426,20 @@ def plot_AURA_overview(daq, smps, ams, timestamps, t_zero, save_path):
     ax0_2.tick_params(axis = 'y', labelcolor = 'tab:blue')
     ax0_2.set_ylabel('Relative humidity (%)', color = 'tab:blue')
 
-    plot_total(ax[1], smps, 'Mean (nm)', 'green', t_zero)
+    plot_total(ax[1], smps, 'Geo. Mean (nm)', 'green', t_zero)
     ax[1].tick_params(axis = 'y', labelcolor = 'green')
-    ax[1].set_ylabel('Mean D$_{p}$ (nm)', color = 'green')
+    ax[1].set_ylabel('Geo. mean D$_{p}$ (nm)', color = 'green')
     ax1_2 = ax[1].twinx()
     plot_total(ax1_2, smps, 'Total concentration', 'purple', t_zero)
     ax1_2.tick_params(axis = 'y', labelcolor = 'purple')
     ax1_2.set_ylabel('Concentration ($\mu$g m$^{-3}$)', color = 'purple')
-
-    plot_total(ax[2], ams, 'Ratio_O_C', 'tab:cyan', t_zero)
-    ax[2].tick_params(axis = 'y', labelcolor = 'tab:cyan')
-    ax[2].set_ylabel('O:C', color = 'tab:cyan')
 
     fig.tight_layout()
     fig.savefig(f'{save_path}{date}_AURA_overview.jpg', dpi = 600)
 
     return fig, ax
 
-def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_key, t_zero, nrows, ncols, save_path):
+def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, RH, total_key, t_zero, nrows, ncols, save_path):
     bin_means = []
     for key in df_keys:
         bin_means.append(float(key))
@@ -420,25 +467,25 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_k
         if datatype == 'number and mass':
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
             plot_timeseries(fig1, axes1, data[dictkeys[0][i]], df_keys, bin_means, 'number', time, total_key, None, t_zero[i])
-            axes1[0].set_title(f'{t_zero[i].split(' ')[0]}')
+            axes1[0].set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
             axes1[1].set_ylabel('Total number conc. (# cm$^{-3}$)', color = 'purple')
             axes1[1].tick_params(axis = 'y', labelcolor = 'purple')
             ax1_twin = axes1[1].twinx()
             geo_mean_number = time_filtered_conc(data[dictkeys[0][i]], ['Geo. Mean (nm)'], time)
             plot_total(ax1_twin, geo_mean_number, 'Geo. Mean (nm)', 'green', t_zero[i])
-            ax1_twin.set_ylabel('Geo. mean (nm)', color = 'green')
+            ax1_twin.set_ylabel('Geo. mean D$_{p}$ (nm)', color = 'green')
             ax1_twin.tick_params(axis = 'y', labelcolor = 'green')
             fig1.tight_layout()
             fig1.savefig(f'{save_path}Timeseries_{dictkeys[0][i]}.jpg', dpi = 600)
             fig2, axes2 = plt.subplots(2, 1, figsize = (6.3, 6))
             plot_timeseries(fig2, axes2, data[dictkeys[1][i]], df_keys, bin_means, 'mass', time, total_key, None, t_zero[i])
-            axes2[0].set_title(f'{t_zero[i].split(' ')[0]}')
+            axes2[0].set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
             axes2[1].set_ylabel('Total mass conc. ($\mu$g m$^{-3}$)', color = 'purple')
             axes2[1].tick_params(axis = 'y', labelcolor = 'purple')
             ax2_twin = axes2[1].twinx()
             geo_mean_mass = time_filtered_conc(data[dictkeys[1][i]], ['Geo. Mean (nm)'], time)
             plot_total(ax2_twin, geo_mean_mass, 'Geo. Mean (nm)', 'green', t_zero[i])
-            ax2_twin.set_ylabel('Geo. mean (nm)', color = 'green')
+            ax2_twin.set_ylabel('Geo. mean D$_{p}$ (nm)', color = 'green')
             ax2_twin.tick_params(axis = 'y', labelcolor = 'green')
             fig2.tight_layout()
             fig2.savefig(f'{save_path}Timeseries_{dictkeys[1][i]}.jpg', dpi = 600)
@@ -450,16 +497,19 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_k
                 ax = ax_mean
                 ax_number, ax_mass = ax_run_number, ax_run_mass
             number, mass, ax3, ax3_2 = plot_bin_mean(ax, [t_zero[i], time[1]], data[dictkeys[0][i]], data[dictkeys[1][i]], df_keys, 'Time', bin_means, None, True)
+            ax.set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
             axes_number.append(ax3)
             axes_mass.append(ax3_2)
 
             plot_running_sizedist(fig_run_number, ax_number, running_SMPS[dictkeys[0][i]], bin_means, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
             plot_running_sizedist(fig_run_mass, ax_mass, running_SMPS[dictkeys[1][i]], bin_means, ['Diameter (nm)', 'dM/dlogDp ($\mu$g m$^{-3}$)'], run_length)
+            ax_number.set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
+            ax_mass.set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
 
         else:
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
             plot_timeseries(fig1, axes1, data[dictkeys[i]], df_keys, bin_means, datatype, time, total_key, None, t_zero[i])
-            axes1[0].set_title(f'{t_zero[i].split(' ')[0]}')
+            axes1[0].set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
             fig1.tight_layout()
             fig1.savefig(f'{save_path}Timeseries_{dictkeys[i]}.jpg', dpi = 600)
             if datatype == 'number':
@@ -468,8 +518,9 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_k
                 axes1[1].set_ylabel('Total mass conc. ($\mu$g m$^{-3}$)', color = 'purple')
             axes1[1].tick_params(axis = 'y', labelcolor = 'purple')
             ax1_twin = axes1[1].twinx()
-            plot_total(ax1_twin, data[dictkeys[0][i]], 'Geo. Mean (nm)', 'green', t_zero[i])
-            ax1_twin.set_ylabel('Geo. mean (nm)', color = 'green')
+            geo_mean = time_filtered_conc(data[dictkeys[i]], ['Geo. Mean (nm)'], time)
+            plot_total(ax1_twin, geo_mean, 'Geo. Mean (nm)', 'green', t_zero[i])
+            ax1_twin.set_ylabel('Geo. mean D$_{p}$ (nm)', color = 'green')
             ax1_twin.tick_params(axis = 'y', labelcolor = 'green')
 
             if datatype == 'number':
@@ -481,9 +532,11 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, total_k
                     ax_number = ax_run_number
 
                 number, mass, ax2, ax2_2 = plot_bin_mean(ax, [t_zero[i], time[1]], data[dictkeys[i]], None, df_keys, 'Time', bin_means, None, False)
+                ax.set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
                 axes_number.append(ax2)
 
                 plot_running_sizedist(fig_run_number, ax_number, running_SMPS[dictkeys[i]], bin_means, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
+                ax_number.set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
     
     fig_mean.tight_layout()
     fig_mean.savefig(f'{save_path}SizeDist.jpg', dpi = 600)
