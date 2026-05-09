@@ -33,7 +33,7 @@ for t, path in zip(t_zero, paths):
     if path != paths[0]:
         temp_PTR = import_PTRMS(f'{parent_path}{path}PTRMS/', '')
         for key in temp_PTR.keys():
-            mask = (0 < temp_PTR[key][temp_PTR[key].keys()[5]]) & (temp_PTR[key][temp_PTR[key].keys()[5]] < 150)
+            mask = (0 < temp_PTR[key][temp_PTR[key].keys()[5]]) & (temp_PTR[key][temp_PTR[key].keys()[5]] < 90)
             temp = temp_PTR[key][mask]
             PTRMS[key] = temp
     temp_daq = import_data(f'{parent_path}{path}DAQ/', '', 'DAQ_Timestamp_UTC', '%d-%m-%Y %H:%M:%S', 0)
