@@ -32,13 +32,13 @@ for t, path in zip(t_zero, paths):
     temp_smps = import_SMPS(f'{parent_path}{path}SMPS/', '', 0)
     for key in temp_smps.keys():
         if 'mass' in key:
-            temp = remove_spikes(temp_smps[key], [temp_smps[key].keys()[38]], max(temp_smps[key][temp_smps[key].keys()[38]])/4)
+            temp = remove_spikes_up(temp_smps[key], [temp_smps[key].keys()[38]], max(temp_smps[key][temp_smps[key].keys()[38]])/4)
         else:
             temp = temp_smps[key]
         temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 30), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = 0
         temp.loc[temp[temp_smps[key].keys()[38]] == 0, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = 0
-        temp.loc[temp['Geo. Mean (nm)'] > 100, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = 0
-        temp = remove_spikes(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
+        temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
+        temp = remove_spikes_down(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
         SMPS[key] = temp
     temp_PTR = import_PTRMS(f'{parent_path}{path}PTRMS/', '')
     for key in temp_PTR.keys():
