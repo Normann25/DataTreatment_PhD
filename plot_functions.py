@@ -311,7 +311,10 @@ def vanKrevelen_ts(df, df_keys, t_zero, timestamps, run_length, title):
     conc_mask = df[df_keys[2]] >= 0.03 # Based on AMS detection limit for organics (in V-mode)
     df = df[conc_mask]
 
-    new_df = time_filtered_conc(df, df_keys, timestamps)
+    if t_zero is not None:
+        new_df = time_filtered_conc(df, df_keys, [t_zero, timestamps[1]])
+    else:
+        new_df = time_filtered_conc(df, df_keys, timestamps)
 
     n_points = len(new_df['Time'])
     cmap = mpl.colormaps['viridis_r']
