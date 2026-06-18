@@ -307,7 +307,7 @@ def vanKrevelen_OS(ax, rotation):
     ax.set(xlim = (0,1.5), ylim = (1,2.55), xlabel = 'O:C', ylabel = 'H:C')
     return ax
 
-def vanKrevelen_ts(df, df_keys, timestamps, run_length):
+def vanKrevelen_ts(df, df_keys, t_zero, timestamps, run_length, title):
     conc_mask = df[df_keys[2]] >= 0.03 # Based on AMS detection limit for organics (in V-mode)
     df = df[conc_mask]
 
@@ -315,14 +315,22 @@ def vanKrevelen_ts(df, df_keys, timestamps, run_length):
 
     n_points = len(new_df['Time'])
     cmap = mpl.colormaps['viridis_r']
-    fig, ax = plt.subplots(1,2, figsize = (6.3, 3))
+    if title is not None:
+        fig, ax = plt.subplots(1, 2, figsize = (6.3, 3.1))
+        fig.suptitle(title, fontsize = 14)
+    else:
+        fig, ax = plt.subplots(1,2, figsize = (6.3, 3))
 
     c_ = np.linspace(1, n_points, n_points)
     ax[0].scatter(new_df[df_keys[1]], new_df[df_keys[0]], c = c_, cmap = cmap, s = 10)
     ax[1].scatter(new_df[df_keys[1]], new_df[df_keys[0]], c = c_, cmap = cmap, s = 10)
 
     # Create a scalar mappable for colorbar
-    norm = mpl.colors.Normalize(vmin=run_length, vmax=run_length + (n_points - 1) * run_length)
+    if t_zero is not None:
+        time = (pd.to_datetime(new_df['Time']) - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+        norm = mpl.colors.Normalize(vmin = min(time), vmax = max(time))
+    else:
+        norm = mpl.colors.Normalize(vmin=run_length, vmax=run_length + (n_points - 1) * run_length)
     sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
     sm.set_array([])  # Required for colorbar
 
@@ -405,14 +413,11 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
     return fig, axes
 
 def plot_AURA_overview(daq, smps, ams, timestamps, t_zero, save_path):
-    if ams != None:
-        fig, ax = plt.subplots(3, 1, figsize = (6.3, 8.5))
-        ams = time_filtered_conc(ams, ['Ratio_H_C', 'Ratio_O_C'], timestamps)
-        plot_total(ax[2], ams, 'Ratio_O_C', 'tab:cyan', t_zero)
-        ax[2].tick_params(axis = 'y', labelcolor = 'tab:cyan')
-        ax[2].set_ylabel('O:C', color = 'tab:cyan')
-    else:
-        fig, ax = plt.subplots(2, 1, figsize = (6.3, 6.3))
+    fig, ax = plt.subplots(3, 1, figsize = (6.3, 8.5))
+    ams = time_filtered_conc(ams, ['Ratio_H_C', 'Ratio_O_C'], timestamps)
+    plot_total(ax[2], ams, 'Ratio_O_C', 'tab:cyan', t_zero)
+    ax[2].tick_params(axis = 'y', labelcolor = 'tab:cyan')
+    ax[2].set_ylabel('O:C', color = 'tab:cyan')
 
     daq = time_filtered_conc(daq, ['Temp_C', 'RH_Percent'], timestamps)
     smps = time_filtered_conc(smps, ['Geo. Mean (nm)', 'Total concentration'], timestamps)
@@ -551,7 +556,7 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, RH, tot
 
     return axes_number, axes_mass if axes_mass else None
 
-def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, save_path):
+def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, RH, save_path):
     date = t_zero.split(' ')[0]
 
     VK_keys = ['Ratio_H_C', 'Ratio_O_C', 'HROrg']
@@ -572,14 +577,14 @@ def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, save_pat
     for color, key in zip(colors[1:], species_keys):
         plot_total(ax1, new_df, key, color, t_zero)
     ax1.legend(species_keys)
-    ax1.set_ylabel('Concentration ($\mu$g m$^{-3}$)')
+    ax1.set(ylabel = 'Concentration ($\mu$g m$^{-3}$)', title = f'{t_zero.split(' ')[0]}, {RH}')
     fig1.tight_layout()
     fig1.savefig(f'{save_path}{date}_AMS_TS.jpg', dpi = 600)
 
     fig2, ax2 = plt.subplots(2, 1, figsize = (6.3, 6))
     for color, key in zip(colors[1:4], family_keys[:3]):
         plot_total(ax2[0], new_df, key, color, t_zero)
-        ax2[0].set_ylabel('Concentration ($\mu$g m$^{-3}$)')
+        ax2[0].set(ylabel = 'Concentration ($\mu$g m$^{-3}$)', title = f'{t_zero.split(' ')[0]}, {RH}')
         ax2[0].legend(['Total org', 'CHO1', 'CH'])
     for color, key in zip(colors[4:], family_keys[3:]):
         plot_total(ax2[1], new_df, key, color, t_zero)
@@ -588,7 +593,7 @@ def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, save_pat
     fig2.tight_layout()
     fig2.savefig(f'{save_path}{date}_AMSfamily_TS.jpg', dpi = 600)
 
-    fig3, ax3 = vanKrevelen_ts(new_df, VK_keys, timestamps, runlength)
+    fig3, ax3 = vanKrevelen_ts(new_df, VK_keys, t_zero, timestamps, runlength, f'{t_zero.split(' ')[0]}, {RH}')
     fig3.tight_layout(pad = 0.75)
     fig3.savefig(f'{save_path}{date}_vanKrevelen.jpg', dpi = 600)
 
@@ -692,3 +697,4 @@ def plot_SASS(df, timestamps, run_length, datatype, name):
         fig2.savefig(f'Figures/SASS/SizeDist_{name}_{dtype}.jpg', dpi = 600)
 
     return
+# %%

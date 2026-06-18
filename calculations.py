@@ -4,6 +4,44 @@ import scipy
 from iminuit import Minuit
 from ExternalFunctions import *
 #%%
+def remove_spikes(df, df_keys, value):
+    """
+    Parameters
+    ----------
+    df: pandas dataframe
+
+    df_keys: dataframe keys
+
+    value: float or int
+        Peak detection threshold
+    """
+
+    for key in df_keys:
+        # `prominence` sets minimum height above surrounding 
+        # signal at which a given value is considered a peak
+        peak_idx = scipy.signal.find_peaks(df[key], prominence=value)[0]
+
+        # To detect valleys deeper than `value`, 
+        # run find_peaks on negative of data
+        valley_idx = scipy.signal.find_peaks(-df[key])[0] #, prominence=value
+
+        # Combine indexes of peaks and valleys into a single array
+        idx = np.concatenate((peak_idx, valley_idx))
+
+        # Build an indicator column of peaks and valleys, or outliers
+        df['outlier'] = False
+        df.loc[idx, 'outlier'] = True
+
+        # Replace each outlier value with NaN
+        df.loc[df['outlier'], key] = np.nan
+
+        # Interpolate over NaNs just created with default linear method
+        df[key] = (df[key].interpolate().astype(float))
+
+        df = df.drop(['outlier'], axis = 1)
+
+    return df
+
 def time_filtered_conc(df, df_keys, timestamps):
     start_time, end_time = pd.to_datetime(timestamps[0]), pd.to_datetime(timestamps[1])
     time = pd.to_datetime(df['Time'])
