@@ -308,7 +308,7 @@ def vanKrevelen_OS(ax, rotation):
     return ax
 
 def vanKrevelen_ts(df, df_keys, t_zero, timestamps, run_length, title):
-    conc_mask = df[df_keys[2]] >= 0.03 # Based on AMS detection limit for organics (in V-mode)
+    conc_mask = df[df_keys[2]] >= 0.003 # Based on AMS detection limit for organics (in V-mode)
     df = df[conc_mask]
 
     if t_zero is not None:
