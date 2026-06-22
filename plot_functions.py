@@ -72,7 +72,7 @@ def plot_heatmap(ax, df, df_keys, time, bin_means, cutpoint, t_zero):
     y_max = np.nanmax(data)
     
     # Fill the generated mesh with particle concentration data
-    p1 = ax.pcolormesh(x, y, data, cmap='viridis', shading='nearest', vmin=y_min, vmax=y_max)
+    p1 = ax.pcolormesh(x, y, data, cmap='viridis', shading='nearest', norm=mpl.colors.LogNorm())  # vmin=y_min, vmax=y_max)
 
     if cutpoint != None:
         ax.hlines(cutpoint, time[0], time[-1], colors = 'white', linestyles = '--')
@@ -474,6 +474,9 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, RH, tot
 
     for i, time in enumerate(timestamps):
         if datatype == 'number and mass':
+            temp_number, temp_mass = data[dictkeys[0][i]], data[dictkeys[1][i]]
+            for key in df_keys:
+                temp_number[key], temp_mass[key] = temp_number[key].replace(0, 10**(-1)).ffill(), temp_mass[key].replace(0, 10**(-3)).ffill()
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
             plot_timeseries(fig1, axes1, data[dictkeys[0][i]], df_keys, bin_means, 'number', time, total_key, None, t_zero[i])
             axes1[0].set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
