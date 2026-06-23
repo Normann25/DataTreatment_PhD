@@ -37,7 +37,7 @@ for i, keys in enumerate(equator_keys):
 
 # fig.suptitle('Equator')
 fig.tight_layout()
-fig.savefig('Solar_spectrum_equator.jpg', dpi = 600)
+fig.savefig('../../../Figures/TUV spectra/Solar_spectrum_equator.jpg', dpi = 600)
 
 fig, ax = plt.subplots(2, 1, figsize = (6.3, 6))
 for i, keys in enumerate(arktis_keys):
@@ -54,7 +54,7 @@ for i, keys in enumerate(arktis_keys):
 
 # fig.suptitle('Arctic')
 fig.tight_layout()
-fig.savefig('Solar_spectrum_arctic.jpg', dpi = 600)
+fig.savefig('../../../Figures/TUV spectra/Solar_spectrum_arctic.jpg', dpi = 600)
 
 fig, ax = plt.subplots(2, 1, figsize = (6.3, 6))
 for i, keys in enumerate(marselis_keys):
@@ -71,7 +71,7 @@ for i, keys in enumerate(marselis_keys):
 
 # fig.suptitle('Marselis Forrest')
 fig.tight_layout()
-fig.savefig('Solar_spectrum_marselis.jpg', dpi = 600)
+fig.savefig('../../../Figures/TUV spectra/Solar_spectrum_marselis.jpg', dpi = 600)
 
 
 fig, ax = plt.subplots(2, 1, figsize = (6.3, 6))
