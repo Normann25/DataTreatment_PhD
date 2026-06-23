@@ -28,16 +28,17 @@ HEPA_timestamps = [['2026-04-27 08:40', '2026-04-27 09:00'],
 RH = ['70% RH', '70% RH', '85% RH', '85% RH']
 
 SMPS = {}
+SMPS_raw = {}
 PTRMS = {}
 AMS = {}
 DAQ = {}
 for t, path in zip(t_zero, paths):
     temp_SMPS = import_SMPS(f'{parent_path}{path}SMPS/', '', 0)
     for key in temp_SMPS.keys():
+        SMPS_raw[key] = temp_SMPS[key]
         temp_SMPS[key].loc[temp_SMPS[key]['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 20), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = 0
         temp = remove_spikes_up(temp_SMPS[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
         SMPS[key] = temp
-        # SMPS[key] = temp_SMPS[key]
     if path != paths[0]:
         temp_PTR = import_PTRMS(f'{parent_path}{path}PTRMS/', '')
         for key in temp_PTR.keys():
@@ -54,7 +55,7 @@ for t, path in zip(t_zero, paths):
     for key in temp_daq.keys():
         DAQ[key] = temp_daq[key]
 
-save_path = 'Figures/2604_vanillin+UV_RH70-85/'
+save_path = '../../../Figures/Vanillin/2604_vanillin+UV_RH70-85/'
 
 for key in SMPS.keys():
     SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
