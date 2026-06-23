@@ -32,13 +32,13 @@ colors = ['tab:blue', 'red']
 fig, axes = plt.subplots(2, 2, figsize = (6.3, 6.3))
 diurnal_DMPS, axes = plot_diurnal_mean(axes, data['DMPS_2024'], 'TZS (PNC)', 'Total conc. (# cm$^{-3}$)')
 fig.tight_layout()
-fig.savefig('Figures/DMPS/Diurnal_mean.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/DMPS/Diurnal_mean.jpg', dpi = 600)
 
 # Plot NAIS diurnal mean
 fig, axes = plt.subplots(2, 2, figsize = (6.3, 6.3))
 diurnal_NAIS_FR, axes = plot_diurnal_mean(axes, TZS_data, 'J2-2.3-/N<2-', 'J$_{2-2.3 nm}$/N$_{<2 nm}$')
 fig.tight_layout()
-fig.savefig('Figures/NAIS/Diurnal_mean_FR.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/NAIS/Diurnal_mean_FR.jpg', dpi = 600)
 #%%
 def plot_multiparameter_diurnal(axes, dictionary, df_keys, colors, season, ylabels):
     for color, dict_key in zip(colors, dictionary.keys()):
@@ -69,7 +69,7 @@ for season in ['Winter', 'Spring', 'Summer', 'Autumn']:
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles = handles, labels = labels)
     fig.tight_layout()
-    fig.savefig(f'Figures/Diurnal variations/{season}_clusters_diurnal.jpg', dpi = 600)
+    fig.savefig(f'../../../../Courses/2026 - INAR winter school/Figures/Diurnal variations/{season}_clusters_diurnal.jpg', dpi = 600)
 
     fig2, axes2 = plt.subplots(2, 2, figsize = (6.3, 6.3))
     plot_multiparameter_diurnal(axes2.flatten(), comparison_dict, aerosol_keys, colors, season, aerosol_ylabels)
@@ -77,4 +77,4 @@ for season in ['Winter', 'Spring', 'Summer', 'Autumn']:
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles = handles, labels = labels)
     fig2.tight_layout()
-    fig2.savefig(f'Figures/Diurnal variations/{season}_aerosols_diurnal.jpg', dpi = 600)
+    fig2.savefig(f'../../../../Courses/2026 - INAR winter school/Figures/Diurnal variations/{season}_aerosols_diurnal.jpg', dpi = 600)
