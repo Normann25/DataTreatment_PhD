@@ -29,41 +29,41 @@ for key, binedges in zip(['PSM_2024-01', 'PSM_2024', 'PSM_2025'], PSM_bins):
     plot_timeseries(fig, ax, data[key], data[key].keys()[:-2], binedges, 'number', True, 'Total conc', None, '%Y/%m')
     ax[0].set(title = key)
     fig.tight_layout()
-    fig.savefig(f'Figures/PSM_{key}.jpg', dpi = 600)
+    fig.savefig(f'../../../../Courses/2026 - INAR winter school/Figures/PSM_{key}.jpg', dpi = 600)
 
 # Plot yearly DMPS
 fig, ax = plt.subplots(2, 1, figsize = (6.3, 6))
 plot_timeseries(fig, ax, data['DMPS_2024'], data['DMPS_2024'].keys()[:-2], DMPS_bins, 'number', True, 'TZS (PNC)', None, '%Y/%m')
 fig.tight_layout()
-fig.savefig('Figures/DMPS_2024.jpg')
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/DMPS_2024.jpg')
 
 # Plot yearly NAIS total concentration
 fig, ax = plt.subplots(figsize = (6.3, 4))
 plot_multi_total(ax, data['NAIS_TZS_1H-avg'], ['tot 2.5-7', 'tot 7-20'], ['2.5-7 nm', '7-20 nm'], '%Y/%m')
 ax.set(title = '2024-2025')
 fig.tight_layout()
-fig.savefig('Figures/NAIS_tot_2024-2025.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/NAIS_tot_2024-2025.jpg', dpi = 600)
 
 # Plot yearly NAIS neg particle concentration
 fig, ax = plt.subplots(figsize = (6.3, 4))
 plot_multi_total(ax, data['NAIS_TZS_1H-avg'], ['neg 0.8-2', 'neg 2-7', 'neg 7-20'], ['<2 nm','2-7 nm', '7-20 nm'], '%Y/%m')
 ax.set(title = '2024-2025', yscale = 'log')
 fig.tight_layout()
-fig.savefig('Figures/NAIS_neg_2024-2025.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/NAIS_neg_2024-2025.jpg', dpi = 600)
 
 # Plot yearly NAIS particle formation rate
 fig, ax = plt.subplots(figsize = (6.3, 4))
 ax, ax2 = plot_total_twinx(ax, data['NAIS_formation_rate_neg_1H-avg'], ['J2-2.3,-/N<2,-', 'N2-2.3,-'], '%Y/%m', ['J$_{2-2.3 nm}$/N$_{<2 nm}$', 'dN/dlogDp (# cm$^{-3}$)'], None)
 ax.set(title = '2024-2025')
 fig.tight_layout()
-fig.savefig('Figures/NAIS_FR_2024-2025.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/NAIS_FR_2024-2025.jpg', dpi = 600)
 
 # Plot yearly MION sulfate cluster
 fig, ax = plt.subplots(figsize = (6.3, 4))
 plot_multi_total(ax, data['MION_TZS_1H-avg'], data['MION_TZS_1H-avg'].keys()[1:4], ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$'], '%Y/%m')
 ax.set(title = '2024-2025', ylabel = 'Ions s$^{-1}$')
 fig.tight_layout()
-fig.savefig('Figures/MION_sulfate-cluster_2024-2025.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/MION_sulfate-cluster_2024-2025.jpg', dpi = 600)
 #%%
 # Plot monthly PSM
 for key, binedges in zip(['PSM_2024-01', 'PSM_2024', 'PSM_2025'], PSM_bins):
@@ -76,7 +76,7 @@ for key, binedges in zip(['PSM_2024-01', 'PSM_2024', 'PSM_2025'], PSM_bins):
         ax[0].set(title = f'{year}-{month}')
         fig.tight_layout()
         if key is not '2024-01':
-            fig.savefig(f'Figures/PSM/Monthly/PSM_{year}-{month}.jpg', dpi = 600)
+            fig.savefig(f'../../../../Courses/2026 - INAR winter school/Figures/PSM/Monthly/PSM_{year}-{month}.jpg', dpi = 600)
     data[key] = data[key].drop(['Month'], axis = 1)
 
 # Plot monthly DMPS
@@ -88,7 +88,7 @@ for month, group in data['DMPS_2024'].groupby('Month'):
     year = str(data['DMPS_2024'].iloc[0]['Time']).split('-')[0]
     ax[0].set(title = f'{year}-{month}')
     fig.tight_layout()
-    fig.savefig(f'Figures/DMPS/Monthly/DMPS_{year}-{month}.jpg', dpi = 600)
+    fig.savefig(f'../../../../Courses/2026 - INAR winter school/Figures/DMPS/Monthly/DMPS_{year}-{month}.jpg', dpi = 600)
 data['DMPS_2024'] = data['DMPS_2024'].drop(['Month'], axis = 1)
 #%%
 # Plot daily DMPS and NAIS 2024
@@ -105,7 +105,7 @@ for date, group in DMPS_NAIS.groupby('Date'):
         ax[0].set(title = date)
         plot_total_twinx(ax[1], group, ['J2-2.3,-/N<2,-', 'N2-2.3,-'], '%H:%M', ['J$_{2-2.3 nm}$/N$_{<2 nm}$', 'dN/dlogDp (# cm$^{-3}$)'], None)
         fig.tight_layout()
-        fig.savefig(f'Figures/DMPS/Daily/{date.split('-')[0]}-{date.split('-')[1]}/DMPS_{date}.jpg', dpi = 600)
+        fig.savefig(f'../../../../Courses/2026 - INAR winter school/Figures/DMPS/Daily/{date.split('-')[0]}-{date.split('-')[1]}/DMPS_{date}.jpg', dpi = 600)
 DMPS_NAIS = DMPS_NAIS.drop(['Date'], axis = 1)
 #%%
 # Plot 2025 daily NAIS 
@@ -119,7 +119,7 @@ for date, group in data['NAIS_TZS_1H-avg'].groupby('Date'):
         plot_total_twinx(ax, group, ['J2-2.3,-/N<2,-', 'N2-2.3,-'], '%H:%M', ['J$_{2-2.3 nm}$/N$_{<2 nm}$', 'dN/dlogDp (# cm$^{-3}$)'], None)
         ax.set(title = date)
         fig.tight_layout()
-        fig.savefig(f'Figures/NAIS/Daily/2025/{date.split('-')[0]}-{date.split('-')[1]}/NAIS_{date}.jpg', dpi = 600)
+        fig.savefig(f'../../../../Courses/2026 - INAR winter school/Figures/NAIS/Daily/2025/{date.split('-')[0]}-{date.split('-')[1]}/NAIS_{date}.jpg', dpi = 600)
 data['NAIS_TZS_1H-avg'] = data['NAIS_TZS_1H-avg'].drop(['Date'], axis = 1)
 #%%
 # Plot monthly NAIS MION correlation
@@ -142,7 +142,7 @@ for year, year_group in Particle_formation.groupby('Year'):
         for ax in axes[1:]:
             ax.set(yscale = 'log', xscale = 'log')
         fig.tight_layout()
-        fig.savefig(f'Figures/NAIS/NAISvsMION/{year}-{month}_NAISvsMION.jpg', dpi = 600)
+        fig.savefig(f'../../../../Courses/2026 - INAR winter school/Figures/NAIS/NAISvsMION/{year}-{month}_NAISvsMION.jpg', dpi = 600)
 Particle_formation = Particle_formation.drop(['Month', 'Year'], axis = 1)
 #%%
 print(data['NAIS-MION_PF_dates'].keys())
@@ -182,7 +182,7 @@ for i, row in data['Event_dates'].iterrows():
         fig.suptitle(f'{start_date} - {end_date}', size = 14)
     
     fig.tight_layout()
-    fig.savefig(f'Figures/Event dates/PF_event_{start_date}.png', dpi = 600)
+    fig.savefig(f'../../../../Courses/2026 - INAR winter school/Figures/Event dates/PF_event_{start_date}.png', dpi = 600)
 #%%
 fig, axes = plt.subplots(1, 3, figsize = (9, 3.3))
 labels = ['HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$']
@@ -193,7 +193,7 @@ plot_correlation(axes, data['NAIS-MION_PF_dates'], merged_keys[1:4]+['J2-2.3,-/N
 for ax in axes:
     ax.set(yscale = 'log', xscale = 'log')
 fig.tight_layout()
-fig.savefig('Figures/Event dates/Event_dates_scatter.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/Event dates/Event_dates_scatter.jpg', dpi = 600)
 #%%
 # Plot daily PSM
 # for key, binedges in zip(PSM.keys(), bins):
