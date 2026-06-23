@@ -440,7 +440,7 @@ def plot_AURA_overview(daq, smps, ams, timestamps, t_zero, RH, save_path):
     ax1_2 = ax[1].twinx()
     plot_total(ax1_2, smps, 'Total concentration', 'purple', t_zero)
     ax1_2.tick_params(axis = 'y', labelcolor = 'purple')
-    ax1_2.set_ylabel('Concentration ($\mu$g m$^{-3}$)', color = 'purple')
+    ax1_2.set_ylabel('Concentration (# cm$^{-3}$)', color = 'purple')
 
     fig.suptitle(f'{t_zero.split(' ')[0]}, {RH}', fontsize = 14)
     fig.tight_layout()
