@@ -40,7 +40,7 @@ for t, path in zip(t_injection, paths):
         # SMPS[key] = temp
         SMPS[key] = temp_SMPS[key]
 
-save_path = 'Figures/2605_vanillin+UV+seeds/'
+save_path = '../../../Figures/Vanillin/2605_vanillin+UV+seeds/'
 
 for key in SMPS.keys():
     SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
