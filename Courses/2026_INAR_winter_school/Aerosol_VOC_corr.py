@@ -110,13 +110,13 @@ ax_labels_org = ['J$_{2-2.3 nm}$/N$_{<2 nm}$ (# s$^{-1}$)', 'Monomers (# cm$^{-3
              'Dimers (# cm$^{-3}$)', 'N dimers (# cm$^{-3}$)', 'Total org. (# cm$^{-3}$)', 
              'DMS (ppb)', 'Isoprene (ppb)', 'Monoterpenes (ppb)']
 seasonal_corr_org = plot_seasonal_scatter(comparison_dict, ['HYDE', 'TZS Marine', 'TZS Land'], ['J2-2.3-/N<2-']+OVOC_keys, 
-                      ['2024-01-01 00:00', '2025-12-31 23:59'], colors, ax_labels_org, 'Day', 0.05, 0.07, None, (10**(-7), 3*10**(-3)), 'Figures/Correlations/')
+                      ['2024-01-01 00:00', '2025-12-31 23:59'], colors, ax_labels_org, 'Day', 0.05, 0.07, None, (10**(-7), 3*10**(-3)), '../../../../Courses/2026 - INAR winter school/Figures/Correlations/')
 
 # Plot NAIS vs cluster correlation
 ax_labels_cluster = ['J$_{2-2.3 nm}$/N$_{<2 nm}$ (# s$^{-1}$)', 'HSO$_{4}^{-}$ (ions s$^{-1}$)', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$ (ions s$^{-1}$)', 
                      '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$ (ions s$^{-1}$)', 'IO$_{3}^{-}$ (ions s$^{-1}$)', '(HIO$_{3}$)HSO$_{4}^{-}$ (ions s$^{-1}$)']
 seasonal_corr_cluser1 = plot_seasonal_scatter(comparison_dict, ['TZS Marine', 'TZS Land'], ['J2-2.3-/N<2-']+cluster_keys, 
-                      ['2024-01-01 00:00', '2025-12-31 23:59'], colors[1:], ax_labels_cluster, 'Day', 0.05, 0.07, None, (10**(-7), 3*10**(-3)), 'Figures/Correlations/')
+                      ['2024-01-01 00:00', '2025-12-31 23:59'], colors[1:], ax_labels_cluster, 'Day', 0.05, 0.07, None, (10**(-7), 3*10**(-3)), '../../../../Courses/2026 - INAR winter school/Figures/Correlations/')
 #%%
 # Plot VOC vs OVOC correlation
 ax_labels_org = ['J$_{2-2.3 nm}$/N$_{<2 nm}$ (# s$^{-1}$)', 'Monomers (# cm$^{-3}$)', 'N monomers (# cm$^{-3}$)', 
@@ -124,15 +124,15 @@ ax_labels_org = ['J$_{2-2.3 nm}$/N$_{<2 nm}$ (# s$^{-1}$)', 'Monomers (# cm$^{-3
              'DMS (ppb)', 'Isoprene (ppb)', 'Monoterpenes (ppb)']
 for label, key in zip(ax_labels_org[1:6], OVOC_keys[:5]):
     DMS_vs_OVOC = plot_seasonal_scatter(comparison_dict, ['HYDE', 'TZS Marine', 'TZS Land'], [key]+[OVOC_keys[5]], 
-                                ['2024-01-01 00:00', '2025-12-31 23:59'], colors, [label, ax_labels_org[6]], 'Day', 0.05, 0.07, None, None, 'Figures/Correlations/')
+                                ['2024-01-01 00:00', '2025-12-31 23:59'], colors, [label, ax_labels_org[6]], 'Day', 0.05, 0.07, None, None, '../../../../Courses/2026 - INAR winter school/Figures/Correlations/')
     Monoterpenes_vs_OVOC = plot_seasonal_scatter(comparison_dict, ['HYDE', 'TZS Marine', 'TZS Land'], [key]+[OVOC_keys[7]], 
-                                ['2024-01-01 00:00', '2025-12-31 23:59'], colors, [label, ax_labels_org[8]], 'Day', 0.62, 0.07, None, None, 'Figures/Correlations/')
+                                ['2024-01-01 00:00', '2025-12-31 23:59'], colors, [label, ax_labels_org[8]], 'Day', 0.62, 0.07, None, None, '../../../../Courses/2026 - INAR winter school/Figures/Correlations/')
 
 # Plot NAIS vs cluster correlation
 ax_labels_cluster = ['J$_{2-2.3 nm}$/N$_{<2 nm}$ (# s$^{-1}$)', 'HSO$_{4}^{-}$ (ions s$^{-1}$)', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$ (ions s$^{-1}$)', 
                      '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$ (ions s$^{-1}$)', 'IO$_{3}^{-}$ (ions s$^{-1}$)', '(HIO$_{3}$)HSO$_{4}^{-}$ (ions s$^{-1}$)']
 seasonal_corr_cluser2 = plot_seasonal_scatter(comparison_dict, ['TZS Marine', 'TZS Land'], ['J2-2.3-']+cluster_keys, 
-                      ['2024-01-01 00:00', '2025-12-31 23:59'], colors[1:], ['J$_{2-2.3 nm}$'] + ax_labels_cluster[1:], 'Day', 0.05, 0.07, None, None, 'Figures/Correlations/')
+                      ['2024-01-01 00:00', '2025-12-31 23:59'], colors[1:], ['J$_{2-2.3 nm}$'] + ax_labels_cluster[1:], 'Day', 0.05, 0.07, None, None, '../../../../Courses/2026 - INAR winter school/Figures/Correlations/')
 #%%
 # Temperature vs cluster weighted formation rate (full year)
 ax_labels = ['Temperature (C)', 'J$_{2-2.3 nm}$/HSO$_{4}^{-}$', 'J$_{2-2.3 nm}$/(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', 'J$_{2-2.3 nm}$/(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$',
@@ -151,7 +151,7 @@ for i, key in enumerate(PFR_vs_cluster_keys):
                 bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
         axes[i].set(yscale = 'log')
 fig.tight_layout()
-fig.savefig('Figures/Correlations/Temp_vs_weighted-PF.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/Correlations/Temp_vs_weighted-PF.jpg', dpi = 600)
 
 # Temperature vs cluster weighted formation rate (summer)
 fig = plt.figure(figsize = (10, 6.3))
@@ -169,7 +169,7 @@ for i, key in enumerate(PFR_vs_cluster_keys):
                 bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
         axes[i].set(yscale = 'log')
 fig.tight_layout()
-fig.savefig('Figures/Correlations/Summer_Temp_vs_weighted-PF.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/Correlations/Summer_Temp_vs_weighted-PF.jpg', dpi = 600)
 
 #%%
 ax_labels = ['Temperature (C)', r'$\frac{J_{2-2.3 nm}/N_{<2 nm}}{HSO_{4}^{-}}$', 
@@ -189,7 +189,7 @@ for i, key in enumerate(normPFR_vs_cluster_keys):
                 bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
         axes[i].set(yscale = 'log')
 fig.tight_layout()
-fig.savefig('Figures/Correlations/Temp_vs_ClusterWeighted-normPF.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/Correlations/Temp_vs_ClusterWeighted-normPF.jpg', dpi = 600)
 
 # Temperature vs cluster weighted formation rate (summer)
 fig = plt.figure(figsize = (10, 6.3))
@@ -207,7 +207,7 @@ for i, key in enumerate(normPFR_vs_cluster_keys):
                 bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
         axes[i].set(yscale = 'log')
 fig.tight_layout()
-fig.savefig('Figures/Correlations/Summer_Temp_vs_ClusterWeighted-normPF.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/Correlations/Summer_Temp_vs_ClusterWeighted-normPF.jpg', dpi = 600)
 #%%
 ax_labels = ['Temperature (C)', r'$\frac{J_{2-2.3 nm}}{HSO_{4}^{-}/Total ions}$', 
              r'$\frac{J_{2-2.3 nm}}{(H_{2}SO_{4})HSO_{4}^{-}/Total ions}$', r'$\frac{J_{2-2.3 nm}}{(H_{2}SO_{4})_{2}HSO_{4}^{-}/Total ions}$',
@@ -226,7 +226,7 @@ for i, key in enumerate(PFR_vs_normCluster_keys):
                 bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
         axes[i].set(yscale = 'log')
 fig.tight_layout()
-fig.savefig('Figures/Correlations/Temp_vs_normClusterWeighted-PF.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/Correlations/Temp_vs_normClusterWeighted-PF.jpg', dpi = 600)
 
 # Temperature vs cluster weighted formation rate (summer)
 fig = plt.figure(figsize = (10, 6.3))
@@ -244,7 +244,7 @@ for i, key in enumerate(normPFR_vs_cluster_keys):
                 bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
         axes[i].set(yscale = 'log')
 fig.tight_layout()
-fig.savefig('Figures/Correlations/Summer_Temp_vs_normClusterWeighted-PF.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/Correlations/Summer_Temp_vs_normClusterWeighted-PF.jpg', dpi = 600)
 #%%
 ax_labels = ['Temperature (C)', r'$\frac{J_{2-2.3 nm}/N_{<2 nm}}{HSO_{4}^{-}/Total ions}$', 
              r'$\frac{J_{2-2.3 nm}/N_{<2 nm}}{(H_{2}SO_{4})HSO_{4}^{-}/Total ions}$', r'$\frac{J_{2-2.3 nm}/N_{<2 nm}}{(H_{2}SO_{4})_{2}HSO_{4}^{-}/Total ions}$',
@@ -263,7 +263,7 @@ for i, key in enumerate(normPFR_vs_normCluster_keys):
                 bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
         axes[i].set(yscale = 'log')
 fig.tight_layout()
-fig.savefig('Figures/Correlations/Temp_vs_normClusterWeighted-normPF.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/Correlations/Temp_vs_normClusterWeighted-normPF.jpg', dpi = 600)
 
 # Temperature vs cluster weighted formation rate (summer)
 fig = plt.figure(figsize = (10, 6.3))
@@ -281,7 +281,7 @@ for i, key in enumerate(normPFR_vs_normCluster_keys):
                 bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
         axes[i].set(yscale = 'log')
 fig.tight_layout()
-fig.savefig('Figures/Correlations/Summer_Temp_vs_normClusterWeighted-normPF.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/Correlations/Summer_Temp_vs_normClusterWeighted-normPF.jpg', dpi = 600)
 #%%
 ax_labels = ['Temperature (C)', 'HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)HSO$_{4}^{-}$', '(H$_{2}$SO$_{4}$)$_{2}$HSO$_{4}^{-}$',
              'IO$_{3}^{-}$', '(HIO$_{3}$)HSO$_{4}^{-}$']
@@ -300,7 +300,7 @@ for i, key in enumerate(cluster_keys):
                 bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
         axes[i].set(yscale = 'log', ylim = ylimits[i])
 fig.tight_layout()
-fig.savefig('Figures/Correlations/Temp_vs_clusters.jpg', dpi = 600)
+fig.savefig('../../../../Courses/2026 - INAR winter school/Figures/Correlations/Temp_vs_clusters.jpg', dpi = 600)
 #%%
 temperature_bins = np.arange(0, 27, 3)
 temperature_bin_means = (temperature_bins[:-1] + temperature_bins[1:]) / 2
