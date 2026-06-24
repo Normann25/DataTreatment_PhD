@@ -262,11 +262,11 @@ def instrument_comparison(ax, x_data, y_data, label, ax_labels, forced_zero):
     if forced_zero:
         fit_params, fit_errors, squares, ndof, R2 = linear_fit(x_data, y_data, linear_forced_zero, a_guess = 1)
         y_fit = linear_forced_zero(x_plot, *fit_params)
+        print(f'f(x) = {fit_params[0]}x, R2 = {R2}')
     else:
         fit_params, fit_errors, squares, ndof, R2 = linear_fit(x_data, y_data, linear, a_guess = 1, b_guess = 0)
         y_fit = linear(x_plot, *fit_params)
-    
-    print(f'f(x) = {fit_params[0]}x + {fit_params[1]}, R2 = {R2}')
+        print(f'f(x) = {fit_params[0]}x + {fit_params[1]}, R2 = {R2}')
 
     ax.plot(x_plot, y_fit, color = 'k', lw = 1.2, label = 'Fit')
     ax.scatter(x_data, y_data, s=10, c='b', label = label)
