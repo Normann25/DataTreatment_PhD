@@ -257,7 +257,8 @@ def plot_running_sizedist(fig, ax, df, bins, axis_labels, run_length):
 
 def instrument_comparison(ax, x_data, y_data, label, ax_labels, forced_zero):
     x_plot = np.linspace(min(x_data), max(x_data), 1000)
-    ax.plot(x_plot, x_plot, color = 'grey', lw = 1, ls = '--', label = None)
+
+    # ax.plot(x_plot, x_plot, color = 'grey', lw = 1, ls = '--', label = None)
 
     if forced_zero:
         fit_params, fit_errors, squares, ndof, R2 = linear_fit(x_data, y_data, linear_forced_zero, a_guess = 1)
