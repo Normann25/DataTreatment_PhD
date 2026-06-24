@@ -11,10 +11,11 @@ warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 parent_path = '../../../Data/2026/'
-paths = ['20260623_cresol_test_H2O2_UV/']
+paths = ['20260623_cresol_test_H2O2_UV/', '20260624_creosol_test_3MC_H2O2_UV/']
 
-timestamps = [['2026-06-23 11:15', '2026-06-23 15:22']]
-t_zero = ['2026-06-23 13:20']
+timestamps = [['2026-06-23 11:15', '2026-06-23 15:22'],
+              ['2026-06-24 13:08', '2026-06-24 16:50']]
+t_zero = ['2026-06-23 13:20', '2026-06-24 15:45']
 
 SMPS = {}
 for path in paths:
@@ -28,8 +29,8 @@ for key in SMPS.keys():
     SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
     SMPS[key] = SMPS[key].fillna(0)
 
-SMPS_keys = [['260623_cresol_test_H2O2_UV_number'], 
-             ['260623_cresol_test_H2O2_UV_mass']]
+SMPS_keys = [['260623_cresol_test_H2O2_UV_number', '260624_creosol_test_3MC_H2O2_UV_number'], 
+             ['260623_cresol_test_H2O2_UV_mass', '260624_creosol_test_3MC_H2O2_UV_mass']]
 #%%
 ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260623_cresol_test_H2O2_UV_mass'].columns[42:-1], 'number and mass', 
-                     timestamps, 10, 'Dry', 'Total concentration', t_zero, 1, 1, save_path)
+                     timestamps, 10, ['Dry']*2, 'Total concentration', t_zero, 1, 2, save_path)
