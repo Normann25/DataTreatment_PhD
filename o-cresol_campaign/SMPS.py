@@ -33,4 +33,4 @@ SMPS_keys = [['260623_cresol_test_H2O2_UV_number', '260624_creosol_test_3MC_H2O2
              ['260623_cresol_test_H2O2_UV_mass', '260624_creosol_test_3MC_H2O2_UV_mass']]
 #%%
 ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260623_cresol_test_H2O2_UV_mass'].columns[42:-1], 'number and mass', 
-                     timestamps, 10, ['Dry']*2, 'Total concentration', t_zero, 1, 2, save_path)
+                     timestamps, 10, ['O-cresol+H$_{2}$O$_{2}$+UV', '3MC+HONO+UV'], 'Total concentration', t_zero, 1, 2, save_path)
