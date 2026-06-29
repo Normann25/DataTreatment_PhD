@@ -9,16 +9,16 @@ from scipy.stats import t
 # File
 # =========================
 lv_path = Path(
-    r"O:\Nat_Chem-Aerosol-data\Data\Processed Data\Campaign"
-    r"\Cresol Campaign\20260624_creosol_test_3MC_H2O2_UV\PTRMS"
-    r"\20260624_d9-butanol_traces.txt"
+    r"C:\Users\au799171\OneDrive - Aarhus universitet\Dokumenter\Data\2026"
+    r"\20260626_test_3MC_H2O2_UV_wCIMS\PTR"
+    r"\20260626_d9-butanol_traces.txt"
 )
 
 # =========================
 # Parameters to change manually
 # =========================
-fit_start = "2026-06-24 15:45:00"   # Light ON
-fit_end   = "2026-06-24 16:50:00"   # Light OFF
+fit_start = "2026-06-26 14:37:00"   # Light ON
+fit_end   = "2026-06-26 15:19:00"   # Light OFF
 
 average_time = "1min"   # examples: "30s", "1min", "2min", "5min"
 
@@ -37,7 +37,7 @@ df["DateTime"] = pd.to_datetime(
     origin="1899-12-30"
 )
 
-signal_col = "m67.129 (d9-butanol_i_Peak1) (Raw)"
+signal_col = "m67.129 (d9-butanol_i_Peak2) (Raw)"
 
 df = df[["DateTime", signal_col]].dropna()
 df = df[df[signal_col] > 0]
