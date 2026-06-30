@@ -285,7 +285,7 @@ def vanKrevelen_OS(ax, rotation):
         ax.plot(O_C_ratio, H_C_ratio, color = 'lightgray', lw = 0.75, ls = '--', zorder = -10)
     
     OS_labels = ['OS = -2', 'OS = -1', 'OS = 0', 'OS = 1']
-    OS_placement = [[0.003, 2.13], [0.003, 1.12], [0.465, 1.05], [0.955, 1.03]]
+    OS_placement = [[0.037, 2.255], [0.55, 2.255], [1.05, 2.255], [1.27, 1.7]]
     for label, placement in zip(OS_labels, OS_placement):
         ax.text(placement[0], placement[1], label, rotation = rotation, fontsize = 7, color = 'darkgray')
 
@@ -296,7 +296,7 @@ def vanKrevelen_OS(ax, rotation):
     y3 = linear(x, -2, 2) # Carbonyls (aldehyde/ketone)
 
     compound_labels = ['slope = 0 \n + alcohol/peroxide', 'slope = -1 \n + carboxylic acid', 'slope = -2 \n + carbonyls']
-    compound_placements = [[0.9, 1.96], [0.66, 1.28], [0.2, 1.31]]
+    compound_placements = [[0.9, 1.97], [0.8, 1.05], [0.15, 1.05]]
 
     for i, y in enumerate([y1, y2, y3]):
         ax.plot(x, y, color = 'darkgray', lw = 0.75, zorder = -10)
@@ -310,7 +310,11 @@ def vanKrevelen_OS(ax, rotation):
 
 def vanKrevelen_ts(df, df_keys, t_zero, timestamps, run_length, title):
     conc_mask = df[df_keys[2]] >= 0.03 # Based on AMS detection limit for organics (in V-mode)
+    HC_mask = df[df_keys[0]] >= 0
+    OC_mask = df[df_keys[1]] >= 0
     df = df[conc_mask]
+    df = df[HC_mask]
+    df = df[OC_mask]
 
     if t_zero is not None:
         new_df = time_filtered_conc(df, df_keys, [t_zero, timestamps[1]])
@@ -320,10 +324,12 @@ def vanKrevelen_ts(df, df_keys, t_zero, timestamps, run_length, title):
     n_points = len(new_df['Time'])
     cmap = mpl.colormaps['viridis_r']
     if title is not None:
-        fig, ax = plt.subplots(1, 2, figsize = (6.3, 3.1))
+        fig, ax = plt.subplots(1, 2, figsize = (6.3, 3.07))
         fig.suptitle(title, fontsize = 14)
     else:
         fig, ax = plt.subplots(1,2, figsize = (6.3, 3))
+    
+    vanKrevelen_OS(ax[0], 63.5)
 
     c_ = np.linspace(1, n_points, n_points)
     ax[0].scatter(new_df[df_keys[1]], new_df[df_keys[0]], c = c_, cmap = cmap, s = 10)
@@ -340,10 +346,8 @@ def vanKrevelen_ts(df, df_keys, t_zero, timestamps, run_length, title):
 
     # Add colorbar to the figure
     cbar = fig.colorbar(sm, ax=ax[1], orientation='vertical')
-    cbar.set_label('Time (min)', fontsize=9)
-    cbar.ax.tick_params(labelsize=8)
-
-    vanKrevelen_OS(ax[0], 63.5)
+    cbar.set_label('Time (min)', fontsize=12)
+    cbar.ax.tick_params(labelsize=10)
 
     ax[1].set(xlabel = 'O:C', ylabel = 'H:C')
 
