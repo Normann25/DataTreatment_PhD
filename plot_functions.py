@@ -443,7 +443,8 @@ def plot_AURA_overview(daq, smps, ams, timestamps, t_zero, RH, save_path):
     ax1_2.tick_params(axis = 'y', labelcolor = 'purple')
     ax1_2.set_ylabel('Concentration (# cm$^{-3}$)', color = 'purple')
 
-    ams.loc[ams['Time'] < pd.to_datetime(t_zero) ['Ratio_H_C', 'Ratio_O_C']] = 0
+    ams.loc[ams['HROrg'] < 0.03, ['Ratio_H_C', 'Ratio_O_C']] = 0
+    ams.loc[ams['Time'] < pd.to_datetime(t_zero), ['Ratio_H_C', 'Ratio_O_C']] = 0
     ams = time_filtered_conc(ams, ['Ratio_H_C', 'Ratio_O_C'], timestamps)
     plot_total(ax[2], ams, 'Ratio_O_C', 'tab:cyan', t_zero)
     ax[2].tick_params(axis = 'y', labelcolor = 'tab:cyan')
