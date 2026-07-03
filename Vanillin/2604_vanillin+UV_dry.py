@@ -37,8 +37,8 @@ for t, path in zip(t_zero, paths):
             temp = remove_spikes_up(temp_smps[key], [temp_smps[key].keys()[38]], max(temp_smps[key][temp_smps[key].keys()[38]])/4)
         else:
             temp = temp_smps[key]
-        temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 30), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = 0
-        temp.loc[temp[temp_smps[key].keys()[38]] == 0, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = 0
+        temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 30), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+        temp.loc[temp[temp_smps[key].keys()[38]] == 0, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
         temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
         temp = remove_spikes_down(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
         SMPS[key] = temp
@@ -64,7 +64,7 @@ save_path = '../../../Figures/Vanillin/2604_vanillin+UV_dry/'
 
 for key in SMPS.keys():
     SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
-    SMPS[key] = SMPS[key].fillna(0)
+    # SMPS[key] = SMPS[key].fillna(0)
 
 SMPS_keys = [['260421_vanillin+UV_dry_number', '260422_vanillin+UV_dry_number', '260501_vanillin+UV_dry_number', '260504_vanillin+UV_dry_number'], 
              ['260421_vanillin+UV_dry_mass', '260422_vanillin+UV_dry_mass', '260501_vanillin+UV_dry_mass', '260504_vanillin+UV_dry_mass']]
