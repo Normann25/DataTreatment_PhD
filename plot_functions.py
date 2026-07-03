@@ -420,7 +420,7 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
 
     return fig, axes
 
-def plot_AURA_overview(daq, smps, ams, timestamps, t_zero, RH, save_path):
+def plot_AURA_overview(daq, smps, ams, timestamps, bg_timestamps, t_zero, RH, save_path):
     fig, ax = plt.subplots(3, 1, figsize = (6.3, 8.5))
 
     daq = time_filtered_conc(daq, ['Temp_C', 'RH_Percent'], timestamps)
@@ -443,6 +443,9 @@ def plot_AURA_overview(daq, smps, ams, timestamps, t_zero, RH, save_path):
     ax1_2.tick_params(axis = 'y', labelcolor = 'purple')
     ax1_2.set_ylabel('Concentration (# cm$^{-3}$)', color = 'purple')
 
+    ams_bg = time_filtered_conc(ams, ['HROrg'], bg_timestamps)
+    Org_DL = ams_bg['HROrg'].std() * 3
+    ams.loc[ams['HROrg'] < Org_DL, ['Ratio_H_C', 'Ratio_O_C']] = np.nan
     ams = time_filtered_conc(ams, ['Ratio_H_C', 'Ratio_O_C'], timestamps)
     plot_total(ax[2], ams, 'Ratio_O_C', 'tab:cyan', t_zero)
     ax[2].tick_params(axis = 'y', labelcolor = 'tab:cyan')
