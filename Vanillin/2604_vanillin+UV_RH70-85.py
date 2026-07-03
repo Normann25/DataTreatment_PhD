@@ -68,7 +68,8 @@ PTRMS_keys = ['260428_VL+UV_70RH_initial', '260429_VL+UV_RH85_initial', '260430_
 DAQ_keys = ['DataDAQ_260427', 'DataDAQ_260428', 'DataDAQ_260429', 'DataDAQ_260430']
 #%%
 for i, time in enumerate(timestamps):
-    plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, t_zero[i], RH[i], save_path)
+    fig, ax = plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, HEPA_timestamps[i], t_zero[i], RH[i], save_path)
+    ax[2].set_ylim (0, 1)
 #%%
 ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260428_vanillin+UV_RH70_mass'].columns[42:-1], 'number and mass', 
                      timestamps, 10, RH, 'Total concentration', t_zero, 2, 2, save_path)
