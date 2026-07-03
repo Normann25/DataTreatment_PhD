@@ -421,7 +421,7 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
     return fig, axes
 
 def plot_AURA_overview(daq, smps, ams, timestamps, bg_timestamps, t_zero, RH, save_path):
-    fig, ax = plt.subplots(3, 1, figsize = (6.3, 8.5))
+    fig, ax = plt.subplots(3, 1, figsize = (6.3, 8.5), sharex = True)
 
     daq = time_filtered_conc(daq, ['Temp_C', 'RH_Percent'], timestamps)
     smps = time_filtered_conc(smps, ['Geo. Mean (nm)', 'Total concentration'], timestamps)
@@ -430,6 +430,7 @@ def plot_AURA_overview(daq, smps, ams, timestamps, bg_timestamps, t_zero, RH, sa
     plot_total(ax[0], daq, 'Temp_C', 'tab:red', t_zero)
     ax[0].tick_params(axis = 'y', labelcolor = 'tab:red')
     ax[0].set_ylabel('Temperature ($^{\circ}$C)', color = 'tab:red')
+    ax[0].set_xlabel(None)
     ax0_2 = ax[0].twinx()
     plot_total(ax0_2, daq, 'RH_Percent', 'tab:blue', t_zero)
     ax0_2.tick_params(axis = 'y', labelcolor = 'tab:blue')
@@ -438,6 +439,7 @@ def plot_AURA_overview(daq, smps, ams, timestamps, bg_timestamps, t_zero, RH, sa
     plot_total(ax[1], smps, 'Geo. Mean (nm)', 'green', t_zero)
     ax[1].tick_params(axis = 'y', labelcolor = 'green')
     ax[1].set_ylabel('Geo. mean D$_{p}$ (nm)', color = 'green')
+    ax[1].set_xlabel(None)
     ax1_2 = ax[1].twinx()
     plot_total(ax1_2, smps, 'Total concentration', 'purple', t_zero)
     ax1_2.tick_params(axis = 'y', labelcolor = 'purple')
