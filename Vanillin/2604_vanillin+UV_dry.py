@@ -53,6 +53,7 @@ for t, path in zip(t_zero, paths):
         if 'PToF' not in key:
             temp_AMS[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
                             'familyCHN', 'familyCHO1', 'familyCHOgt1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
+            temp_AMS[key].loc[temp_AMS[key]['Time'] < pd.to_datetime(t), ['Ratio_H_C', 'Ratio_O_C']] = np.nan
         AMS[key] = temp_AMS[key]
     temp_daq = import_data(f'{parent_path}{path}DAQ/', '', 'DAQ_Timestamp_UTC', '%d-%m-%Y %H:%M:%S', 0)
     for key in temp_daq.keys():
@@ -73,7 +74,7 @@ DAQ_keys = ['DataDAQ_260421', 'DataDAQ_260422', 'DataDAQ_260501', 'DataDAQ_26050
 #%%
 # Experiment overview
 for i, time in enumerate(timestamps):
-    plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, t_zero[i], 'Dry', save_path)
+    plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, HEPA_timestamps[i], t_zero[i], 'Dry', save_path)
 #%%
 # SMPS raw
 for i, time in enumerate(timestamps):
