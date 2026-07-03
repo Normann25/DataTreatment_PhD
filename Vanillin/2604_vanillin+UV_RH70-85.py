@@ -36,7 +36,7 @@ for t, path in zip(t_zero, paths):
     temp_SMPS = import_SMPS(f'{parent_path}{path}SMPS/', '', 0)
     for key in temp_SMPS.keys():
         SMPS_raw[key] = temp_SMPS[key]
-        temp_SMPS[key].loc[temp_SMPS[key]['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 20), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = 0
+        temp_SMPS[key].loc[temp_SMPS[key]['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 20), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
         temp = remove_spikes_up(temp_SMPS[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
         SMPS[key] = temp
     if path != paths[0]:
@@ -59,7 +59,7 @@ save_path = '../../../Figures/Vanillin/2604_vanillin+UV_RH70-85/'
 
 for key in SMPS.keys():
     SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
-    SMPS[key] = SMPS[key].fillna(0)
+    # SMPS[key] = SMPS[key].fillna(0)
 
 SMPS_keys = [['260427_vanillin+UV_RH70_number', '260428_vanillin+UV_RH70_number', '260429_vanillin+UV_RH85_number', '260430_vanillin+UV_RH85_number'],
              ['260427_vanillin+UV_RH70_mass', '260428_vanillin+UV_RH70_mass', '260429_vanillin+UV_RH85_mass', '260430_vanillin+UV_RH85_mass']]
