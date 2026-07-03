@@ -85,7 +85,7 @@ def remove_spikes_down(df, df_keys, value):
         # Replace each outlier value with NaN
         df.loc[df['outlier'], key] = np.nan
         # Interpolate over NaNs just created with default linear method
-        df[key] = (df[key].interpolate().astype(float))
+        # df[key] = (df[key].interpolate().astype(float))
         df = df.drop(['outlier'], axis = 1)
 
     return df
