@@ -308,8 +308,8 @@ def vanKrevelen_OS(ax, rotation):
     ax.set(xlim = (0,1.5), ylim = (1,2.55), xlabel = 'O:C', ylabel = 'H:C')
     return ax
 
-def vanKrevelen_ts(df, df_keys, t_zero, timestamps, run_length, title):
-    conc_mask = df[df_keys[2]] >= 0.03 # Based on AMS detection limit for organics (in V-mode)
+def vanKrevelen_ts(df, df_keys, Org_DL, t_zero, timestamps, run_length, title):
+    conc_mask = df[df_keys[2]] >= Org_DL
     HC_mask = df[df_keys[0]] >= 0
     OC_mask = df[df_keys[1]] >= 0
     df = df[conc_mask]
@@ -576,19 +576,21 @@ def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, RH, save
 
     VK_keys = ['Ratio_H_C', 'Ratio_O_C', 'HROrg']
     species_keys = ['HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl']
-    family_keys = ['HROrg', 'familyCHO1', 'familyCH', 'familyCHN', 'familyCHO1N']
-    if bg_timestamps is not None:
-        bg_df = time_filtered_conc(df, species_keys+family_keys[1:], bg_timestamps)
-        for key in species_keys+family_keys[1:]:
-            df[key] = df[key] - bg_df[key].mean()
+    family_keys = ['HROrg', 'familyCHO1', 'familyCHOgt1', 'familyCH', 'familyCHN', 'familyCHO1N']
+    bg_df = time_filtered_conc(df, species_keys+family_keys[1:], bg_timestamps)
+    Org_DL = bg_df['HROrg'].std() * 3
+    for key in species_keys+family_keys[1:]:
+        df[key] = df[key] - bg_df[key].mean()
     
     new_df = time_filtered_conc(df, species_keys+family_keys[1:]+VK_keys[:-1], timestamps)
 
     n_species = len(species_keys)
     cmap = mpl.colormaps['viridis_r']
-    colors = cmap(np.linspace(0, 1, n_species+2))
+    colors = cmap(np.linspace(0, 1, n_species+3))
 
     fig1, ax1 = plt.subplots(figsize = (6.3, 3))
+    ax1.hlines(Org_DL, (new_df['Time'][0] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (new_df['Time'][-1] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1),
+               color = 'gray', lw = 0.5, ls = '--')
     for color, key in zip(colors[1:], species_keys):
         plot_total(ax1, new_df, key, color, t_zero)
     ax1.legend(species_keys)
@@ -597,18 +599,18 @@ def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, RH, save
     fig1.savefig(f'{save_path}{date}_AMS_TS.jpg', dpi = 600)
 
     fig2, ax2 = plt.subplots(2, 1, figsize = (6.3, 6))
-    for color, key in zip(colors[1:4], family_keys[:3]):
+    for color, key in zip(colors[1:5], family_keys[:4]):
         plot_total(ax2[0], new_df, key, color, t_zero)
         ax2[0].set(ylabel = 'Concentration ($\mu$g m$^{-3}$)', title = f'{t_zero.split(' ')[0]}, {RH}')
-        ax2[0].legend(['Total org', 'CHO1', 'CH'])
-    for color, key in zip(colors[4:], family_keys[3:]):
+        ax2[0].legend(['Total org', 'C$_{x}$H$_{y}$O$_{1}$', 'C$_{x}$H$_{y}$O$_{>1}$', 'C$_{x}$H$_{y}$'])
+    for color, key in zip(colors[5:], family_keys[4:]):
         plot_total(ax2[1], new_df, key, color, t_zero)
         ax2[1].set_ylabel('Concentration ($\mu$g m$^{-3}$)')
-        ax2[1].legend(['CHN', 'CHO1N'])
+        ax2[1].legend(['C$_{x}$H$_{y}$N$_{z}$', 'C$_{x}$H$_{y}$O$_{1}$N$_{z}$'])
     fig2.tight_layout()
     fig2.savefig(f'{save_path}{date}_AMSfamily_TS.jpg', dpi = 600)
 
-    fig3, ax3 = vanKrevelen_ts(new_df, VK_keys, t_zero, timestamps, runlength, f'{t_zero.split(' ')[0]}, {RH}')
+    fig3, ax3 = vanKrevelen_ts(new_df, VK_keys, Org_DL, t_zero, timestamps, runlength, f'{t_zero.split(' ')[0]}, {RH}')
     fig3.tight_layout(pad = 0.75)
     fig3.savefig(f'{save_path}{date}_vanKrevelen.jpg', dpi = 600)
 
