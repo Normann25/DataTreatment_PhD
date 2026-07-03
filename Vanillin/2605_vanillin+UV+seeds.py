@@ -44,9 +44,9 @@ for t, path in zip(t_injection, paths):
         if 'PToF' not in key:
             temp_AMS[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
                             'familyCHN', 'familyCHO1', 'familyCHOgt1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
-            temp_AMS[key].loc[temp_AMS[key]['Time'] < pd.to_datetime(t), ['Ratio_H_C', 'Ratio_O_C']] = 0
-            temp_AMS[key].loc[temp_AMS[key]['Ratio_O_C'] < -0.1, ['Ratio_H_C', 'Ratio_O_C']] = 0
-            temp_AMS[key].loc[temp_AMS[key]['Ratio_O_C'] > 4, ['Ratio_H_C', 'Ratio_O_C']] = 0
+            temp_AMS[key].loc[temp_AMS[key]['Time'] < pd.to_datetime(t), ['Ratio_H_C', 'Ratio_O_C']] = np.nan
+            # temp_AMS[key].loc[temp_AMS[key]['Ratio_O_C'] < -0.1, ['Ratio_H_C', 'Ratio_O_C']] = 0
+            # temp_AMS[key].loc[temp_AMS[key]['Ratio_O_C'] > 4, ['Ratio_H_C', 'Ratio_O_C']] = 0
         AMS[key] = temp_AMS[key]
     temp_daq = import_data(f'{parent_path}{path}DAQ/', '', 'DAQ_Timestamp_UTC', '%d-%m-%Y %H:%M:%S', 0)
     for key in temp_daq.keys():
@@ -68,7 +68,7 @@ AMS_keys = ['260505_AMS_vanillin+UV+seeds_85RH_TS', '260506_AMS_vanillin+UV+seed
 DAQ_keys = ['DataDAQ_260505', 'DataDAQ_260506', 'DataDAQ_260507', 'DataDAQ_260508']
 #%%
 for i, time in enumerate(timestamps):
-    plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, t_zero[i], RH[i], save_path)
+    plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, HEPA_timestamps[i], t_zero[i], RH[i], save_path)
 #%%
 ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260505_vanillin+UV+seeds_RH85_mass'].columns[42:-1], 'number and mass', 
                      timestamps, 10, RH, 'Total concentration', t_zero, 2, 2, save_path)
