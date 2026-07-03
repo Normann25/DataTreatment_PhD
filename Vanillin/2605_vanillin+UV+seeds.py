@@ -26,28 +26,52 @@ HEPA_timestamps = [['2026-05-05 07:47', '2026-05-05 08:07'],
                    ['2026-05-07 08:10', '2026-05-07 08:30'],
                    ['2026-05-08 08:13', '2026-05-08 08:33']]
 
-RH = ['85% RH', '85% RH', '0% RH', '0% RH']
+RH = ['85% RH', '85% RH', 'Dry', 'Dry']
 
 SMPS = {}
 # PTRMS = {}
-# AMS = {}
-# DAQ = {}
+AMS = {}
+DAQ = {}
 for t, path in zip(t_injection, paths):
     temp_SMPS = import_SMPS(f'{parent_path}{path}SMPS/', '', 0)
     for key in temp_SMPS.keys():
-        temp_SMPS[key].loc[temp_SMPS[key]['Time'] < pd.to_datetime(t), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = 0
-        # temp = remove_spikes_up(temp_SMPS[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
-        # SMPS[key] = temp
-        SMPS[key] = temp_SMPS[key]
+        temp_SMPS[key].loc[temp_SMPS[key]['Time'] < pd.to_datetime(t), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+        temp = remove_spikes_up(temp_SMPS[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
+        SMPS[key] = temp
+        # SMPS[key] = temp_SMPS[key]
+    temp_AMS = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', 0)
+    for key in temp_AMS.keys():
+        if 'PToF' not in key:
+            temp_AMS[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
+                            'familyCHN', 'familyCHO1', 'familyCHOgt1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
+            temp_AMS[key].loc[temp_AMS[key]['Time'] < pd.to_datetime(t), ['Ratio_H_C', 'Ratio_O_C']] = 0
+            temp_AMS[key].loc[temp_AMS[key]['Ratio_O_C'] < -0.1, ['Ratio_H_C', 'Ratio_O_C']] = 0
+            temp_AMS[key].loc[temp_AMS[key]['Ratio_O_C'] > 4, ['Ratio_H_C', 'Ratio_O_C']] = 0
+        AMS[key] = temp_AMS[key]
+    temp_daq = import_data(f'{parent_path}{path}DAQ/', '', 'DAQ_Timestamp_UTC', '%d-%m-%Y %H:%M:%S', 0)
+    for key in temp_daq.keys():
+        temp = remove_spikes(temp_daq[key], ['Temp_C'], 5)
+        DAQ[key] = temp
 
 save_path = '../../../Figures/Vanillin/2605_vanillin+UV+seeds/'
 
 for key in SMPS.keys():
     SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
-    SMPS[key] = SMPS[key].fillna(0)
+    # SMPS[key] = SMPS[key].fillna(0)
+
+RH_mask = DAQ['DataDAQ_260507']['RH_Percent'] < 0.005
+DAQ['DataDAQ_260507'] = DAQ['DataDAQ_260507'][RH_mask]
 
 SMPS_keys = [['260505_vanillin+UV+seeds_RH85_number', '260506_vanillin+UV+seeds_RH85_number', '260507_vanillin+UV+seeds_dry_number', '260508_vanillin+UV+seeds_dry_number'],
              ['260505_vanillin+UV+seeds_RH85_mass', '260506_vanillin+UV+seeds_RH85_mass', '260507_vanillin+UV+seeds_dry_mass', '260508_vanillin+UV+seeds_dry_mass']]
+AMS_keys = ['260505_AMS_vanillin+UV+seeds_85RH_TS', '260506_AMS_vanillin+UV+seeds_85RH_TS', '260507_AMS_vanillin+UV+seeds_dry_TS', '260508_AMS_vanillin+UV+seeds_dry_TS']
+DAQ_keys = ['DataDAQ_260505', 'DataDAQ_260506', 'DataDAQ_260507', 'DataDAQ_260508']
+#%%
+for i, time in enumerate(timestamps):
+    plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, t_zero[i], RH[i], save_path)
 #%%
 ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260505_vanillin+UV+seeds_RH85_mass'].columns[42:-1], 'number and mass', 
                      timestamps, 10, RH, 'Total concentration', t_zero, 2, 2, save_path)
+#%%
+for i, key in enumerate(AMS_keys):
+    plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], 1, RH[i], save_path)
