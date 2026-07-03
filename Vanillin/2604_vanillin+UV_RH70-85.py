@@ -49,7 +49,7 @@ for t, path in zip(t_zero, paths):
     for key in temp_AMS.keys():
         if 'PToF' not in key:
             temp_AMS[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
-                            'familyCHN', 'familyCHO1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
+                            'familyCHN', 'familyCHO1', 'familyCHOgt1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
         AMS[key] = temp_AMS[key]
     temp_daq = import_data(f'{parent_path}{path}DAQ/', '', 'DAQ_Timestamp_UTC', '%d-%m-%Y %H:%M:%S', 0)
     for key in temp_daq.keys():
@@ -67,6 +67,9 @@ AMS_keys = ['260427_AMS_vanillin+UV_70RH_TS', '260428_AMS_vanillin+UV_70RH_TS', 
 PTRMS_keys = ['260428_VL+UV_70RH_initial', '260429_VL+UV_RH85_initial', '260430_VL+UV_RH85_inital']
 DAQ_keys = ['DataDAQ_260427', 'DataDAQ_260428', 'DataDAQ_260429', 'DataDAQ_260430']
 #%%
+for i, time in enumerate(timestamps):
+    plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, t_zero[i], RH[i], save_path)
+#%%
 ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260428_vanillin+UV_RH70_mass'].columns[42:-1], 'number and mass', 
                      timestamps, 10, RH, 'Total concentration', t_zero, 2, 2, save_path)
 #%%
@@ -79,9 +82,3 @@ for i, key in enumerate(PTRMS_keys):
                                t_zero[i+1], t_UV_off[i], timestamps[i+1][1], RH[i+1])
     fig.tight_layout()
     fig.savefig(f'{save_path}{t_zero[i+1].split(' ')[0]}_PTRMS_initial.jpg', dpi = 600)
-#%%
-for i, time in enumerate(timestamps):
-    plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, t_zero[i], RH[i], save_path)
-    #%%
-for i, key in enumerate(['260429_AMS_vanillin+UV_85RH_TS_v2', '260430_AMS_vanillin+UV_85RH_TS_v2']):
-    plot_AMS(AMS[key], None, t_zero[i+2], timestamps[i+2], HEPA_timestamps[i+2], 1, RH[i+2], save_path)
