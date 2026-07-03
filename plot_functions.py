@@ -591,7 +591,7 @@ def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, RH, save
                color = 'gray', lw = 0.5, ls = '--')
     for color, key in zip(colors[1:], species_keys):
         plot_total(ax1, new_df, key, color, t_zero)
-    ax1.legend(species_keys)
+    ax1.legend(['HROrg DL'] + species_keys)
     ax1.set(ylabel = 'Concentration ($\mu$g m$^{-3}$)', title = f'{t_zero.split(' ')[0]}, {RH}')
     fig1.tight_layout()
     fig1.savefig(f'{save_path}{date}_AMS_TS.jpg', dpi = 600)
