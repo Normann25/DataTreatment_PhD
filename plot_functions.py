@@ -589,7 +589,7 @@ def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, RH, save
     colors = cmap(np.linspace(0, 1, n_species+3))
 
     fig1, ax1 = plt.subplots(figsize = (6.3, 3))
-    ax1.hlines(Org_DL, (new_df['Time'][0] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (new_df['Time'][-1] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1),
+    ax1.hlines(Org_DL, (pd.to_datetime(timestamps[0]) - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(timestamps[1]) - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1),
                color = 'gray', lw = 0.5, ls = '--')
     for color, key in zip(colors[1:], species_keys):
         plot_total(ax1, new_df, key, color, t_zero)
