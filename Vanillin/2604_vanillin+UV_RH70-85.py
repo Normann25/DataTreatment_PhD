@@ -77,6 +77,27 @@ ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260428_vanillin+UV_RH70_mass'].colum
 for i, key in enumerate(AMS_keys):
     plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], 1, RH[i], save_path)
 #%%
+print(PTRMS.keys())
+#%%
+# PTR-MS grouping of ions
+for key in ['260429_VL+UV_RH85_products', '260430_VL+UV_RH85_products']:
+    # Identify concentration columns
+    concentration_cols = [col for col in PTRMS[key].columns if col.startswith('m') and '(' in col] # The name of the time series
+    smooth_data_array = GetData(PTRMS[key], concentration_cols, smooth=True, window_size=12)
+    data_array = GetData(PTRMS[key], concentration_cols, smooth=False, window_size=50)
+
+    # Compute Distance measures
+    smooth_distance_matrices = ComputeTSDistance(smooth_data_array, 'p4')
+    distance_matrices = ComputeTSDistance(data_array, 'p4')
+
+    # Do clustering and plot the result
+    for label, d_mat in smooth_distance_matrices.items():
+        hdbscan_labels= PerformHDBSCAN(d_mat)
+        PlotClusterRows(smooth_data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'{save_path}hdbscan_clusters_{key.split('_')[0]}_{label}_smooth.jpg')
+    for label, d_mat in distance_matrices.items():
+        hdbscan_labels= PerformHDBSCAN(d_mat) # Element x in concentration_cols belongs to cluster i where i is element x in hdbscan_labels
+        PlotClusterRows(data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'{save_path}hdbscan_clusters_{key.split('_')[0]}_{label}_raw.jpg')
+#%%
 for i, key in enumerate(PTRMS_keys):
     fig, ax = plot_PTRMS_decay(PTRMS[key], PTRMS[key].keys()[5], [PTRMS[key].keys()[4]], 
                                ['C$_{8}$H$_{9}$O$_{3}^{+}$', 'C$_{7}$H$_{9}$O$_{2}^{+}$'], 
