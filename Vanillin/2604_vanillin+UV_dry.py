@@ -46,8 +46,8 @@ for t, path in zip(t_zero, paths):
     for key in temp_PTR.keys():
         # mask = (0 < temp_PTR[key][temp_PTR[key].keys()[5]]) & (temp_PTR[key][temp_PTR[key].keys()[5]] < 90)
         # temp = temp_PTR[key][mask]
-        temp = remove_spikes(temp_PTR[key], temp_PTR[key].keys()[4:-2], 5)
-        PTRMS[key] = temp
+        # temp = remove_spikes(temp_PTR[key], temp_PTR[key].keys()[4:-2], 5)
+        PTRMS[key] = temp_PTR[key]
     temp_AMS = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', 0)
     for key in temp_AMS.keys():
         if 'PToF' not in key:
@@ -71,6 +71,8 @@ SMPS_keys = [['260421_vanillin+UV_dry_number', '260422_vanillin+UV_dry_number', 
 AMS_keys = ['260421_AMS_vanillin+UV_dry_TS', '260422_AMS_vanillin+UV_dry_TS', '260501_AMS_vanillin+UV_dry_TS', '260504_AMS_vanillin+UV_dry_TS']
 PTRMS_keys = ['260501_VL+UV_dry_initial', '260504_VL+UV_dry_initial']
 DAQ_keys = ['DataDAQ_260421', 'DataDAQ_260422', 'DataDAQ_260501', 'DataDAQ_260504']
+#%%
+print(PTRMS.keys())
 #%%
 # Experiment overview
 for i, time in enumerate(timestamps):
@@ -110,6 +112,25 @@ ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260422_vanillin+UV_dry_mass'].column
 # AMS
 for i, key in enumerate(AMS_keys):
     plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], 1, 'Dry', save_path)
+#%%
+# PTR-MS grouping of ions
+for key in ['260501_VL+UV_dry_products', '260504_VL+UV_dry_products']:
+    # Identify concentration columns
+    concentration_cols = [col for col in PTRMS[key].columns if col.startswith('m') and '(' in col] # The name of the time series
+    smooth_data_array = GetData(PTRMS[key], concentration_cols, smooth=True, window_size=12)
+    data_array = GetData(PTRMS[key], concentration_cols, smooth=False, window_size=50)
+
+    # Compute Distance measures
+    smooth_distance_matrices = ComputeTSDistance(smooth_data_array, 'p4')
+    distance_matrices = ComputeTSDistance(data_array, 'p4')
+
+    # Do clustering and plot the result
+    for label, d_mat in smooth_distance_matrices.items():
+        hdbscan_labels= PerformHDBSCAN(d_mat)
+        PlotClusterRows(smooth_data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'{save_path}hdbscan_clusters_{key.split('_')[0]}_{label}_smooth.jpg')
+    for label, d_mat in distance_matrices.items():
+        hdbscan_labels= PerformHDBSCAN(d_mat) # Element x in concentration_cols belongs to cluster i where i is element x in hdbscan_labels
+        PlotClusterRows(data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'{save_path}hdbscan_clusters_{key.split('_')[0]}_{label}_raw.jpg')
 #%%
 # PTR-MS
 for i, key in enumerate(PTRMS_keys):
