@@ -107,7 +107,7 @@ for i, keys in enumerate(PTR_merge_keys):
     PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'] = calc_OC_HC_PTRMS(merged)
 
     fig, ax = vanKrevelen_ts(PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'], ['Ratio_H_C', 'Ratio_O_C'], None,
-                             t_zero[i+2], [t_VL_inj[i], timestamps[i+2][1]], 5/60, f'{timestamps[i+2][0].split(' ')[0]}, 85% RH')
+                             t_zero[i+2], [t_VL_inj[i], t_UV_off[i+2]], 5/60, f'{t_UV_off[i+2].split(' ')[0]}, 85% RH')
     fig.tight_layout(pad = 0.75)
     fig.savefig(f'{save_path}{timestamps[i+2][0].split(' ')[0]}_vanKrevelen_PTRMS.jpg', dpi = 600)
 #%%
