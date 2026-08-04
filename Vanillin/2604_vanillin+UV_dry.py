@@ -47,13 +47,13 @@ for t, path in zip(t_zero, paths):
         # mask = (0 < temp_PTR[key][temp_PTR[key].keys()[5]]) & (temp_PTR[key][temp_PTR[key].keys()[5]] < 90)
         # temp = temp_PTR[key][mask]
         # temp = remove_spikes(temp_PTR[key], temp_PTR[key].keys()[4:-2], 5)
-        PTRMS[key] = temp_PTR[key]
+        PTRMS[key] = temp_PTR[key].drop(['AbsTime', 'RelTime', 'Cycle', 'CycleInFile', 'Filename'], axis = 1)
     temp_AMS = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', 0)
     for key in temp_AMS.keys():
         if 'PToF' not in key:
             temp_AMS[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
                             'familyCHN', 'familyCHO1', 'familyCHOgt1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
-            temp_AMS[key].loc[temp_AMS[key]['Time'] < pd.to_datetime(t), ['Ratio_H_C', 'Ratio_O_C']] = np.nan
+            # temp_AMS[key].loc[temp_AMS[key]['Time'] < pd.to_datetime(t), ['Ratio_H_C', 'Ratio_O_C']] = np.nan
         AMS[key] = temp_AMS[key]
     temp_daq = import_data(f'{parent_path}{path}DAQ/', '', 'DAQ_Timestamp_UTC', '%d-%m-%Y %H:%M:%S', 0)
     for key in temp_daq.keys():
@@ -71,8 +71,6 @@ SMPS_keys = [['260421_vanillin+UV_dry_number', '260422_vanillin+UV_dry_number', 
 AMS_keys = ['260421_AMS_vanillin+UV_dry_TS', '260422_AMS_vanillin+UV_dry_TS', '260501_AMS_vanillin+UV_dry_TS', '260504_AMS_vanillin+UV_dry_TS']
 PTRMS_keys = ['260501_VL+UV_dry_initial', '260504_VL+UV_dry_initial']
 DAQ_keys = ['DataDAQ_260421', 'DataDAQ_260422', 'DataDAQ_260501', 'DataDAQ_260504']
-#%%
-print(PTRMS.keys())
 #%%
 # Experiment overview
 for i, time in enumerate(timestamps):
@@ -134,15 +132,20 @@ for key in ['260501_VL+UV_dry_products', '260504_VL+UV_dry_products']:
 
 #%%
 # PTR-MS O:C and H:C
-import re
-for key in ['260501_VL+UV_dry_products', '260504_VL+UV_dry_products']:
-    concentration_cols = [col for col in PTRMS[key].columns if col.startswith('m') and '(' in col]
-    for col in concentration_cols:
-        matches = re.findall(r'-?\d*\.?\d+', col)
-        values = [float(x) if '.' in x else int(x) for x in matches]
-        print(values)
+PTR_merge_keys = [['260501_VL+UV_dry_fragments', '260501_VL+UV_dry_products'],
+                  ['260504_VL+UV_dry_fragments', '260504_VL+UV_dry_products']]
+for i, keys in enumerate(PTR_merge_keys):
+    merged = pd.merge(PTRMS[keys[0]], PTRMS[keys[1]], on = 'Time', how = 'outer')
+    PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'] = calc_OC_HC_PTRMS(merged)
+
+    fig, ax = vanKrevelen_ts(PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'], ['Ratio_H_C', 'Ratio_O_C'], None,
+                             t_zero[i+2], timestamps[i+2], 5/60, f'{timestamps[i+2][0].split(' ')[0]}, Dry')
+    fig.tight_layout(pad = 0.75)
+    fig.savefig(f'{save_path}{timestamps[i+2][0].split(' ')[0]}_vanKrevelen_PTRMS.jpg', dpi = 600)
+
+        
 #%%
-# PTR-MS
+# PTR-MS decay (still need wall loss correction)
 for i, key in enumerate(PTRMS_keys):
     fig, ax = plot_PTRMS_decay(PTRMS[key], PTRMS[key].keys()[5], [PTRMS[key].keys()[4]], 
                                ['C$_{8}$H$_{9}$O$_{3}^{+}$', 'C$_{7}$H$_{9}$O$_{2}^{+}$'], 
