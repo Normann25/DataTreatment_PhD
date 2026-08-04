@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import scipy
 from iminuit import Minuit
+import re
 from ExternalFunctions import *
 #%%
 def remove_spikes(df, df_keys, value):
@@ -273,6 +274,34 @@ def GCMS_concentration_calculation(flow_data, flow_dict_keys, flow_key, timestam
 def density_from_AMS(H_C_ratio, O_C_ratio):
     rho = 1000 * (12 + 1*H_C_ratio + 16*O_C_ratio) / (7.0 + 5.0*H_C_ratio + 4.15*O_C_ratio) # Density in kg/m^3
     return rho
+
+def calc_OC_HC_PTRMS(df):
+    # Molecular weights of C, H, and O (accounting for isotope)
+    Mw = [12.011, 1.008, 15.999]
+
+    # Temporary df containing relative mass concentrations of C, H, and O
+    temp = pd.DataFrame({'M_C': np.zeros(len(df.index)), 'M_H': np.zeros(len(df.index)), 'M_O': np.zeros(len(df.index))})
+
+    # Extract Mw and number of C, H, and O atoms in each molecule
+    concentration_cols = [col for col in df.columns if col.startswith('m') and '(' in col]
+    for col in concentration_cols:
+        matches = re.findall(r'-?\d*\.?\d+', col)
+        values = [float(x) if '.' in x else int(x) for x in matches]
+        if len(values) < 7:
+            values = values + [16, 0]
+
+        # Calculate relative mass concentrations
+        for i, value in enumerate(values[2::2]):
+            temp[temp.keys()[i]] = temp[temp.keys()[i]] + (df[col] * ((value*Mw[i])/values[0]))
+
+    # New dataframe for O:C and H:C ratios
+    OC_HC_df = pd.DataFrame({'Time': df['Time']})
+
+    # Calculate O:C and H:C ratios
+    OC_HC_df['Ratio_O_C'] = (temp['M_O']/Mw[2]) / (temp['M_C']/Mw[0])
+    OC_HC_df['Ratio_H_C'] = (temp['M_H']/Mw[1]) / (temp['M_C']/Mw[0])
+
+    return OC_HC_df
 
 def linear_forced_zero(x, a):
     return (a * x)
