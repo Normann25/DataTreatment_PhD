@@ -287,12 +287,13 @@ def calc_OC_HC_PTRMS(df):
     for col in concentration_cols:
         matches = re.findall(r'-?\d*\.?\d+', col)
         values = [float(x) if '.' in x else int(x) for x in matches]
+        values[4] = values[4] - 1
         if len(values) < 7:
             values = values + [16, 0]
 
         # Calculate relative mass concentrations
         for i, value in enumerate(values[2::2]):
-            temp[temp.keys()[i]] = temp[temp.keys()[i]] + (df[col] * ((value*Mw[i])/values[0]))
+            temp[temp.keys()[i]] = temp[temp.keys()[i]] + (df[col] * ((value*Mw[i])/(values[0]-Mw[1])))
 
     # New dataframe for O:C and H:C ratios
     OC_HC_df = pd.DataFrame({'Time': df['Time']})
