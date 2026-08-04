@@ -142,8 +142,6 @@ for i, keys in enumerate(PTR_merge_keys):
                              t_zero[i+2], timestamps[i+2], 5/60, f'{timestamps[i+2][0].split(' ')[0]}, Dry')
     fig.tight_layout(pad = 0.75)
     fig.savefig(f'{save_path}{timestamps[i+2][0].split(' ')[0]}_vanKrevelen_PTRMS.jpg', dpi = 600)
-
-        
 #%%
 # PTR-MS decay (still need wall loss correction)
 for i, key in enumerate(PTRMS_keys):
