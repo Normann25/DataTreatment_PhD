@@ -309,10 +309,11 @@ def vanKrevelen_OS(ax, rotation):
     return ax
 
 def vanKrevelen_ts(df, df_keys, Org_DL, t_zero, timestamps, run_length, title):
-    conc_mask = df[df_keys[2]] >= Org_DL
+    if Org_DL is not None:
+        conc_mask = df[df_keys[2]] >= Org_DL
+        df = df[conc_mask]
     HC_mask = df[df_keys[0]] >= 0
     OC_mask = df[df_keys[1]] >= 0
-    df = df[conc_mask]
     df = df[HC_mask]
     df = df[OC_mask]
 

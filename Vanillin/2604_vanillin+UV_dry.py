@@ -131,6 +131,16 @@ for key in ['260501_VL+UV_dry_products', '260504_VL+UV_dry_products']:
     for label, d_mat in distance_matrices.items():
         hdbscan_labels= PerformHDBSCAN(d_mat) # Element x in concentration_cols belongs to cluster i where i is element x in hdbscan_labels
         PlotClusterRows(data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'{save_path}hdbscan_clusters_{key.split('_')[0]}_{label}_raw.jpg')
+
+#%%
+# PTR-MS O:C and H:C
+import re
+for key in ['260501_VL+UV_dry_products', '260504_VL+UV_dry_products']:
+    concentration_cols = [col for col in PTRMS[key].columns if col.startswith('m') and '(' in col]
+    for col in concentration_cols:
+        matches = re.findall(r'-?\d*\.?\d+', col)
+        values = [float(x) if '.' in x else int(x) for x in matches]
+        print(values)
 #%%
 # PTR-MS
 for i, key in enumerate(PTRMS_keys):
