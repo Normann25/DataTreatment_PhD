@@ -317,10 +317,7 @@ def vanKrevelen_ts(df, df_keys, Org_DL, t_zero, timestamps, run_length, title):
     df = df[HC_mask]
     df = df[OC_mask]
 
-    if t_zero is not None:
-        new_df = time_filtered_conc(df, df_keys, [t_zero, timestamps[1]])
-    else:
-        new_df = time_filtered_conc(df, df_keys, timestamps)
+    new_df = time_filtered_conc(df, df_keys, timestamps)
 
     n_points = len(new_df['Time'])
     cmap = mpl.colormaps['viridis_r']
@@ -614,9 +611,9 @@ def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, RH, save
     fig2.tight_layout()
     fig2.savefig(f'{save_path}{date}_AMSfamily_TS.jpg', dpi = 600)
 
-    fig3, ax3 = vanKrevelen_ts(new_df, VK_keys, Org_DL, t_zero, timestamps, runlength, f'{t_zero.split(' ')[0]}, {RH}')
+    fig3, ax3 = vanKrevelen_ts(new_df, VK_keys, Org_DL, t_zero, [t_zero, timestamps[1]], runlength, f'{t_zero.split(' ')[0]}, {RH}')
     fig3.tight_layout(pad = 0.75)
-    fig3.savefig(f'{save_path}{date}_vanKrevelen.jpg', dpi = 600)
+    fig3.savefig(f'{save_path}{date}_vanKrevelen_AMS.jpg', dpi = 600)
 
     if PToF_df is not None:
         # To be continued...
