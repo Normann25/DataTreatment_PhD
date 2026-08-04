@@ -18,6 +18,7 @@ timestamps = [['2026-04-27 10:36', '2026-04-27 17:28'],
               ['2026-04-28 11:07', '2026-04-28 17:38'],
               ['2026-04-29 08:52', '2026-04-29 16:45'],
               ['2026-04-30 07:58', '2026-04-30 17:56']]
+t_VL_inj = ['2026-04-29 10:02', '2026-04-30 11:11']
 t_zero = ['2026-04-27 12:16', '2026-04-28 12:35', '2026-04-29 11:45', '2026-04-30 12:47']
 t_UV_off = ['2026-04-27 16:21', '2026-04-28 16:36', '2026-04-29 15:45', '2026-04-30 16:47']
 HEPA_timestamps = [['2026-04-27 08:40', '2026-04-27 09:00'],
@@ -44,7 +45,7 @@ for t, path in zip(t_zero, paths):
         for key in temp_PTR.keys():
             mask = (0 < temp_PTR[key][temp_PTR[key].keys()[5]]) & (temp_PTR[key][temp_PTR[key].keys()[5]] < 90)
             temp = temp_PTR[key][mask]
-            PTRMS[key] = temp
+            PTRMS[key] = temp.drop(['AbsTime', 'RelTime', 'Cycle', 'CycleInFile', 'Filename'], axis = 1)
     temp_AMS = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', 0)
     for key in temp_AMS.keys():
         if 'PToF' not in key:
@@ -97,6 +98,18 @@ for key in ['260429_VL+UV_RH85_products', '260430_VL+UV_RH85_products']:
     for label, d_mat in distance_matrices.items():
         hdbscan_labels= PerformHDBSCAN(d_mat) # Element x in concentration_cols belongs to cluster i where i is element x in hdbscan_labels
         PlotClusterRows(data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'{save_path}hdbscan_clusters_{key.split('_')[0]}_{label}_raw.jpg')
+#%%
+# PTR-MS O:C and H:C
+PTR_merge_keys = [['260429_VL+UV_RH85_fragments', '260429_VL+UV_RH85_products'],
+                  ['260430_VL+UV_RH85_fragments', '260430_VL+UV_RH85_products']]
+for i, keys in enumerate(PTR_merge_keys):
+    merged = pd.merge(PTRMS[keys[0]], PTRMS[keys[1]], on = 'Time', how = 'outer')
+    PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'] = calc_OC_HC_PTRMS(merged)
+
+    fig, ax = vanKrevelen_ts(PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'], ['Ratio_H_C', 'Ratio_O_C'], None,
+                             t_zero[i+2], [t_VL_inj[i], timestamps[i+2][1]], 5/60, f'{timestamps[i+2][0].split(' ')[0]}, 85% RH')
+    fig.tight_layout(pad = 0.75)
+    fig.savefig(f'{save_path}{timestamps[i+2][0].split(' ')[0]}_vanKrevelen_PTRMS.jpg', dpi = 600)
 #%%
 for i, key in enumerate(PTRMS_keys):
     fig, ax = plot_PTRMS_decay(PTRMS[key], PTRMS[key].keys()[5], [PTRMS[key].keys()[4]], 
