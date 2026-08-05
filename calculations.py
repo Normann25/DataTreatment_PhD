@@ -275,7 +275,7 @@ def density_from_AMS(H_C_ratio, O_C_ratio):
     rho = 1000 * (12 + 1*H_C_ratio + 16*O_C_ratio) / (7.0 + 5.0*H_C_ratio + 4.15*O_C_ratio) # Density in kg/m^3
     return rho
 
-def calc_OC_HC_PTRMS(df):
+def calc_OC_HC_PTRMS(df, bg_timestamps):
     # Molecular weights of C, H, and O (accounting for isotope)
     Mw = [12.011, 1.008, 15.999]
 
@@ -284,17 +284,25 @@ def calc_OC_HC_PTRMS(df):
 
     # Extract Mw and number of C, H, and O atoms in each molecule
     concentration_cols = [col for col in df.columns if col.startswith('m') and '(' in col]
+
+    # df containing background measurements
+    bg_df = time_filtered_conc(df, concentration_cols, bg_timestamps)
+
     for col in concentration_cols:
+        # Replace values below DL (3*std) with NaN
+        DL = bg_df[col].std() * 3
+        df.loc[df[col] < DL, [col]] = np.nan
+
+        # Extract mz value and number of C, H, and O atoms of the ion
         matches = re.findall(r'-?\d*\.?\d+', col)
         values = [float(x) if '.' in x else int(x) for x in matches]
-        values[4] = values[4] - 1
-        if len(values) < 7:
+        if len(values) < 7:     # ions that do not contain oxygen
             values = values + [16, 0]
 
         if values[0] < 200:
             # Calculate relative mass concentrations
             for i, value in enumerate(values[2::2]):
-                temp[temp.keys()[i]] = temp[temp.keys()[i]] + (df[col] * ((value*Mw[i])/(values[0]-Mw[1])))
+                temp[temp.keys()[i]] = temp[temp.keys()[i]] + (df[col] * ((value*Mw[i])/values[0]))
 
     # New dataframe for O:C and H:C ratios
     OC_HC_df = pd.DataFrame({'Time': df['Time']})
