@@ -102,9 +102,13 @@ for key in ['260429_VL+UV_RH85_products', '260430_VL+UV_RH85_products']:
 # PTR-MS O:C and H:C
 PTR_merge_keys = [['260429_VL+UV_RH85_fragments', '260429_VL+UV_RH85_products'],
                   ['260430_VL+UV_RH85_fragments', '260430_VL+UV_RH85_products']]
+bg_timestamps = [['2026-04-29 09:50', '2026-04-29 10:02'],
+                 ['2026-04-30 07:29', '2026-04-30 07:36']]
+
 for i, keys in enumerate(PTR_merge_keys):
     merged = pd.merge(PTRMS[keys[0]], PTRMS[keys[1]], on = 'Time', how = 'outer')
-    PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'] = calc_OC_HC_PTRMS(merged)
+
+    PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'] = calc_OC_HC_PTRMS(merged, bg_timestamps[i])
 
     fig, ax = vanKrevelen_ts(PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'], ['Ratio_H_C', 'Ratio_O_C'], None,
                              t_zero[i+2], [t_VL_inj[i], t_UV_off[i+2]], 5/60, f'{t_UV_off[i+2].split(' ')[0]}, 85% RH')
