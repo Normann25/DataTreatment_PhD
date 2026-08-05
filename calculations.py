@@ -289,9 +289,9 @@ def calc_OC_HC_PTRMS(df, bg_timestamps):
     bg_df = time_filtered_conc(df, concentration_cols, bg_timestamps)
 
     for col in concentration_cols:
-        # Replace values below DL (3*std) with NaN
+        # Replace values below DL (3*std) with zero
         DL = bg_df[col].std() * 3
-        df.loc[df[col] < DL, [col]] = np.nan
+        df.loc[df[col] < DL, [col]] = 0
 
         # Extract mz value and number of C, H, and O atoms of the ion
         matches = re.findall(r'-?\d*\.?\d+', col)
