@@ -291,9 +291,10 @@ def calc_OC_HC_PTRMS(df):
         if len(values) < 7:
             values = values + [16, 0]
 
-        # Calculate relative mass concentrations
-        for i, value in enumerate(values[2::2]):
-            temp[temp.keys()[i]] = temp[temp.keys()[i]] + (df[col] * ((value*Mw[i])/(values[0]-Mw[1])))
+        if values[0] < 200:
+            # Calculate relative mass concentrations
+            for i, value in enumerate(values[2::2]):
+                temp[temp.keys()[i]] = temp[temp.keys()[i]] + (df[col] * ((value*Mw[i])/(values[0]-Mw[1])))
 
     # New dataframe for O:C and H:C ratios
     OC_HC_df = pd.DataFrame({'Time': df['Time']})
