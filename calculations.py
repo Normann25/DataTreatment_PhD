@@ -276,8 +276,8 @@ def density_from_AMS(H_C_ratio, O_C_ratio):
     return rho
 
 def calc_OC_HC_PTRMS(df, bg_timestamps):
-    # Molecular weights of C, H, and O (accounting for isotope)
-    Mw = [12.011, 1.008, 15.999]
+    # Molecular weights of C, H, and O
+    Mw = [12.000, 1.008, 15.995]
 
     # Temporary df containing relative mass concentrations of C, H, and O
     temp = pd.DataFrame({'M_C': np.zeros(len(df.index)), 'M_H': np.zeros(len(df.index)), 'M_O': np.zeros(len(df.index))})
