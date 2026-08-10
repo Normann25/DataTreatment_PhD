@@ -31,7 +31,9 @@ def GetData(df, concentration_cols, normalize=True, smooth=True, window_size=100
 
         # Normalize the data
         if normalize:
-            data = (data - data.mean()) / data.std()
+            # data = (data - data.mean()) / data.std()
+            data = data / np.percentile(data, 99)
+            data = [x for x in data if x < 1.1]
 
         # Smooth the data
         if smooth:
@@ -105,7 +107,7 @@ def PerformHDBSCAN(distance_matrix, min_samples=2):
 def PlotClusterRows(data, concentration_cols, labels, title, filename):
     unique_labels = set(labels)
     n_clusters = len(unique_labels)
-    colors = plt.cm.tab10(np.linspace(0, 1, n_clusters))
+    # colors = plt.cm.tab10(np.linspace(0, 1, n_clusters))
 
     # Create a figure with subplots for each cluster
     fig, axes = plt.subplots(n_clusters, 1, figsize=(12, 3 * n_clusters), sharex=True)
@@ -116,7 +118,7 @@ def PlotClusterRows(data, concentration_cols, labels, title, filename):
     for ax, label in zip(axes, unique_labels):
         for i, col in enumerate(concentration_cols):
             if labels[i] == label:
-                ax.plot(data[i, :], label=col, color=colors[list(unique_labels).index(label)], linewidth=2)
+                ax.plot(data[i, :], label=col, linewidth=2)         # , color=colors[list(unique_labels).index(label)]
         ax.set_title(f'Cluster {label}')
         ax.set_ylabel('Concentration')
         ax.grid(True)
