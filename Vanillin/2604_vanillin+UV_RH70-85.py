@@ -10,10 +10,13 @@ import warnings
 warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
+# Paths
 parent_path = '../../../Data/2026/'
 paths = ['260427_Vanillin70ppb_UV_RH70/', '260428_Vanillin70ppb_UV_RH70/', 
          '260429_Vanillin70ppb_UV_RH85/', '260430_Vanillin70ppb_UV_RH85/']
+save_path = '../../../Figures/Vanillin/2604_vanillin+UV_RH70-85/'
 
+# Timestamps
 timestamps = [['2026-04-27 10:36', '2026-04-27 17:28'],
               ['2026-04-28 11:07', '2026-04-28 17:38'],
               ['2026-04-29 08:52', '2026-04-29 16:45'],
@@ -26,8 +29,10 @@ HEPA_timestamps = [['2026-04-27 08:40', '2026-04-27 09:00'],
                    ['2026-04-29 08:40', '2026-04-29 09:00'],
                    ['2026-04-30 08:15', '2026-04-30 08:35']]
 
+# Exp relative humidity
 RH = ['70% RH', '70% RH', '85% RH', '85% RH']
 
+# Read data
 SMPS = {}
 SMPS_raw = {}
 PTRMS = {}
@@ -43,9 +48,7 @@ for t, path in zip(t_zero, paths):
     if path != paths[0]:
         temp_PTR = import_PTRMS(f'{parent_path}{path}PTRMS/', '')
         for key in temp_PTR.keys():
-            mask = (0 < temp_PTR[key][temp_PTR[key].keys()[5]]) & (temp_PTR[key][temp_PTR[key].keys()[5]] < 90)
-            temp = temp_PTR[key][mask]
-            PTRMS[key] = temp.drop(['AbsTime', 'RelTime', 'Cycle', 'CycleInFile', 'Filename'], axis = 1)
+            PTRMS[key] = temp_PTR[key].drop(['AbsTime', 'RelTime', 'Cycle', 'CycleInFile', 'Filename'], axis = 1)
     temp_AMS = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', 0)
     for key in temp_AMS.keys():
         if 'PToF' not in key:
@@ -56,16 +59,26 @@ for t, path in zip(t_zero, paths):
     for key in temp_daq.keys():
         DAQ[key] = temp_daq[key]
 
-save_path = '../../../Figures/Vanillin/2604_vanillin+UV_RH70-85/'
-
 for key in SMPS.keys():
     SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
-    # SMPS[key] = SMPS[key].fillna(0)
 
+# PTR-MS H:C and O:C calculation
+PTR_merge_keys = [['260429_VL+UV_RH85_fragments', '260429_VL+UV_RH85_products'],
+                  ['260430_VL+UV_RH85_fragments', '260430_VL+UV_RH85_products']]
+bg_timestamps = [['2026-04-29 09:50', '2026-04-29 10:02'],
+                 ['2026-04-30 07:29', '2026-04-30 07:36']]
+
+for i, keys in enumerate(PTR_merge_keys):
+    merged = pd.merge(PTRMS[keys[0]], PTRMS[keys[1]], on = 'Time', how = 'outer')
+    mask = (0 < merged['m153.061 (C[12]8H[1]9O[16]3) (Conc)']) & (merged['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
+    merged = merged[mask]
+
+    PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'] = calc_OC_HC_PTRMS(merged, bg_timestamps[i])
+
+# Dataframe keys
 SMPS_keys = [['260427_vanillin+UV_RH70_number', '260428_vanillin+UV_RH70_number', '260429_vanillin+UV_RH85_number', '260430_vanillin+UV_RH85_number'],
              ['260427_vanillin+UV_RH70_mass', '260428_vanillin+UV_RH70_mass', '260429_vanillin+UV_RH85_mass', '260430_vanillin+UV_RH85_mass']]
 AMS_keys = ['260427_AMS_vanillin+UV_70RH_TS', '260428_AMS_vanillin+UV_70RH_TS', '260429_AMS_vanillin+UV_85RH_TS', '260430_AMS_vanillin+UV_85RH_TS']
-PTRMS_keys = ['260428_VL+UV_70RH_initial', '260429_VL+UV_RH85_initial', '260430_VL+UV_RH85_inital']
 DAQ_keys = ['DataDAQ_260427', 'DataDAQ_260428', 'DataDAQ_260429', 'DataDAQ_260430']
 #%%
 for i, time in enumerate(timestamps):
@@ -84,8 +97,8 @@ print(PTRMS.keys())
 for key in ['260429_VL+UV_RH85_products', '260430_VL+UV_RH85_products']:
     # Identify concentration columns
     concentration_cols = [col for col in PTRMS[key].columns if col.startswith('m') and '(' in col] # The name of the time series
-    smooth_data_array = GetData(PTRMS[key], concentration_cols, smooth=True, window_size=12)
-    data_array = GetData(PTRMS[key], concentration_cols, smooth=False, window_size=50)
+    smooth_data_array = GetData(PTRMS[key], concentration_cols, smooth=True, window_size=12, normalize=True)
+    data_array = GetData(PTRMS[key], concentration_cols, smooth=False, window_size=50, normalize=True)
 
     # Compute Distance measures
     smooth_distance_matrices = ComputeTSDistance(smooth_data_array, 'p4')
@@ -100,24 +113,62 @@ for key in ['260429_VL+UV_RH85_products', '260430_VL+UV_RH85_products']:
         PlotClusterRows(data_array, concentration_cols, hdbscan_labels, f'HDBSCAN Clustering: {label}', f'{save_path}hdbscan_clusters_{key.split('_')[0]}_{label}_raw.jpg')
 #%%
 # PTR-MS O:C and H:C
-PTR_merge_keys = [['260429_VL+UV_RH85_fragments', '260429_VL+UV_RH85_products'],
-                  ['260430_VL+UV_RH85_fragments', '260430_VL+UV_RH85_products']]
-bg_timestamps = [['2026-04-29 09:50', '2026-04-29 10:02'],
-                 ['2026-04-30 07:29', '2026-04-30 07:36']]
-
-for i, keys in enumerate(PTR_merge_keys):
-    merged = pd.merge(PTRMS[keys[0]], PTRMS[keys[1]], on = 'Time', how = 'outer')
-
-    PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'] = calc_OC_HC_PTRMS(merged, bg_timestamps[i])
-
-    fig, ax = vanKrevelen_ts(PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'], ['Ratio_H_C', 'Ratio_O_C'], None,
+for i, key in enumerate(['260429_VL+UV_dry_OC-HC', '260430_VL+UV_dry_OC-HC']):
+    fig, ax = vanKrevelen_ts(PTRMS[key], ['Ratio_H_C', 'Ratio_O_C'], None,
                              t_zero[i+2], [t_VL_inj[i], t_UV_off[i+2]], 5/60, f'{t_UV_off[i+2].split(' ')[0]}, 85% RH')
+    
     fig.tight_layout(pad = 0.75)
     fig.savefig(f'{save_path}{timestamps[i+2][0].split(' ')[0]}_vanKrevelen_PTRMS.jpg', dpi = 600)
 #%%
-for i, key in enumerate(PTRMS_keys):
-    fig, ax = plot_PTRMS_decay(PTRMS[key], PTRMS[key].keys()[5], [PTRMS[key].keys()[4]], 
-                               ['C$_{8}$H$_{9}$O$_{3}^{+}$', 'C$_{7}$H$_{9}$O$_{2}^{+}$'], 
-                               t_zero[i+1], t_UV_off[i], timestamps[i+1][1], RH[i+1])
+for i, key in enumerate(['260429_VL+UV_RH85_fragments', '260430_VL+UV_RH85_fragments']):
+    mask = (0 < PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
+    df = PTRMS[key][mask]
+
+    fig, ax = plot_PTRMS_decay(df, 'm153.061 (C[12]8H[1]9O[16]3) (Conc)', list(df.keys()[:-2]), 
+                               ['C$_{8}$H$_{8}$O$_{3}$H$^{+}$', 'C$_{5}$H$_{4}$H$^{+}$', 'C$_{6}$H$_{5}$O$_{2}$H$^{+}$', 
+                                'C$_{6}$H$_{6}$O$_{2}$H$^{+}$', 'C$_{7}$H$_{8}$O$_{2}$H$^{+}$', 'C$_{8}$H$_{6}$O$_{3}$H$^{+}$'], 
+                               t_zero[i+2], t_UV_off[i+2], timestamps[i+2][1], RH[i+2])
     fig.tight_layout()
     fig.savefig(f'{save_path}{t_zero[i+1].split(' ')[0]}_PTRMS_initial.jpg', dpi = 600)
+#%%
+# PTR-MS decay (wall loss corrected)
+wall_loss = [0.0006446245895402325, 0.0004942765846080444]
+
+for i, key in enumerate(['260429_VL+UV_RH85_fragments', '260430_VL+UV_RH85_fragments']):
+    mask = (0 < PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
+    df = PTRMS[key][mask]
+
+    time_minutes = (df['Time'] - pd.to_datetime(t_zero[i+2])) / pd.Timedelta(minutes = 1)
+    to_replace = [t for t in time_minutes if t < 0]
+    time_minutes = time_minutes.replace(to_replace, 0)
+
+    df['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] = df['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] + time_minutes*wall_loss[i]*df['m153.061 (C[12]8H[1]9O[16]3) (Conc)']
+    
+    fig, ax = plot_PTRMS_decay(df, 'm153.061 (C[12]8H[1]9O[16]3) (Conc)', list(df.keys()[:-2]), 
+                               ['C$_{8}$H$_{8}$O$_{3}$H$^{+}$', 'C$_{5}$H$_{4}$H$^{+}$', 'C$_{6}$H$_{5}$O$_{2}$H$^{+}$', 
+                                'C$_{6}$H$_{6}$O$_{2}$H$^{+}$', 'C$_{7}$H$_{8}$O$_{2}$H$^{+}$', 'C$_{8}$H$_{6}$O$_{3}$H$^{+}$'], 
+                               t_zero[i+2], t_UV_off[i+2], timestamps[i+2][1], RH[i+2])
+    fig.tight_layout()
+    fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_PTRMS_VLdecay_wall-loss-corrected.jpg', dpi = 600)
+#%%
+decays_minutes = np.array([0.0015498450850007783, 9.553880394080894e-05, 0.0015976754392935666, 5.9092508593650006e-05])
+decays_seconds = decays_minutes / 60
+print(decays_seconds)
+#%%
+# AMS and PTR-MS carbon oxidation state
+COS_ylim = [(-1, 0), (-1.2, -0.2)]
+for i, keys in enumerate([['260429_AMS_vanillin+UV_85RH_TS', '260429_VL+UV_dry_OC-HC'],
+                          ['260430_AMS_vanillin+UV_85RH_TS', '260430_VL+UV_dry_OC-HC']]):
+
+    AMS_bg = time_filtered_conc(AMS[keys[0]], ['HROrg'], HEPA_timestamps[i+2])
+    AMS_DL = AMS_bg['HROrg'].std() * 3
+    
+    fig, axes, OC_ax = plot_COS(AMS[keys[0]], AMS_DL, PTRMS[keys[1]], t_VL_inj[i], t_zero[i+2], t_UV_off[i+2])
+
+    OC_ax.set_ylim(0.3, 0.8)
+    axes[1].set(ylim = COS_ylim[i])
+
+    axes[0].set_title(f'{t_zero[i+2].split(' ')[0]}, 85% RH')
+
+    fig.tight_layout()
+    fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_COS.jpg', dpi = 600)
