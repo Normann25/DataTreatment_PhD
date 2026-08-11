@@ -418,6 +418,57 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
 
     return fig, axes
 
+def plot_COS(df_AMS, AMS_DL, df_PTR, t_injection, t_zero, t_off):
+    cmap = mpl.colormaps['viridis_r']
+    colors = cmap(np.linspace(0, 1, 8))
+
+    t_off = (pd.to_datetime(t_off) - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+
+    fig, axes = plt.subplots(2, 1, figsize = (6.5, 6.3))
+    OC_ax = axes[0].twinx()
+
+    axes[0].tick_params(axis = 'y', labelcolor = colors[5])
+    axes[0].set_ylabel('H:C ratio', color = colors[5])
+    OC_ax.tick_params(axis = 'y', labelcolor = colors[2])
+    OC_ax.set_ylabel('O:C ratio', color = colors[2])
+
+    for ax in axes:
+        ax.axvspan(0, t_off, color = 'y', alpha = 0.15, lw = 0)
+    
+    if df_AMS is not None:
+        time_filter = pd.to_datetime(df_AMS['Time']) >= pd.to_datetime(t_zero)
+        filtered_df = df_AMS[time_filter]
+        filtered_df = filtered_df[filtered_df['HROrg'] >= AMS_DL]
+
+        COS = carbon_oxidation_state(filtered_df['Ratio_H_C'], O_C_ratio = filtered_df['Ratio_O_C'])
+        time = (filtered_df['Time'] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+
+        axes[0].plot(time, filtered_df['Ratio_H_C'], color = colors[5], lw = 1, label = 'AMS H:C')
+        OC_ax.plot(time, filtered_df['Ratio_O_C'], color = colors[2], lw = 1, label = 'AMS O:C')
+
+        axes[1].plot(time, COS, color = colors[4], label = 'AMS')
+
+    if df_PTR is not None:
+            time_filter = pd.to_datetime(df_PTR['Time']) >= pd.to_datetime(t_injection)
+            filtered_df = df_PTR[time_filter]
+    
+            COS = carbon_oxidation_state(filtered_df['Ratio_H_C'], O_C_ratio = filtered_df['Ratio_O_C'])
+            time = (filtered_df['Time'] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+    
+            axes[0].plot(time, filtered_df['Ratio_H_C'], color = colors[6], lw = 1, label = 'PTR-MS H:C')
+            OC_ax.plot(time, filtered_df['Ratio_O_C'], color = colors[3], lw = 1, label = 'PTR-MS O:C')
+    
+            axes[1].plot(time, COS, color = colors[7], label = 'PTR-MS')
+
+    for ax in axes:
+        ax.legend(loc = 2)
+        ax.set_xlabel('Time (min)')
+
+    OC_ax.legend(loc = 1)
+    axes[1].set_ylabel('Carbon oxidation state')
+
+    return fig, axes, OC_ax
+
 def plot_AURA_overview(daq, smps, ams, timestamps, bg_timestamps, t_zero, RH, save_path):
     fig, ax = plt.subplots(3, 1, figsize = (6.3, 8.5), sharex = True)
 
