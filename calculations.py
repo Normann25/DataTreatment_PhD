@@ -313,6 +313,9 @@ def calc_OC_HC_PTRMS(df, bg_timestamps):
 
     return OC_HC_df
 
+def carbon_oxidation_state(H_C_ratio, O_C_ratio):
+    return 2*O_C_ratio - H_C_ratio
+
 def linear_forced_zero(x, a):
     return (a * x)
 
