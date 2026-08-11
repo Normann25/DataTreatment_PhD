@@ -374,7 +374,7 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels)
     return ax
 
 def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, ts_exp_end, RH):
-    fig = plt.figure(figsize = (6.5,6.5))
+    fig = plt.figure(figsize = (6.5, 6.5))
     axes = [plt.subplot(2, 1, 1), plt.subplot(2, 2, 3), plt.subplot(2, 2, 4)]
 
     if fragments != None:
