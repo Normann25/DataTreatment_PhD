@@ -90,6 +90,33 @@ ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260428_vanillin+UV_RH70_mass'].colum
 for i, key in enumerate(AMS_keys):
     plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], 1, RH[i], save_path)
 #%%
+# AMS pie charts
+for time, key in zip(t_zero[2:], AMS_keys[2:]):
+    temp = AMS[key]
+    temp['Time (min)'] = (temp['Time'].dt.floor('min') - pd.to_datetime(time)) / pd.Timedelta(minutes = 1)
+    get_times = np.array([[88, 92],
+                          [118, 122],
+                          [178, 182],
+                          [238, 242]])
+
+    species = ['familyCHO1', 'familyCHOgt1', 'familyCH', 'familyCHN']
+    cmap = mpl.colormaps['viridis_r']
+    colors = cmap(np.linspace(0, 1, len(species)+1))
+
+    piechart_values = np.zeros((4, 4))
+    for i, get_t in enumerate(get_times):
+        filtered_temp = temp.loc[(temp['Time (min)'] >= get_t[0]) & (temp['Time (min)'] <= get_t[1])]
+        filtered_temp['sum'] = filtered_temp[species].sum(axis = 1)
+        for j, specie in enumerate(species):
+            piechart_values[i][j] += (filtered_temp[specie].mean() / filtered_temp['sum'].mean()) * 100
+
+        fig, ax = plt.subplots(figsize = (5, 5))
+        ax.pie(piechart_values[i], labels = species, colors = colors, autopct = '%1.2f%%')
+        ax.set(title = f'{time.split(' ')[0]}, 85% RH, {get_t[0]+2} min')
+
+        fig.tight_layout()
+        fig.savefig(f'{save_path}{time.split(' ')[0]}_AMSpie_{get_t[0]+2}min.jpg', dpi = 600)
+#%%
 # PTR-MS VL concentration and chamber temperature
 ylim = [(50, 72), (38, 51)]
 
