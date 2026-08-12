@@ -125,13 +125,27 @@ for i, key in enumerate(AMS_keys):
 for time, key in zip(t_zero[2:], AMS_keys[2:]):
     temp = AMS[key]
     temp['Time (min)'] = (temp['Time'].dt.floor('min') - pd.to_datetime(time)) / pd.Timedelta(minutes = 1)
-    temp = temp.loc[temp['Time (min)'].isin([90, 120, 180, 240])]
+    get_times = np.array([[118, 122],
+                          [178, 182],
+                          [238, 242]])
 
-    species = ['familyCHO1', 'familyCHOgt1', 'familyCH', 'familyCHN']
+    species = ['familyCHO1', 'familyCHOgt1', 'familyCH']
+    cmap = mpl.colormaps['viridis_r']
+    colors = cmap(np.linspace(0, 1, len(species)+2))
 
-    piechart_values = np.zeros((4, 4))
-    for i, row in temp.iterrows():
-        print(i, row)
+    piechart_values = np.zeros((3, 3))
+    for i, get_t in enumerate(get_times):
+        filtered_temp = temp.loc[(temp['Time (min)'] >= get_t[0]) & (temp['Time (min)'] <= get_t[1])]
+        filtered_temp['sum'] = filtered_temp[species].sum(axis = 1)
+        for j, specie in enumerate(species):
+            piechart_values[i][j] += (filtered_temp[specie].mean() / filtered_temp['sum'].mean()) * 100
+
+        fig, ax = plt.subplots(figsize = (5, 5))
+        ax.pie(piechart_values[i], labels = species, colors = colors, autopct = '%1.2f%%')
+        ax.set(title = f'{time.split(' ')[0]}, 85% RH, {get_t[0]+2} min')
+
+        fig.tight_layout()
+        fig.savefig(f'{save_path}{time.split(' ')[0]}_AMSpie_{get_t[0]+2}min.jpg', dpi = 600)
 #%%
 # PTR-MS VL concentration and chamber temperature
 ylim = [(45, 65), (60, 90)]
