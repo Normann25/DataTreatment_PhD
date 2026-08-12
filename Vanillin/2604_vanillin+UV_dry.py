@@ -49,7 +49,10 @@ for t, path in zip(t_zero, paths):
         SMPS[key] = temp
     temp_PTR = import_PTRMS(f'{parent_path}{path}PTRMS/', '')
     for key in temp_PTR.keys():
-        PTRMS[key] = temp_PTR[key].drop(['AbsTime', 'RelTime', 'Cycle', 'CycleInFile', 'Filename'], axis = 1)
+        if 'fragments' in key or 'all' in key:
+            mask = (0 < temp_PTR[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)']) & (temp_PTR[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
+            temp_PTR[key] = temp_PTR[key][mask]
+        PTRMS[key] = temp_PTR[key]
     temp_AMS = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', 0)
     for key in temp_AMS.keys():
         if 'PToF' not in key:
@@ -71,8 +74,6 @@ bg_timestamps = [['2026-05-01 08:00', '2026-05-01 08:40'],
                  ['2026-05-04 08:01', '2026-05-04 08:16']]
 
 for i, key in enumerate(['260501_VL+UV_dry_all', '260504_VL+UV_dry_all']):
-    mask = (0 < PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
-    PTRMS[key] = PTRMS[key][mask]
     PTRMS[f'{key.split('_')[0]}_VL+UV_dry_OC-HC'] = calc_OC_HC_PTRMS(PTRMS[key], bg_timestamps[i])
 
 # Dataframe keys
@@ -119,6 +120,33 @@ ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260422_vanillin+UV_dry_mass'].column
 # AMS
 for i, key in enumerate(AMS_keys):
     plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], 1, 'Dry', save_path)
+#%%
+#%%
+ylim = [(45, 65), (60, 90)]
+
+for i, key in enumerate(['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragments']):
+    PTR_df = time_filtered_conc(PTRMS[key], ['m153.060 (C[12]8H[1]9O[16]3) (Conc)'], timestamps[i+2])
+    DAQ_df = time_filtered_conc(DAQ[DAQ_keys[i+2]], ['Temp_C'], timestamps[i+2])
+
+    t_off = (pd.to_datetime(t_UV_off[i]) - pd.to_datetime(t_zero[i+2])) / pd.Timedelta(minutes = 1)
+
+    fig, axes = plt.subplots(2, 1, figsize = (6.3, 6.5))
+    axes[0].axvspan(0, t_off, color = 'y', alpha = 0.15, lw = 0, label = None)
+    for ax in axes:
+        plot_total(ax, PTR_df, 'm153.060 (C[12]8H[1]9O[16]3) (Conc)', 'indigo', t_zero[i+2])
+        ax.tick_params(axis = 'y', labelcolor = 'indigo')
+        ax.set_ylabel('C$_{8}$H$_{8}$O$_{3}$H$^{+}$ conc. (ppb)', color = 'indigo')
+        ax.set(xlabel = 'Time (min)', title = f'{t_zero[i+2].split(' ')[0]}, 85% RH')
+
+        ax_2 = ax.twinx()
+        plot_total(ax_2, DAQ_df, 'Temp_C', 'tab:red', t_zero[i+2])
+        ax_2.tick_params(axis = 'y', labelcolor = 'tab:red')
+        ax_2.set_ylabel('Temperature ($^{\circ}$C)', color = 'tab:red')
+
+    axes[1].set(xlim = (0, 100), ylim = ylim[i])
+
+    fig.tight_layout()
+    fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_VLvsTemp.jpg', dpi = 600)
 #%%
 # PTR-MS grouping of ions
 for key in ['260501_VL+UV_dry_products', '260504_VL+UV_dry_products']:
@@ -187,11 +215,8 @@ for i, key in enumerate(['260501_VL+UV_dry_OC-HC', '260504_VL+UV_dry_OC-HC']):
     fig.savefig(f'{save_path}{timestamps[i+2][0].split(' ')[0]}_vanKrevelen_PTRMS.jpg', dpi = 600)
 #%%
 # PTR-MS decay (no wall loss correction)
-for i, key in enumerate(['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragments']):
-    mask = (0 < PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
-    df = PTRMS[key][mask]
-    
-    fig, ax = plot_PTRMS_decay(df, 'm153.060 (C[12]8H[1]9O[16]3) (Conc)', list(df.keys()[:-2]), 
+for i, key in enumerate(['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragments']):  
+    fig, ax = plot_PTRMS_decay(PTRMS[key], 'm153.060 (C[12]8H[1]9O[16]3) (Conc)', list(PTRMS[key].keys()[:-2]), 
                                ['C$_{8}$H$_{8}$O$_{3}$H$^{+}$', 'C$_{5}$H$_{4}$H$^{+}$', 'C$_{7}$H$_{6}$O$_{2}$H$^{+}$', 
                                 'C$_{7}$H$_{8}$O$_{2}$H$^{+}$', 'C$_{7}$H$_{5}$O$_{3}$H$^{+}$', 'C$_{8}$H$_{6}$O$_{3}$H$^{+}$'], 
                                t_zero[i+2], t_UV_off[i], timestamps[i+2][1], 'Dry')
@@ -202,16 +227,13 @@ for i, key in enumerate(['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragmen
 wall_loss = [0.001150, 0.001086]
 
 for i, key in enumerate(['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragments']):
-    mask = (0 < PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
-    df = PTRMS[key][mask]
-
-    time_minutes = (df['Time'] - pd.to_datetime(t_zero[i+2])) / pd.Timedelta(minutes = 1)
+    time_minutes = (PTRMS[key]['Time'] - pd.to_datetime(t_zero[i+2])) / pd.Timedelta(minutes = 1)
     to_replace = [t for t in time_minutes if t < 0]
     time_minutes = time_minutes.replace(to_replace, 0)
 
-    df['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] = df['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] + time_minutes*wall_loss[i]*df['m153.060 (C[12]8H[1]9O[16]3) (Conc)']
+    PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] = PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] + time_minutes*wall_loss[i]*PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)']
     
-    fig, ax = plot_PTRMS_decay(df, 'm153.060 (C[12]8H[1]9O[16]3) (Conc)', list(df.keys()[:-2]), 
+    fig, ax = plot_PTRMS_decay(PTRMS[key], 'm153.060 (C[12]8H[1]9O[16]3) (Conc)', list(PTRMS[key].keys()[:-2]), 
                                ['C$_{8}$H$_{8}$O$_{3}$H$^{+}$', 'C$_{5}$H$_{4}$H$^{+}$', 'C$_{7}$H$_{6}$O$_{2}$H$^{+}$', 
                                 'C$_{7}$H$_{8}$O$_{2}$H$^{+}$', 'C$_{7}$H$_{5}$O$_{3}$H$^{+}$', 'C$_{8}$H$_{6}$O$_{3}$H$^{+}$'], 
                                t_zero[i+2], t_UV_off[i], timestamps[i+2][1], 'Dry')
