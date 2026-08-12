@@ -77,16 +77,20 @@ SMPS_keys = [['260427_vanillin+UV_RH70_number', '260428_vanillin+UV_RH70_number'
 AMS_keys = ['260427_AMS_vanillin+UV_70RH_TS', '260428_AMS_vanillin+UV_70RH_TS', '260429_AMS_vanillin+UV_85RH_TS', '260430_AMS_vanillin+UV_85RH_TS']
 DAQ_keys = ['DataDAQ_260427', 'DataDAQ_260428', 'DataDAQ_260429', 'DataDAQ_260430']
 #%%
+# Experiment overview
 for i, time in enumerate(timestamps):
     fig, ax = plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, HEPA_timestamps[i], t_zero[i], RH[i], save_path)
     ax[2].set_ylim (0, 1)
 #%%
+# SMPS
 ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260428_vanillin+UV_RH70_mass'].columns[42:-1], 'number and mass', 
                      timestamps, 10, RH, 'Total concentration', t_zero, 2, 2, save_path)
 #%%
+# AMS
 for i, key in enumerate(AMS_keys):
     plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], 1, RH[i], save_path)
 #%%
+# PTR-MS VL concentration and chamber temperature
 ylim = [(50, 72), (38, 51)]
 
 for i, key in enumerate(['260429_VL+UV_RH85_fragments', '260430_VL+UV_RH85_fragments']):
