@@ -121,6 +121,18 @@ ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260422_vanillin+UV_dry_mass'].column
 for i, key in enumerate(AMS_keys):
     plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], 1, 'Dry', save_path)
 #%%
+# AMS pie charts
+for time, key in zip(t_zero[2:], AMS_keys[2:]):
+    temp = AMS[key]
+    temp['Time (min)'] = (temp['Time'].dt.floor('min') - pd.to_datetime(time)) / pd.Timedelta(minutes = 1)
+    temp = temp.loc[temp['Time (min)'].isin([90, 120, 180, 240])]
+
+    species = ['familyCHO1', 'familyCHOgt1', 'familyCH', 'familyCHN']
+
+    piechart_values = np.zeros((4, 4))
+    for i, row in temp.iterrows():
+        print(i, row)
+#%%
 # PTR-MS VL concentration and chamber temperature
 ylim = [(45, 65), (60, 90)]
 
