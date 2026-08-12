@@ -122,6 +122,7 @@ for i, key in enumerate(AMS_keys):
     plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], 1, 'Dry', save_path)
 #%%
 #%%
+# PTR-MS VL concentration and chamber temperature
 ylim = [(45, 65), (60, 90)]
 
 for i, key in enumerate(['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragments']):
