@@ -68,12 +68,11 @@ PTR_merge_keys = [['260429_VL+UV_RH85_fragments', '260429_VL+UV_RH85_products'],
 bg_timestamps = [['2026-04-29 09:50', '2026-04-29 10:02'],
                  ['2026-04-30 07:29', '2026-04-30 07:36']]
 
-for i, keys in enumerate(PTR_merge_keys):
-    merged = pd.merge(PTRMS[keys[0]], PTRMS[keys[1]], on = 'Time', how = 'outer')
-    mask = (0 < merged['m153.061 (C[12]8H[1]9O[16]3) (Conc)']) & (merged['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
-    merged = merged[mask]
+for i, key in enumerate(['260429_VL+UV_RH85_all', '260430_VL+UV_RH85_all']):
+    mask = (0 < PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
+    PTRMS[key] = PTRMS[key][mask]
 
-    PTRMS[f'{keys[0].split('_')[0]}_VL+UV_dry_OC-HC'] = calc_OC_HC_PTRMS(merged, bg_timestamps[i])
+    PTRMS[f'{key.split('_')[0]}_VL+UV_dry_OC-HC'] = calc_OC_HC_PTRMS(PTRMS[key], bg_timestamps[i])
 
 # Dataframe keys
 SMPS_keys = [['260427_vanillin+UV_RH70_number', '260428_vanillin+UV_RH70_number', '260429_vanillin+UV_RH85_number', '260430_vanillin+UV_RH85_number'],
@@ -90,8 +89,6 @@ ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260428_vanillin+UV_RH70_mass'].colum
 #%%
 for i, key in enumerate(AMS_keys):
     plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], 1, RH[i], save_path)
-#%%
-print(PTRMS.keys())
 #%%
 # PTR-MS grouping of ions
 for key in ['260429_VL+UV_RH85_products', '260430_VL+UV_RH85_products']:
@@ -129,7 +126,7 @@ for i, key in enumerate(['260429_VL+UV_RH85_fragments', '260430_VL+UV_RH85_fragm
                                 'C$_{6}$H$_{6}$O$_{2}$H$^{+}$', 'C$_{7}$H$_{8}$O$_{2}$H$^{+}$', 'C$_{8}$H$_{6}$O$_{3}$H$^{+}$'], 
                                t_zero[i+2], t_UV_off[i+2], timestamps[i+2][1], RH[i+2])
     fig.tight_layout()
-    fig.savefig(f'{save_path}{t_zero[i+1].split(' ')[0]}_PTRMS_initial.jpg', dpi = 600)
+    fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_PTRMS_initial.jpg', dpi = 600)
 #%%
 # PTR-MS decay (wall loss corrected)
 wall_loss = [0.0006446245895402325, 0.0004942765846080444]
