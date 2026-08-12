@@ -80,7 +80,7 @@ def import_PTRMS(path, parent_path):
         Timestamps = pd.to_datetime(df['AbsTime'], origin = pd.Timestamp('1899-12-30'), unit = 'D').dt.floor('s')  # format = '%d/%m/%Y %H:%M:%S'
         df['Time'] = Timestamps
 
-        new_dict[key] = df
+        new_dict[key] = df.drop(['AbsTime', 'RelTime', 'Cycle', 'CycleInFile', 'Filename'], axis = 1)
 
     return new_dict
 
