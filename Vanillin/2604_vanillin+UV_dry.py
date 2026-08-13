@@ -178,8 +178,8 @@ for i, key in enumerate(['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragmen
 for key in ['260501_VL+UV_dry_products', '260504_VL+UV_dry_products']:
     # Identify concentration columns
     concentration_cols = [col for col in PTRMS[key].columns if col.startswith('m') and '(' in col] # The name of the time series
-    smooth_data_array = GetData(PTRMS[key], concentration_cols, smooth=True, window_size=12, normalize = False)
-    data_array = GetData(PTRMS[key], concentration_cols, smooth=False, window_size=50, normalize = False)
+    smooth_data_array = GetData(PTRMS[key], concentration_cols, smooth=True, window_size=12, normalize = True)
+    data_array = GetData(PTRMS[key], concentration_cols, smooth=False, window_size=50, normalize = True)
 
     # Compute Distance measures
     smooth_distance_matrices = ComputeTSDistance(smooth_data_array, 'p4')
