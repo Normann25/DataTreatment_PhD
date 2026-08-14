@@ -49,7 +49,7 @@ for t, path in zip(t_zero, paths):
         SMPS[key] = temp
     temp_PTR = import_PTRMS(f'{parent_path}{path}PTRMS/', '')
     for key in temp_PTR.keys():
-        if 'fragments' in key or 'all' in key:
+        if 'fragments' in key or 'all' in key or 'filtered' in key:
             mask = (0 < temp_PTR[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)']) & (temp_PTR[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
             temp_PTR[key] = temp_PTR[key][mask]
         PTRMS[key] = temp_PTR[key]
@@ -75,6 +75,7 @@ bg_timestamps = [['2026-05-01 08:00', '2026-05-01 08:40'],
 
 for i, key in enumerate(['260501_VL+UV_dry_all', '260504_VL+UV_dry_all']):
     PTRMS[f'{key.split('_')[0]}_VL+UV_dry_OC-HC'] = calc_OC_HC_PTRMS(PTRMS[key], bg_timestamps[i])
+    PTRMS[f'{key.split('_')[0]}_VL+UV_dry_OC-HC_filtered'] = calc_OC_HC_PTRMS(PTRMS[f'{key.split('_')[0]}_VL+UV_dry_filtered'], bg_timestamps[i])
 
 # Dataframe keys
 SMPS_keys = [['260421_vanillin+UV_dry_number', '260422_vanillin+UV_dry_number', '260501_vanillin+UV_dry_number', '260504_vanillin+UV_dry_number'], 
@@ -230,15 +231,44 @@ for i, keys in enumerate(PTR_merge_keys):
     axes[-1].set(xlabel = 'Time')
     fig.tight_layout()
     fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_PTR-MS_clusters.jpg', dpi = 600)
+#%%
+PTR_filtered_clusters = [0, 2, 5, 5, 3, 1, 1, 3, 3, 0, 1, -1, 0, 0, 0, -1, 2, 1, -1, 2, 0, 0, 4, -1, 5, -1]
 
+for i, key in enumerate(['260501_VL+UV_dry_filtered', '260504_VL+UV_dry_filtered']):
+    concentration_cols = [col for col in PTRMS[key].columns if col.startswith('m') and '(' in col]
+    concentration_cols = np.array([PTR_filtered_clusters, concentration_cols]).T
+    unique_clusters = set(map(lambda x:int(x[0]), concentration_cols))
+    grouped_concentration_cols = [[y[1] for y in concentration_cols if int(y[0])==x] for x in unique_clusters]
+
+    fig, axes = plt.subplots(7, 1, figsize = (8, 3.1*7), sharex = True)
+
+    cmap = mpl.colormaps['viridis']
+    colors_VL = cmap(np.linspace(0, 1, 8))
+
+    for k, cluster in enumerate(list(unique_clusters)):
+        colors = cmap(np.linspace(0, 1, len(grouped_concentration_cols[k])+1))
+        for l, col in enumerate(grouped_concentration_cols[k]):
+            plot_total(axes[cluster], PTRMS[key], col, colors[l], t_zero[i+2])
+
+        axes[cluster].legend(labels = grouped_concentration_cols[k])
+        axes[cluster].set(xlabel = None, ylabel = 'Conc. (ppb)', title = f'Cluster {cluster}')
+
+    axes[-1].set(xlabel = 'Time')
+    fig.tight_layout()
+    fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_PTR-MS_clusters.jpg', dpi = 600)
 #%%
 # PTR-MS O:C and H:C
 for i, key in enumerate(['260501_VL+UV_dry_OC-HC', '260504_VL+UV_dry_OC-HC']):
-
     fig, ax = vanKrevelen_ts(PTRMS[key], ['Ratio_H_C', 'Ratio_O_C'], None,
                              t_zero[i+2], [timestamps[i+2][0], t_UV_off[i]], 5/60, f'{timestamps[i+2][0].split(' ')[0]}, Dry')
     fig.tight_layout(pad = 0.75)
     fig.savefig(f'{save_path}{timestamps[i+2][0].split(' ')[0]}_vanKrevelen_PTRMS.jpg', dpi = 600)
+
+    fig2, ax2 = vanKrevelen_ts(PTRMS[f'{key}_filtered'], ['Ratio_H_C', 'Ratio_O_C'], None,
+                                 t_zero[i+2], [timestamps[i+2][0], t_UV_off[i]], 5/60, f'{timestamps[i+2][0].split(' ')[0]}, Dry (filtered)')
+    ax2[1].set(ylim = (1.126, 1.1325), xlim = (0.348, 0.36))
+    fig2.tight_layout(pad = 0.75)
+    fig2.savefig(f'{save_path}{timestamps[i+2][0].split(' ')[0]}_vanKrevelen_PTRMS_filtered.jpg', dpi = 600)
 #%%
 # PTR-MS decay (no wall loss correction)
 for i, key in enumerate(['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragments']):  
