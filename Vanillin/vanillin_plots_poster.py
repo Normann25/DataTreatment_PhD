@@ -6,6 +6,7 @@ from plot_functions import *
 from calculations import *
 from grouping import *
 plt.style.use('../Style.mplstyle')
+plt.rcParams['font.family'] = 'Arial'
 import warnings
 warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
@@ -18,8 +19,9 @@ save_path = '../../../Figures/Vanillin/for_poster/'
 # Timestamps
 timestamps = [['2026-04-29 08:52', '2026-04-29 16:45'],
               ['2026-05-04 08:45', '2026-05-04 15:11']]
+t_humidify = ['2026-04-29 09:49']
 t_inj = [['2026-04-29 10:02', '2026-04-29 11:18'], 
-         ['2026-05-04 10:10', '2026-05-04 09:46']]
+         ['2026-05-04 08:16', '2026-05-04 09:46']]
 t_zero = ['2026-04-29 11:45', '2026-05-04 10:10']
 t_off = ['2026-04-29 15:45', '2026-05-04 14:11']
 HEPA_timestamps = [['2026-04-29 08:40', '2026-04-29 09:00'],
@@ -36,8 +38,7 @@ for t, path in zip(t_zero, paths):
         SMPS_raw[key] = temp_smps[key]
         temp_smps[key].loc[temp_smps[key]['Time'] < pd.to_datetime(t), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
         temp_smps[key].loc[temp_smps[key][temp_smps[key].keys()[38]] <= 6, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
-        temp = remove_spikes_up(temp_smps[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
-        SMPS[key] = temp
+        SMPS[key] = temp_smps[key]
     temp_PTR = import_PTRMS(f'{parent_path}{path}PTRMS/', '')
     for key in temp_PTR.keys():
         if 'fragments' in key or 'all' in key or 'filtered' in key:
@@ -74,46 +75,53 @@ xlims = [(-180, 300), (-120, 300)]
 ylims = [(-0.1, 1.60), (-0.02, 0.21)]
 for i, key in enumerate(SMPS_keys):
     cmap = mpl.colormaps['viridis_r']
-    colors = cmap(np.linspace(0, 1, 5))
+    colors = cmap(np.linspace(0, 1, 7))
 
-    fig, axes = plt.subplots(2, 1, figsize = (7.5, 8.6), sharex = True)
+    fig, axes = plt.subplots(2, 1, figsize = (7.5, 8.4), sharex = True)
     for ax in axes:
-        ax.axvspan((pd.to_datetime(t_inj[i][0]) - pd.to_datetime(t_zero[i])) / pd.Timedelte(minutes = 1),
-                   (pd.to_datetime(t_inj[i][1]) - pd.to_datetime(t_zero[i])) / pd.Timedelte(minutes = 1),
+        ax.axvspan((pd.to_datetime(t_inj[i][0]) - pd.to_datetime(t_zero[i])) / pd.Timedelta(minutes = 1),
+                   (pd.to_datetime(t_inj[i][1]) - pd.to_datetime(t_zero[i])) / pd.Timedelta(minutes = 1),
                    color = 'gray', alpha = 0.15, lw = 0)
-        ax.axvspan(0, (pd.to_datetime(t_off[i]) - pd.to_datetime(t_zero[i])) / pd.Timedelte(minutes = 1),
+        ax.axvspan(0, (pd.to_datetime(t_off[i]) - pd.to_datetime(t_zero[i])) / pd.Timedelta(minutes = 1),
                    color = 'yellow', alpha = 0.15, lw = 0)
+        if 'dry' not in key:
+            ax.axvspan((pd.to_datetime(timestamps[i][0]) - pd.to_datetime(t_zero[i])) / pd.Timedelta(minutes = 1),
+                       (pd.to_datetime(t_humidify[i]) - pd.to_datetime(t_zero[i])) / pd.Timedelta(minutes = 1),
+                       color = 'blue', alpha = 0.15, lw = 0)
 
     axes[0].plot((PTRMS[PTRMS_keys[i][0]]['Time'] - pd.to_datetime(t_zero[i])) / pd.Timedelta(minutes = 1), PTRMS[PTRMS_keys[i][0]][PTRMS_keys[i][1]],
-               color = colors[1], lw = 2)
-    axes[0].tick_params(axis = 'y', labelcolor = colors[1], labelsize = 18)
-    axes[0].set_ylabel('VL conc. (ppb)', color = colors[1], fontsize = 24)
+               color = colors[5], lw = 2)
+    axes[0].tick_params(axis = 'y', labelcolor = colors[5], labelsize = 18)
+    axes[0].set_ylabel('VL conc. (ppb)', color = colors[5], fontsize = 24)
     axes[0].set_xlabel(None)
 
     ax0_twin = axes[0].twinx()
     ax0_twin.plot((AMS[AMS_keys[i]]['Time'] - pd.to_datetime(t_zero[i])) / pd.Timedelta(minutes = 1), AMS[AMS_keys[i]]['HROrg'],
-                   color = colors[3], lw = 2)
+                   color = colors[3], lw = 3)
     ax0_twin.tick_params(axis = 'y', labelcolor = colors[3], labelsize = 18)
-    ax0_twin.set_ylabel('Org. mass ($\mu$g m$^{-3}$)', color = colors[3], fontsize = 24)
+    ax0_twin.set_ylabel('SOA mass ($\mu$g m$^{-3}$)', color = colors[3], fontsize = 24)
     ax0_twin.set(ylim = ylims[i])
 
     axes[1].plot((SMPS[key]['Time'] - pd.to_datetime(t_zero[i])) / pd.Timedelta(minutes = 1), SMPS[key]['Total concentration'], 
-               color = colors[2], lw = 2)
-    axes[1].tick_params(axis = 'y', labelcolor = colors[2], labelsize = 18)
-    axes[1].set_ylabel('Number conc. (cm$^{-3}$)', color = colors[2], fontsize = 24)
+               color = colors[4], lw = 4)
+    axes[1].tick_params(axis = 'y', labelcolor = colors[4], labelsize = 18)
+    axes[1].set_ylabel('Number conc. (cm$^{-3}$)', color = colors[4], fontsize = 24)
 
     mask = SMPS[key]['Geo. Mean (nm)'] < 100
     temp = SMPS[key][mask]
     ax1_twin = axes[1].twinx()
     ax1_twin.plot((temp['Time'] - pd.to_datetime(t_zero[i])) / pd.Timedelta(minutes = 1), temp['Geo. Mean (nm)'], 
-                  color = colors[4], lw = 2)
-    ax1_twin.tick_params(axis = 'y', labelcolor = colors[4], labelsize = 18)
-    ax1_twin.set_ylabel('Geo. mean D$_{p}$ (nm)', color = colors[4], fontsize = 24)
+                  color = colors[6], lw = 4)
+    ax1_twin.tick_params(axis = 'y', labelcolor = colors[6], labelsize = 18)
+    ax1_twin.set_ylabel('Geo. mean D$_{p}$ (nm)', color = colors[6], fontsize = 24)
 
     axes[1].xaxis.set_major_locator(mpl.ticker.FixedLocator([-100, 0, 100, 200, 300]))
     axes[1].tick_params(axis = 'x', labelsize = 18)
     axes[1].set_xlabel('Time (min)', fontsize = 24)
+    axes[1].yaxis.offsetText.set_fontsize(18)
     axes[1].set(xlim = xlims[i])
 
     fig.tight_layout()
     fig.savefig(f'{save_path}{t_zero[i].split(' ')[0]}_overview_ts.png', transparent = True, dpi = 600)
+#%%
+(2.9*10**(4)) / (9*10**(3))
