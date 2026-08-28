@@ -498,14 +498,15 @@ def plot_AURA_overview(daq, smps, ams, timestamps, bg_timestamps, t_zero, RH, sa
     ax0_2.tick_params(axis = 'y', labelcolor = 'tab:blue')
     ax0_2.set_ylabel('Relative humidity (%)', color = 'tab:blue')
 
-    plot_total(ax[1], smps, 'Geo. Mean (nm)', 'green', t_zero)
-    ax[1].tick_params(axis = 'y', labelcolor = 'green')
-    ax[1].set_ylabel('Geo. mean D$_{p}$ (nm)', color = 'green')
-    ax[1].set_xlabel(None)
+    plot_total(ax[1], smps, 'Total concentration', 'purple', t_zero)
+    ax[1].tick_params(axis = 'y', labelcolor = 'purple')
+    ax[1].set_ylabel('Concentration (# cm$^{-3}$)', color = 'purple')
+    if ams is not None:
+        ax[1].set_xlabel(None)
     ax1_2 = ax[1].twinx()
-    plot_total(ax1_2, smps, 'Total concentration', 'purple', t_zero)
-    ax1_2.tick_params(axis = 'y', labelcolor = 'purple')
-    ax1_2.set_ylabel('Concentration (# cm$^{-3}$)', color = 'purple')
+    plot_total(ax1_2, smps, 'Geo. Mean (nm)', 'green', t_zero)
+    ax1_2.tick_params(axis = 'y', labelcolor = 'green')
+    ax1_2.set_ylabel('Geo. mean D$_{p}$ (nm)', color = 'green')
 
     fig.suptitle(f'{t_zero.split(' ')[0]}, {RH}', fontsize = 14)
     fig.tight_layout()
