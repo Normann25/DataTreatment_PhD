@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 parent_path = '../../../Data/2026/'
-paths = ['20260824_blank_UV/', '20260827_Blank_UV_85RH']
+paths = ['20260824_blank_UV/', '20260827_Blank_UV_85RH/']
 
 timestamps = [['2026-08-24 12:30', '2026-08-24 18:21'],
               ['2026-08-27 08:20', '2026-08-27 13:45']]
@@ -52,6 +52,8 @@ save_path = '../../../Figures/Vanillin/2608_Blanks/'
 for key in SMPS.keys():
     SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
 
-SMPS_keys = [['260505_vanillin+UV+seeds_RH85_number', '260506_vanillin+UV+seeds_RH85_number', '260507_vanillin+UV+seeds_dry_number', '260508_vanillin+UV+seeds_dry_number'],
-             ['260505_vanillin+UV+seeds_RH85_mass', '260506_vanillin+UV+seeds_RH85_mass', '260507_vanillin+UV+seeds_dry_mass', '260508_vanillin+UV+seeds_dry_mass']]
-DAQ_keys = ['DataDAQ_260505', 'DataDAQ_260506', 'DataDAQ_260507', 'DataDAQ_260508']
+SMPS_keys = [['20260824_blank_uv_dry_number', '20260827_blank_uv_85RH_number'],
+             ['20260824_blank_uv_dry_mass', '20260827_blank_uv_85RH_mass']]
+DAQ_keys = ['DataDAQ_260824', 'DataDAQ_260826']
+PTRMS_keys = ['260824_blank_dry', '260827_blank_85RH']
+#%%
