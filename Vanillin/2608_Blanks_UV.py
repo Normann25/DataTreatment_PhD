@@ -43,6 +43,9 @@ for key in SMPS.keys():
 RH_mask = DAQ['DataDAQ_260826']['RH_Percent'] > 10
 DAQ['DataDAQ_260826'] = DAQ['DataDAQ_260826'][RH_mask]
 
+ptr_mask = PTRMS['260908_VL+UV_dry_fragments']['m153.059 (C[12]8H[1]9O[16]3) (Conc)'] < 70
+PTRMS['260908_VL+UV_dry_fragments'] = PTRMS['260908_VL+UV_dry_fragments'][ptr_mask]
+
 SMPS_blank = [['20260824_blank_uv_dry_number', '20260827_blank_uv_85RH_number', '20260824_blank_uv_dry_number'],
              ['20260824_blank_uv_dry_mass', '20260827_blank_uv_85RH_mass', '20260824_blank_uv_dry_mass']]
 SMPS_rep = [['260908_vanillin+UV_dry_number', '260909_vanillin+UV_85RH_number'],
@@ -55,7 +58,32 @@ for i, time in enumerate(timestamps):
     plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_number[i]], None, time, None, t_zero[i], RH[i], save_path)
 #%%
 ax, ax_2 = plot_SMPS(SMPS, SMPS_blank, SMPS['20260824_blank_uv_dry_mass'].columns[42:-1], 'number and mass', 
-                     timestamps[:3], 10, RH[:3], 'Total concentration', t_zero[:3], 1, 2, save_path)
+                     timestamps[:3], 10, RH[:3], 'Total concentration', t_zero[:3], 1, 3, save_path)
+
+ax, ax_2 = plot_SMPS(SMPS, SMPS_rep, SMPS['260908_vanillin+UV_dry_number'].columns[42:-1], 'number and mass', 
+                     timestamps[3:], 10, RH[3:], 'Total concentration', t_zero[3:], 1, 2, save_path)
+#%%
+# PTR-MS decay (no wall loss correction)
+for i, key in enumerate(PTRMS_keys[3:]):  
+    fig, ax = plot_PTRMS_decay(PTRMS[key], 'm153.059 (C[12]8H[1]9O[16]3) (Conc)', None, ['C$_{8}$H$_{8}$O$_{3}$H$^{+}$'], 
+                               t_zero[i+3], t_UV_off[i+3], timestamps[i+3][1], 'Dry')
+    fig.tight_layout()
+    fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_PTRMS_initial.jpg', dpi = 600)
+#%%
+# PTR-MS decay (wall loss corrected)
+wall_loss = [0.0013018008212910548, 0.0008360344956755417]
+
+for i, key in enumerate(PTRMS_keys[3:]):
+    time_minutes = (PTRMS[key]['Time'] - pd.to_datetime(t_zero[i+3])) / pd.Timedelta(minutes = 1)
+    to_replace = [t for t in time_minutes if t < 0]
+    time_minutes = time_minutes.replace(to_replace, 0)
+
+    PTRMS[key]['m153.059 (C[12]8H[1]9O[16]3) (Conc)'] = PTRMS[key]['m153.059 (C[12]8H[1]9O[16]3) (Conc)'] + time_minutes*wall_loss[i]*PTRMS[key]['m153.059 (C[12]8H[1]9O[16]3) (Conc)']
+    
+    fig, ax = plot_PTRMS_decay(PTRMS[key], 'm153.059 (C[12]8H[1]9O[16]3) (Conc)', None, ['C$_{8}$H$_{8}$O$_{3}$H$^{+}$'], 
+                               t_zero[i+3], t_UV_off[i+3], timestamps[i+3][1], 'Dry')
+    fig.tight_layout()
+    fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_PTRMS_VLdecay_wall-loss-corrected.jpg', dpi = 600)
 #%%
 # PTR-MS grouping of ions
 for key in PTRMS_keys:
