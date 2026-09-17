@@ -472,18 +472,18 @@ def plot_COS(df_AMS, AMS_DL, df_PTR, t_injection, t_zero, t_off):
 def plot_AURA_overview(daq, smps, ams, timestamps, bg_timestamps, t_zero, RH, save_path):
 
     if ams is not None:
-        fig, ax = plt.subplots(3, 1, figsize = (6.3, 8.5), sharex = True)
+        fig, ax = plt.subplots(4, 1, figsize = (6.3, 10.5), sharex = True)
 
         ams_bg = time_filtered_conc(ams, ['HROrg'], bg_timestamps)
         Org_DL = ams_bg['HROrg'].std() * 3
         ams.loc[ams['HROrg'] < Org_DL, ['Ratio_H_C', 'Ratio_O_C']] = np.nan
         ams = time_filtered_conc(ams, ['Ratio_H_C', 'Ratio_O_C'], timestamps)
-        plot_total(ax[2], ams, 'Ratio_O_C', 'tab:cyan', t_zero)
-        ax[2].tick_params(axis = 'y', labelcolor = 'tab:cyan')
-        ax[2].set_ylabel('O:C', color = 'tab:cyan')
+        plot_total(ax[3], ams, 'Ratio_O_C', 'tab:cyan', t_zero)
+        ax[3].tick_params(axis = 'y', labelcolor = 'tab:cyan')
+        ax[3].set_ylabel('O:C', color = 'tab:cyan')
 
     else:
-        fig, ax = plt.subplots(2, 1, figsize = (6.3, 6.3), sharex = True)
+        fig, ax = plt.subplots(3, 1, figsize = (6.3, 8.5), sharex = True)
 
     daq = time_filtered_conc(daq, ['Temp_C', 'RH_Percent'], timestamps)
     smps = time_filtered_conc(smps, ['Geo. Mean (nm)', 'Total concentration'], timestamps)
@@ -498,15 +498,19 @@ def plot_AURA_overview(daq, smps, ams, timestamps, bg_timestamps, t_zero, RH, sa
     ax0_2.tick_params(axis = 'y', labelcolor = 'tab:blue')
     ax0_2.set_ylabel('Relative humidity (%)', color = 'tab:blue')
 
-    plot_total(ax[1], smps, 'Total concentration', 'purple', t_zero)
-    ax[1].tick_params(axis = 'y', labelcolor = 'purple')
-    ax[1].set_ylabel('Concentration (# cm$^{-3}$)', color = 'purple')
+    plot_total(ax[1], daq, 'Laser_Distance', 'darkred', t_zero)
+    ax[1].set_ylabel('Laser distance (cm)', color = 'darkred')
+    ax[1].tick_params(axis = 'y', labelcolor = 'darkred')
+
+    plot_total(ax[2], smps, 'Total concentration', 'purple', t_zero)
+    ax[2].tick_params(axis = 'y', labelcolor = 'purple')
+    ax[2].set_ylabel('Concentration (# cm$^{-3}$)', color = 'purple')
     if ams is not None:
-        ax[1].set_xlabel(None)
-    ax1_2 = ax[1].twinx()
-    plot_total(ax1_2, smps, 'Geo. Mean (nm)', 'green', t_zero)
-    ax1_2.tick_params(axis = 'y', labelcolor = 'green')
-    ax1_2.set_ylabel('Geo. mean D$_{p}$ (nm)', color = 'green')
+        ax[2].set_xlabel(None)
+    ax2_2 = ax[2].twinx()
+    plot_total(ax2_2, smps, 'Geo. Mean (nm)', 'green', t_zero)
+    ax2_2.tick_params(axis = 'y', labelcolor = 'green')
+    ax2_2.set_ylabel('Geo. mean D$_{p}$ (nm)', color = 'green')
 
     fig.suptitle(f'{t_zero.split(' ')[0]}, {RH}', fontsize = 14)
     fig.tight_layout()
