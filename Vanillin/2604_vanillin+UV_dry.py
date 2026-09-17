@@ -28,19 +28,27 @@ HEPA_timestamps = [['2026-04-21 08:40', '2026-04-21 09:00'],
                    ['2026-05-01 08:50', '2026-05-01 09:10'],
                    ['2026-05-04 08:10', '2026-05-04 08:30']]
 
+# Dataframe keys
+SMPS_keys = [['260421_vanillin+UV_dry_number', '260422_vanillin+UV_dry_number', '260501_vanillin+UV_dry_number', '260504_vanillin+UV_dry_number'], 
+             ['260421_vanillin+UV_dry_mass', '260422_vanillin+UV_dry_mass', '260501_vanillin+UV_dry_mass', '260504_vanillin+UV_dry_mass']]
+AMS_keys = ['260421_AMS_vanillin+UV_dry_TS', '260422_AMS_vanillin+UV_dry_TS', '260501_AMS_vanillin+UV_dry_TS', '260504_AMS_vanillin+UV_dry_TS']
+DAQ_keys = ['DataDAQ_260421', 'DataDAQ_260422', 'DataDAQ_260501', 'DataDAQ_260504']
+
 # Read data
 SMPS = {}
 SMPS_raw = import_SMPS(paths, parent_path, 0)
 PTRMS = import_PTRMS(paths, parent_path)
 AMS = import_AMS(paths, parent_path, 0)
 DAQ = import_DAQ(paths, parent_path, 0)
-for t, key in zip(t_zero, SMPS.keys()):
+for i, key in enumerate(np.array(SMPS_keys).flatten()):
     if 'mass' in key:
-        temp = remove_spikes_up(SMPS[key], [SMPS[key].keys()[38]], max(SMPS[key][SMPS[key].keys()[38]])/4)
+        t = t_zero[i-4]
+        temp = remove_spikes_up(SMPS_raw[key], [SMPS_raw[key].keys()[38]], max(SMPS_raw[key][SMPS_raw[key].keys()[38]])/4)
     else:
-        temp = SMPS[key]
+        t = t_zero[i]
+        temp = SMPS_raw[key]
     temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 30), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
-    temp.loc[temp[SMPS[key].keys()[38]] == 0, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+    temp.loc[temp[SMPS_raw[key].keys()[38]] == 0, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
     temp = remove_spikes_down(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
     temp.rename(columns = {temp.columns[38]:'Total concentration'}, inplace = True)
@@ -61,12 +69,6 @@ bg_timestamps = [['2026-05-01 08:00', '2026-05-01 08:40'],
 for i, key in enumerate(['260501_VL+UV_dry_all', '260504_VL+UV_dry_all']):
     PTRMS[f'{key.split('_')[0]}_VL+UV_dry_OC-HC'] = calc_OC_HC_PTRMS(PTRMS[key], bg_timestamps[i])
     PTRMS[f'{key.split('_')[0]}_VL+UV_dry_OC-HC_filtered'] = calc_OC_HC_PTRMS(PTRMS[f'{key.split('_')[0]}_VL+UV_dry_filtered'], bg_timestamps[i])
-
-# Dataframe keys
-SMPS_keys = [['260421_vanillin+UV_dry_number', '260422_vanillin+UV_dry_number', '260501_vanillin+UV_dry_number', '260504_vanillin+UV_dry_number'], 
-             ['260421_vanillin+UV_dry_mass', '260422_vanillin+UV_dry_mass', '260501_vanillin+UV_dry_mass', '260504_vanillin+UV_dry_mass']]
-AMS_keys = ['260421_AMS_vanillin+UV_dry_TS', '260422_AMS_vanillin+UV_dry_TS', '260501_AMS_vanillin+UV_dry_TS', '260504_AMS_vanillin+UV_dry_TS']
-DAQ_keys = ['DataDAQ_260421', 'DataDAQ_260422', 'DataDAQ_260501', 'DataDAQ_260504']
 #%%
 # Experiment overview
 for i, time in enumerate(timestamps):
