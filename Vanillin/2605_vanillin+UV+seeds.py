@@ -28,30 +28,18 @@ HEPA_timestamps = [['2026-05-05 07:47', '2026-05-05 08:07'],
 
 RH = ['85% RH', '85% RH', 'Dry', 'Dry']
 
-SMPS = {}
+SMPS = import_SMPS(paths, parent_path, 0)
 # PTRMS = {}
-AMS = {}
-DAQ = {}
-for t, path in zip(t_injection, paths):
-    temp_SMPS = import_SMPS(f'{parent_path}{path}SMPS/', '', 0)
-    for key in temp_SMPS.keys():
-        temp_SMPS[key].loc[temp_SMPS[key]['Time'] < pd.to_datetime(t), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
-        temp = remove_spikes_up(temp_SMPS[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
-        SMPS[key] = temp
-        # SMPS[key] = temp_SMPS[key]
-    temp_AMS = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', 0)
-    for key in temp_AMS.keys():
-        if 'PToF' not in key:
-            temp_AMS[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
-                            'familyCHN', 'familyCHO1', 'familyCHOgt1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
-            temp_AMS[key].loc[temp_AMS[key]['Time'] < pd.to_datetime(t), ['Ratio_H_C', 'Ratio_O_C']] = np.nan
-            # temp_AMS[key].loc[temp_AMS[key]['Ratio_O_C'] < -0.1, ['Ratio_H_C', 'Ratio_O_C']] = 0
-            # temp_AMS[key].loc[temp_AMS[key]['Ratio_O_C'] > 4, ['Ratio_H_C', 'Ratio_O_C']] = 0
-        AMS[key] = temp_AMS[key]
-    temp_daq = import_data(f'{parent_path}{path}DAQ/', '', 'DAQ_Timestamp_UTC', '%d-%m-%Y %H:%M:%S', 0)
-    for key in temp_daq.keys():
-        temp = remove_spikes(temp_daq[key], ['Temp_C'], 5)
-        DAQ[key] = temp
+AMS = import_AMS(paths, parent_path, 0)
+DAQ = import_DAQ(paths, parent_path, 0)
+for t, key in zip(t_injection, SMPS.keys()):
+    SMPS[key].loc[SMPS[key]['Time'] < pd.to_datetime(t), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+    SMPS[key] = remove_spikes_up(SMPS[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
+for i, key in zip(t_injection, AMS.keys()):
+    if 'PToF' not in key:
+        AMS[key].loc[AMS[key]['Time'] < pd.to_datetime(t), ['Ratio_H_C', 'Ratio_O_C']] = np.nan
+for key in DAQ.keys():
+    DAQ[key] = remove_spikes(DAQ[key], ['Temp_C'], 5)
 
 save_path = '../../../Figures/Vanillin/2605_vanillin+UV+seeds/'
 
