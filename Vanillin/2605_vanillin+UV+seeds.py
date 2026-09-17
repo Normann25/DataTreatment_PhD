@@ -26,17 +26,29 @@ HEPA_timestamps = [['2026-05-05 07:47', '2026-05-05 08:07'],
                    ['2026-05-07 08:10', '2026-05-07 08:30'],
                    ['2026-05-08 08:13', '2026-05-08 08:33']]
 
+# Dict keys
+SMPS_keys = [['260505_vanillin+UV+seeds_RH85_number', '260506_vanillin+UV+seeds_RH85_number', '260507_vanillin+UV+seeds_dry_number', '260508_vanillin+UV+seeds_dry_number'],
+             ['260505_vanillin+UV+seeds_RH85_mass', '260506_vanillin+UV+seeds_RH85_mass', '260507_vanillin+UV+seeds_dry_mass', '260508_vanillin+UV+seeds_dry_mass']]
+AMS_keys = ['260505_AMS_vanillin+UV+seeds_85RH_TS', '260506_AMS_vanillin+UV+seeds_85RH_TS', '260507_AMS_vanillin+UV+seeds_dry_TS', '260508_AMS_vanillin+UV+seeds_dry_TS']
+DAQ_keys = ['DataDAQ_260505', 'DataDAQ_260506', 'DataDAQ_260507', 'DataDAQ_260508']
+
+# Relative humidity of experiments
 RH = ['85% RH', '85% RH', 'Dry', 'Dry']
 
+# Import data
 SMPS = import_SMPS(paths, parent_path, 0)
 # PTRMS = {}
 AMS = import_AMS(paths, parent_path, 0)
 DAQ = import_DAQ(paths, parent_path, 0)
-for t, key in zip(t_injection, SMPS.keys()):
+for i, key in enumerate(np.array(SMPS_keys).flatten()):
+    if 'mass' in key:
+        t = t_injection[i-4]
+    else:
+        t = t_injection[i]
     SMPS[key].loc[SMPS[key]['Time'] < pd.to_datetime(t), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     SMPS[key] = remove_spikes_up(SMPS[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
     SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
-for i, key in zip(t_injection, AMS.keys()):
+for t, key in zip(t_injection, AMS.keys()):
     if 'PToF' not in key:
         AMS[key].loc[AMS[key]['Time'] < pd.to_datetime(t), ['Ratio_H_C', 'Ratio_O_C']] = np.nan
 for key in DAQ.keys():
@@ -46,11 +58,6 @@ save_path = '../../../Figures/Vanillin/2605_vanillin+UV+seeds/'
 
 RH_mask = DAQ['DataDAQ_260507']['RH_Percent'] < 0.005
 DAQ['DataDAQ_260507'] = DAQ['DataDAQ_260507'][RH_mask]
-
-SMPS_keys = [['260505_vanillin+UV+seeds_RH85_number', '260506_vanillin+UV+seeds_RH85_number', '260507_vanillin+UV+seeds_dry_number', '260508_vanillin+UV+seeds_dry_number'],
-             ['260505_vanillin+UV+seeds_RH85_mass', '260506_vanillin+UV+seeds_RH85_mass', '260507_vanillin+UV+seeds_dry_mass', '260508_vanillin+UV+seeds_dry_mass']]
-AMS_keys = ['260505_AMS_vanillin+UV+seeds_85RH_TS', '260506_AMS_vanillin+UV+seeds_85RH_TS', '260507_AMS_vanillin+UV+seeds_dry_TS', '260508_AMS_vanillin+UV+seeds_dry_TS']
-DAQ_keys = ['DataDAQ_260505', 'DataDAQ_260506', 'DataDAQ_260507', 'DataDAQ_260508']
 #%%
 for i, time in enumerate(timestamps):
     plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, HEPA_timestamps[i], t_zero[i], RH[i], save_path)
