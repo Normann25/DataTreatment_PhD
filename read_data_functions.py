@@ -92,7 +92,7 @@ def import_DAQ(paths, parent_path, hour):
 
         for key in data.keys():
             data[key]['Laser_Distance'] = (data[key]['AR500_Distance_1'] + data[key]['AR500_Distance_2']) / 2
-            
+
             new_dict[key] = data[key]
 
     return new_dict
@@ -126,7 +126,7 @@ def import_SMPS(paths, parent_path, hour):
                 separations = [',', '\t']
                 for separation in separations:
                     try:
-                        with open(os.path.join(path, file), 'r') as f:
+                        with open(os.path.join(f'{parent_path}{path}SMPS/', file), 'r') as f:
                             df = pd.read_csv(f, sep = separation, skiprows = 52)
 
                         df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
@@ -143,7 +143,7 @@ def import_SMPS(paths, parent_path, hour):
             separations = [',', '\t']
             for separation in separations:
                 try:
-                    with open(os.path.join(path, file), 'r') as f:
+                    with open(os.path.join(f'{parent_path}{path}SMPS/', file), 'r') as f:
                         df = pd.read_csv(f, sep = separation, skiprows = 52)
 
                     df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
