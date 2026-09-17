@@ -43,7 +43,7 @@ for t, key in zip(t_zero, SMPS.keys()):
     temp.loc[temp[SMPS[key].keys()[38]] == 0, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
     temp = remove_spikes_down(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
-    temp.rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
+    temp.rename(columns = {temp.columns[38]:'Total concentration'}, inplace = True)
     SMPS[key] = temp
 for key in PTRMS.keys():
     if 'fragments' in key or 'all' in key or 'filtered' in key:
