@@ -70,32 +70,76 @@ def import_data(path, parent_path, timelabel, time_format, hour):
 
     return data_dict
 
-def import_PTRMS(path, parent_path):
-    data = import_data(path, parent_path, None, None, None)
-
+def import_AMS(paths, parent_path, hour):
     new_dict = {}
-    for key in data.keys():
-        df = data[key]
 
-        Timestamps = pd.to_datetime(df['AbsTime'], origin = pd.Timestamp('1899-12-30'), unit = 'D').dt.floor('s')  # format = '%d/%m/%Y %H:%M:%S'
-        df['Time'] = Timestamps
+    for path in paths:
+        data = import_data(f'{parent_path}{path}AMS/', '' 't_series', '%d-%m-%Y %H:%M:%S', hour)
+        for key in data.keys():
+            if 'PToF' not in key or 'ePToF' not in key:
+                data[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
+                                     'familyCHN', 'familyCHO1', 'familyCHOgt1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
 
-        new_dict[key] = df.drop(['AbsTime', 'RelTime', 'Cycle', 'CycleInFile', 'Filename'], axis = 1)
+            new_dict[key] = data[key].drop(['t_series'], axis = 1)
 
     return new_dict
 
-def import_SMPS(path, parent_path, hour):
-    """Read SMPS data from CSV files in the specified path."""
-    files = file_list(path, parent_path)
-    SMPS_files = []
+def import_DAQ(paths, parent_path, hour):
+    new_dict = {}
 
-    for file in files:
-        SMPS_files.append(file)
+    for path in paths:
+        data = import_data(f'{parent_path}{path}DAQ/', '', 'DAQ_Timestamp_UTC', '%d-%m-%Y %H:%M:%S', hour)
 
-    if len(SMPS_files) > 1:
-        data = {}
+        for key in data.keys():
+            data[key]['Laser_Distance'] = (data[key]['AR500_Distance_1'] + data[key]['AR500_Distance_2']) / 2
+            
+            new_dict[key] = data[key]
 
-        for file in SMPS_files:
+    return new_dict
+
+def import_PTRMS(paths, parent_path):
+    new_dict = {}
+
+    for path in paths:
+        data = import_data(f'{parent_path}{path}PTRMS/', '', None, None, None)
+
+        for key in data.keys():
+            df = data[key]
+
+            Timestamps = pd.to_datetime(df['AbsTime'], origin = pd.Timestamp('1899-12-30'), unit = 'D').dt.floor('s')  # format = '%d/%m/%Y %H:%M:%S'
+            df['Time'] = Timestamps
+
+            new_dict[key] = df.drop(['AbsTime', 'RelTime', 'Cycle', 'CycleInFile', 'Filename'], axis = 1)
+
+    return new_dict
+
+def import_SMPS(paths, parent_path, hour):
+    data = {}
+
+    for path in paths:
+        """Read SMPS data from CSV files in the specified path."""
+        files = file_list(f'{parent_path}{path}SMPS/', '')
+
+        if len(files) > 1:
+
+            for file in files:
+                separations = [',', '\t']
+                for separation in separations:
+                    try:
+                        with open(os.path.join(path, file), 'r') as f:
+                            df = pd.read_csv(f, sep = separation, skiprows = 52)
+
+                        df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
+                        df['Time'] = df['Time'] + pd.Timedelta(hours = hour)
+
+                        name = file.split('.')[0]
+                        data[name] = df
+                        
+                    except KeyError:
+                        pass
+
+        else:
+            file = files[0]
             separations = [',', '\t']
             for separation in separations:
                 try:
@@ -110,22 +154,6 @@ def import_SMPS(path, parent_path, hour):
                     
                 except KeyError:
                     pass
-
-    else:
-        file = SMPS_files[0]
-        separations = [',', '\t']
-        for separation in separations:
-            try:
-                with open(os.path.join(path, file), 'r') as f:
-                    df = pd.read_csv(f, sep = separation, skiprows = 52)
-
-                df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
-                df['Time'] = df['Time'] + pd.Timedelta(hours = hour)
-
-                data = df
-                
-            except KeyError:
-                pass
         
     return data
 
