@@ -74,7 +74,7 @@ def import_AMS(paths, parent_path, hour):
     new_dict = {}
 
     for path in paths:
-        data = import_data(f'{parent_path}{path}AMS/', '' 't_series', '%d-%m-%Y %H:%M:%S', hour)
+        data = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', hour)
         for key in data.keys():
             if 'PToF' not in key or 'ePToF' not in key:
                 data[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
