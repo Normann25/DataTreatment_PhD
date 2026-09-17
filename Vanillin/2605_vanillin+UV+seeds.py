@@ -35,6 +35,7 @@ DAQ = import_DAQ(paths, parent_path, 0)
 for t, key in zip(t_injection, SMPS.keys()):
     SMPS[key].loc[SMPS[key]['Time'] < pd.to_datetime(t), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     SMPS[key] = remove_spikes_up(SMPS[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
+    SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
 for i, key in zip(t_injection, AMS.keys()):
     if 'PToF' not in key:
         AMS[key].loc[AMS[key]['Time'] < pd.to_datetime(t), ['Ratio_H_C', 'Ratio_O_C']] = np.nan
@@ -42,10 +43,6 @@ for key in DAQ.keys():
     DAQ[key] = remove_spikes(DAQ[key], ['Temp_C'], 5)
 
 save_path = '../../../Figures/Vanillin/2605_vanillin+UV+seeds/'
-
-for key in SMPS.keys():
-    SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
-    # SMPS[key] = SMPS[key].fillna(0)
 
 RH_mask = DAQ['DataDAQ_260507']['RH_Percent'] < 0.005
 DAQ['DataDAQ_260507'] = DAQ['DataDAQ_260507'][RH_mask]
