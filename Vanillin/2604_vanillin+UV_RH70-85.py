@@ -29,6 +29,12 @@ HEPA_timestamps = [['2026-04-27 08:40', '2026-04-27 09:00'],
                    ['2026-04-29 08:40', '2026-04-29 09:00'],
                    ['2026-04-30 08:15', '2026-04-30 08:35']]
 
+# Dataframe keys
+SMPS_keys = [['260427_vanillin+UV_RH70_number', '260428_vanillin+UV_RH70_number', '260429_vanillin+UV_RH85_number', '260430_vanillin+UV_RH85_number'],
+             ['260427_vanillin+UV_RH70_mass', '260428_vanillin+UV_RH70_mass', '260429_vanillin+UV_RH85_mass', '260430_vanillin+UV_RH85_mass']]
+AMS_keys = ['260427_AMS_vanillin+UV_70RH_TS', '260428_AMS_vanillin+UV_70RH_TS', '260429_AMS_vanillin+UV_85RH_TS', '260430_AMS_vanillin+UV_85RH_TS']
+DAQ_keys = ['DataDAQ_260427', 'DataDAQ_260428', 'DataDAQ_260429', 'DataDAQ_260430']
+
 # Exp relative humidity
 RH = ['70% RH', '70% RH', '85% RH', '85% RH']
 
@@ -38,33 +44,35 @@ SMPS_raw = import_SMPS(paths, parent_path, 0)
 PTRMS = import_PTRMS(paths, parent_path)
 AMS = import_AMS(paths, parent_path, 0)
 DAQ = import_DAQ(paths, parent_path, 0)
-for t, key in zip(t_zero, SMPS_raw.keys()):
+for i, key in enumerate(np.array(SMPS_keys).flatten()):
+    if 'mass' in key:
+        t = t_zero[i-4]
+    else: 
+        t = t_zero[i]
     temp = SMPS_raw[key]
     temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 20), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
-    temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
     temp.rename(columns = {temp.columns[38]:'Total concentration'}, inplace = True)
+    if 'number' in key:
+        temp.loc[temp['Total concentration'] <= 2, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     SMPS[key] = temp
 for key in PTRMS.keys():
     if 'fragments' in key or 'all' in key:
         mask = (0 < PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
         PTRMS[key] = PTRMS[key][mask]
 
+for key in SMPS.keys():
+    print(SMPS[key]['Total concentration'])
+
 # PTR-MS H:C and O:C calculation
 bg_timestamps = [['2026-04-29 09:50', '2026-04-29 10:02'],
                  ['2026-04-30 07:29', '2026-04-30 07:36']]
 for i, key in enumerate(['260429_VL+UV_RH85_all', '260430_VL+UV_RH85_all']):
     PTRMS[f'{key.split('_')[0]}_VL+UV_RH85_OC-HC'] = calc_OC_HC_PTRMS(PTRMS[key], bg_timestamps[i])
-
-# Dataframe keys
-SMPS_keys = [['260427_vanillin+UV_RH70_number', '260428_vanillin+UV_RH70_number', '260429_vanillin+UV_RH85_number', '260430_vanillin+UV_RH85_number'],
-             ['260427_vanillin+UV_RH70_mass', '260428_vanillin+UV_RH70_mass', '260429_vanillin+UV_RH85_mass', '260430_vanillin+UV_RH85_mass']]
-AMS_keys = ['260427_AMS_vanillin+UV_70RH_TS', '260428_AMS_vanillin+UV_70RH_TS', '260429_AMS_vanillin+UV_85RH_TS', '260430_AMS_vanillin+UV_85RH_TS']
-DAQ_keys = ['DataDAQ_260427', 'DataDAQ_260428', 'DataDAQ_260429', 'DataDAQ_260430']
 #%%
 # Experiment overview
 for i, time in enumerate(timestamps):
     fig, ax = plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, HEPA_timestamps[i], t_zero[i], RH[i], save_path)
-    ax[2].set_ylim (0, 1)
+    ax[3].set_ylim (0, 1)
 #%%
 # SMPS
 ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260428_vanillin+UV_RH70_mass'].columns[42:-1], 'number and mass', 
