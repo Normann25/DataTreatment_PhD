@@ -649,7 +649,7 @@ def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, RH, save
     fig1, ax1 = plt.subplots(figsize = (6.3, 3))
     ax1.hlines(Org_DL, (pd.to_datetime(timestamps[0]) - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(timestamps[1]) - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1),
                color = 'gray', lw = 0.5, ls = '--')
-    for color, key in zip(['green', 'blue', 'red', 'orange', 'pink'], species_keys):
+    for color, key in zip(['green', 'blue', 'red', 'orange', 'tab:pink'], species_keys):
         plot_total(ax1, new_df, key, color, t_zero)
     ax1.legend(['HROrg DL'] + species_keys)
     ax1.set(ylabel = 'Concentration ($\mu$g m$^{-3}$)', title = f'{t_zero.split(' ')[0]}, {RH}')
@@ -657,7 +657,7 @@ def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, RH, save
     fig1.savefig(f'{save_path}{date}_AMS_TS.jpg', dpi = 600)
 
     fig2, ax2 = plt.subplots(2, 1, figsize = (6.3, 6))
-    for color, key in zip(colors[1:5], family_keys[:4]):
+    for color, key in zip(['green'] + colors[2:5], family_keys[:4]):
         plot_total(ax2[0], new_df, key, color, t_zero)
         ax2[0].set(ylabel = 'Concentration ($\mu$g m$^{-3}$)', title = f'{t_zero.split(' ')[0]}, {RH}')
         ax2[0].legend(['Total org', 'C$_{x}$H$_{y}$O$_{1}$', 'C$_{x}$H$_{y}$O$_{>1}$', 'C$_{x}$H$_{y}$'])
