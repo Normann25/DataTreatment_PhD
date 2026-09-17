@@ -485,7 +485,7 @@ def plot_AURA_overview(daq, smps, ams, timestamps, bg_timestamps, t_zero, RH, sa
     else:
         fig, ax = plt.subplots(3, 1, figsize = (6.3, 8.5), sharex = True)
 
-    daq = time_filtered_conc(daq, ['Temp_C', 'RH_Percent'], timestamps)
+    daq = time_filtered_conc(daq, ['Temp_C', 'RH_Percent', 'Laser_Distance'], timestamps)
     smps = time_filtered_conc(smps, ['Geo. Mean (nm)', 'Total concentration'], timestamps)
     date = timestamps[0].split(' ')[0]
 
