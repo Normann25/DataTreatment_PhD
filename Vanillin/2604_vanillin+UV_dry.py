@@ -30,42 +30,27 @@ HEPA_timestamps = [['2026-04-21 08:40', '2026-04-21 09:00'],
 
 # Read data
 SMPS = {}
-SMPS_raw = {}
-PTRMS = {}
-AMS = {}
-DAQ = {}
-for t, path in zip(t_zero, paths):
-    temp_smps = import_SMPS(f'{parent_path}{path}SMPS/', '', 0)
-    for key in temp_smps.keys():
-        SMPS_raw[key] = temp_smps[key]
-        if 'mass' in key:
-            temp = remove_spikes_up(temp_smps[key], [temp_smps[key].keys()[38]], max(temp_smps[key][temp_smps[key].keys()[38]])/4)
-        else:
-            temp = temp_smps[key]
-        temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 30), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
-        temp.loc[temp[temp_smps[key].keys()[38]] == 0, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
-        temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
-        temp = remove_spikes_down(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
-        SMPS[key] = temp
-    temp_PTR = import_PTRMS(f'{parent_path}{path}PTRMS/', '')
-    for key in temp_PTR.keys():
-        if 'fragments' in key or 'all' in key or 'filtered' in key:
-            mask = (0 < temp_PTR[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)']) & (temp_PTR[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
-            temp_PTR[key] = temp_PTR[key][mask]
-        PTRMS[key] = temp_PTR[key]
-    temp_AMS = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', 0)
-    for key in temp_AMS.keys():
-        if 'PToF' not in key:
-            temp_AMS[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
-                            'familyCHN', 'familyCHO1', 'familyCHOgt1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
-        AMS[key] = temp_AMS[key]
-    temp_daq = import_data(f'{parent_path}{path}DAQ/', '', 'DAQ_Timestamp_UTC', '%d-%m-%Y %H:%M:%S', 0)
-    for key in temp_daq.keys():
-        temp = remove_spikes(temp_daq[key], ['Temp_C', 'RH_Percent'], 5)
-        DAQ[key] = temp
-
-for key in SMPS.keys():
-    SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
+SMPS_raw = import_SMPS(paths, parent_path, 0)
+PTRMS = import_PTRMS(paths, parent_path)
+AMS = import_AMS(paths, parent_path, 0)
+DAQ = import_DAQ(paths, parent_path, 0)
+for t, key in zip(t_zero, SMPS.keys()):
+    if 'mass' in key:
+        temp = remove_spikes_up(SMPS[key], [SMPS[key].keys()[38]], max(SMPS[key][SMPS[key].keys()[38]])/4)
+    else:
+        temp = SMPS[key]
+    temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 30), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+    temp.loc[temp[SMPS[key].keys()[38]] == 0, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+    temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
+    temp = remove_spikes_down(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
+    temp.rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
+    SMPS[key] = temp
+for key in PTRMS.keys():
+    if 'fragments' in key or 'all' in key or 'filtered' in key:
+        mask = (0 < PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
+        PTRMS[key] = PTRMS[key][mask]
+for key in DAQ.keys():
+    DAQ[key] = remove_spikes(DAQ[key], ['Temp_C', 'RH_Percent'], 5)
 
 # PTR-MS H:C and O:C calculation
 PTR_merge_keys = [['260501_VL+UV_dry_fragments', '260501_VL+UV_dry_products'],
