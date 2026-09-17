@@ -501,6 +501,7 @@ def plot_AURA_overview(daq, smps, ams, timestamps, bg_timestamps, t_zero, RH, sa
     plot_total(ax[1], daq, 'Laser_Distance', 'darkred', t_zero)
     ax[1].set_ylabel('Laser distance (cm)', color = 'darkred')
     ax[1].tick_params(axis = 'y', labelcolor = 'darkred')
+    ax[1].set_xlabel(None)
 
     plot_total(ax[2], smps, 'Total concentration', 'purple', t_zero)
     ax[2].tick_params(axis = 'y', labelcolor = 'purple')
