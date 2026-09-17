@@ -34,33 +34,19 @@ RH = ['70% RH', '70% RH', '85% RH', '85% RH']
 
 # Read data
 SMPS = {}
-SMPS_raw = {}
-PTRMS = {}
-AMS = {}
-DAQ = {}
-for t, path in zip(t_zero, paths):
-    temp_SMPS = import_SMPS(f'{parent_path}{path}SMPS/', '', 0)
-    for key in temp_SMPS.keys():
-        SMPS_raw[key] = temp_SMPS[key]
-        temp_SMPS[key].loc[temp_SMPS[key]['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 20), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
-        temp = remove_spikes_up(temp_SMPS[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
-        SMPS[key] = temp
-    if path != paths[0]:
-        temp_PTR = import_PTRMS(f'{parent_path}{path}PTRMS/', '')
-        for key in temp_PTR.keys():
-            if 'fragments' in key or 'all' in key:
-                mask = (0 < temp_PTR[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)']) & (temp_PTR[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
-                temp_PTR[key] = temp_PTR[key][mask]
-            PTRMS[key] = temp_PTR[key]
-    temp_AMS = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', 0)
-    for key in temp_AMS.keys():
-        if 'PToF' not in key:
-            temp_AMS[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
-                            'familyCHN', 'familyCHO1', 'familyCHOgt1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
-        AMS[key] = temp_AMS[key]
-    temp_daq = import_data(f'{parent_path}{path}DAQ/', '', 'DAQ_Timestamp_UTC', '%d-%m-%Y %H:%M:%S', 0)
-    for key in temp_daq.keys():
-        DAQ[key] = temp_daq[key]
+SMPS_raw = import_SMPS(paths, parent_path, 0)
+PTRMS = import_PTRMS(paths, parent_path)
+AMS = import_AMS(paths, parent_path, 0)
+DAQ = import_DAQ(paths, parent_path, 0)
+for t, key in zip(t_zero, SMPS_raw.keys()):
+    temp = SMPS_raw[key]
+    temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 20), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+    temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
+    SMPS[key] = temp
+for key in PTRMS.keys():
+    if 'fragments' in key or 'all' in key:
+        mask = (0 < PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
+        PTRMS[key] = PTRMS[key][mask]
 
 for key in SMPS.keys():
     SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
