@@ -657,7 +657,7 @@ def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, RH, save
     fig1.savefig(f'{save_path}{date}_AMS_TS.jpg', dpi = 600)
 
     fig2, ax2 = plt.subplots(2, 1, figsize = (6.3, 6))
-    for color, key in zip(['green'] + colors[2:5], family_keys[:4]):
+    for color, key in zip(['green'] + colors[2:5].tolist(), family_keys[:4]):
         plot_total(ax2[0], new_df, key, color, t_zero)
         ax2[0].set(ylabel = 'Concentration ($\mu$g m$^{-3}$)', title = f'{t_zero.split(' ')[0]}, {RH}')
         ax2[0].legend(['Total org', 'C$_{x}$H$_{y}$O$_{1}$', 'C$_{x}$H$_{y}$O$_{>1}$', 'C$_{x}$H$_{y}$'])
