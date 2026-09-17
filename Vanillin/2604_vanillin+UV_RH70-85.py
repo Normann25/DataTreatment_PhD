@@ -42,14 +42,12 @@ for t, key in zip(t_zero, SMPS_raw.keys()):
     temp = SMPS_raw[key]
     temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 20), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
+    temp.rename(columns = {temp.columns[38]:'Total concentration'}, inplace = True)
     SMPS[key] = temp
 for key in PTRMS.keys():
     if 'fragments' in key or 'all' in key:
         mask = (0 < PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
         PTRMS[key] = PTRMS[key][mask]
-
-for key in SMPS.keys():
-    SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
 
 # PTR-MS H:C and O:C calculation
 bg_timestamps = [['2026-04-29 09:50', '2026-04-29 10:02'],
