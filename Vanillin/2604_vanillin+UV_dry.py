@@ -49,8 +49,8 @@ for i, key in enumerate(np.array(SMPS_keys).flatten()):
         temp = SMPS_raw[key]
     temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 30), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     temp.loc[temp[SMPS_raw[key].keys()[38]] == 0, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
-    temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
-    temp = remove_spikes_down(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 12)
+    temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 50)
+    temp = remove_spikes_down(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 50)
     temp.rename(columns = {temp.columns[38]:'Total concentration'}, inplace = True)
     SMPS[key] = temp
 for key in PTRMS.keys():
@@ -102,8 +102,7 @@ for i, time in enumerate(timestamps):
     fig.savefig(f'{save_path}{t_zero[i].split(' ')[0]}_SMPS_TS_raw.jpg', dpi = 600)
 #%%
 # SMPS spikes removed
-ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260422_vanillin+UV_dry_mass'].columns[42:-1], 'number and mass', 
-                     timestamps, 10, ['Dry']*len(t_zero), 'Total concentration', t_zero, 2, 2, save_path)
+ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, 'number and mass', timestamps, 10, ['Dry']*len(t_zero), t_zero, 2, 2, save_path)
 #%%
 # AMS
 for i, key in enumerate(AMS_keys):
