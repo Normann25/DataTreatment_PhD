@@ -625,11 +625,11 @@ def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, t_zero, nrow
 
     if 'number' in datatype:
         fig_run_number.tight_layout()
-        fig_run_number.savefig(f'{save_path}Running_SizeDist_number.jpg', dpi = 600)
+        fig_run_number.savefig(f'{save_path}{t_zero[0].split(' ')[0]}_{t_zero[-1].split(' ')[0]}_Running_SizeDist_number.jpg', dpi = 600)
 
     if 'mass' in datatype:
         fig_run_mass.tight_layout()
-        fig_run_mass.savefig(f'{save_path}Running_SizeDist_mass.jpg', dpi = 600)
+        fig_run_mass.savefig(f'{save_path}{t_zero[0].split(' ')[0]}_{t_zero[-1].split(' ')[0]}_Running_SizeDist_mass.jpg', dpi = 600)
 
     return axes_number, axes_mass if axes_mass else None
 
