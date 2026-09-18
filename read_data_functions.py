@@ -132,6 +132,8 @@ def import_SMPS(paths, parent_path, hour):
                         df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
                         df['Time'] = df['Time'] + pd.Timedelta(hours = hour)
 
+                        df.rename(columns = {df.columns[38]:'Total concentration'}, inplace = True)
+
                         name = file.split('.')[0]
                         data[name] = df
                         
@@ -148,6 +150,8 @@ def import_SMPS(paths, parent_path, hour):
 
                     df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
                     df['Time'] = df['Time'] + pd.Timedelta(hours = hour)
+
+                    df.rename(columns = {df.columns[38]:'Total concentration'}, inplace = True)
 
                     name = file.split('.')[0]
                     data[name] = df
