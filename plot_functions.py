@@ -545,12 +545,12 @@ def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, total_key, t
 
             # Plot heatmap, total concentration, and geometric mean diameter for number
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig1, axes1, data[dictkeys[0][i]], df_keys, bin_means, 'number', time, total_key, None, t_zero[i])
+            plot_timeseries(fig1, axes1, temp_number, df_keys, bin_means, 'number', time, total_key, None, t_zero[i])
             axes1[0].set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
             axes1[1].set_ylabel('Total number conc. (# cm$^{-3}$)', color = 'purple')
             axes1[1].tick_params(axis = 'y', labelcolor = 'purple')
             ax1_twin = axes1[1].twinx()
-            geo_mean_number = time_filtered_conc(data[dictkeys[0][i]], ['Geo. Mean (nm)'], time)
+            geo_mean_number = time_filtered_conc(temp_number, ['Geo. Mean (nm)'], time)
             plot_total(ax1_twin, geo_mean_number, 'Geo. Mean (nm)', 'green', t_zero[i])
             ax1_twin.set_ylabel('Geo. mean D$_{p}$ (nm)', color = 'green')
             ax1_twin.tick_params(axis = 'y', labelcolor = 'green')
@@ -559,12 +559,12 @@ def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, total_key, t
 
             # Plot heatmap, total concentration, and geometric mean diameter for mass
             fig2, axes2 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig2, axes2, data[dictkeys[1][i]], df_keys, bin_means, 'mass', time, total_key, None, t_zero[i])
+            plot_timeseries(fig2, axes2, temp_mass, df_keys, bin_means, 'mass', time, total_key, None, t_zero[i])
             axes2[0].set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
             axes2[1].set_ylabel('Total mass conc. ($\mu$g m$^{-3}$)', color = 'purple')
             axes2[1].tick_params(axis = 'y', labelcolor = 'purple')
             ax2_twin = axes2[1].twinx()
-            geo_mean_mass = time_filtered_conc(data[dictkeys[1][i]], ['Geo. Mean (nm)'], time)
+            geo_mean_mass = time_filtered_conc(temp_mass, ['Geo. Mean (nm)'], time)
             plot_total(ax2_twin, geo_mean_mass, 'Geo. Mean (nm)', 'green', t_zero[i])
             ax2_twin.set_ylabel('Geo. mean D$_{p}$ (nm)', color = 'green')
             ax2_twin.tick_params(axis = 'y', labelcolor = 'green')
