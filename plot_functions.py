@@ -67,10 +67,6 @@ def plot_heatmap(ax, df, df_keys, time, bin_means, cutpoint, t_zero):
     # generate 2d meshgrid for the x, y, and z data of the 3D color plot
     y, x = np.meshgrid(bin_means, time)
     
-    # Set the upper and/or lower limit of the color scale based on input
-    y_min = np.nanmin(data)
-    y_max = np.nanmax(data)
-    
     # Fill the generated mesh with particle concentration data
     p1 = ax.pcolormesh(x, y, data, cmap='viridis', shading='nearest', norm=mpl.colors.LogNorm())  # vmin=y_min, vmax=y_max)
 
