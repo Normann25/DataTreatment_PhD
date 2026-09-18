@@ -519,35 +519,31 @@ def plot_AURA_overview(daq, smps, ams, timestamps, bg_timestamps, t_zero, RH, sa
 
     return fig, ax
 
-def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, RH, total_key, t_zero, nrows, ncols, save_path):
-    bin_means = []
-    for key in df_keys:
-        bin_means.append(float(key))
-    
-    running_SMPS = {}
-    for i, time in enumerate(timestamps):
-        if datatype == 'number and mass':
-            temp_number = running_mean(data[dictkeys[0][i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
-            running_SMPS[dictkeys[0][i]] = temp_number
-            temp_mass = running_mean(data[dictkeys[1][i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
-            running_SMPS[dictkeys[1][i]] = temp_mass
-        else:
-            temp = running_mean(data[dictkeys[i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
-            running_SMPS[dictkeys[i]] = temp
-        
+def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, total_key, t_zero, nrows, ncols, save_path):
     fig_run_number, ax_run_number = plt.subplots(nrows, ncols, figsize = (3.5*ncols, 3*nrows))
     if 'mass' in datatype:
         fig_run_mass, ax_run_mass = plt.subplots(nrows, ncols, figsize = (3.5*ncols, 3*nrows))
     fig_mean, ax_mean = plt.subplots(nrows, ncols, figsize = (3.5*ncols, 3*nrows))
     axes_number, axes_mass = [], []
-
-#'Total number conc. (# cm$^{-3}$)')('Total mass conc. ($\mu$g m$^{-3}$)')
-
+    
     for i, time in enumerate(timestamps):
+        df_keys = data[dictkeys[0][i]].keys()[42:-1]
+        bin_means = []
+        for key in df_keys:
+            bin_means.append(float(key))
+
+        if datatype == 'number and mass':
+            running_number = running_mean(data[dictkeys[0][i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
+            running_mass = running_mean(data[dictkeys[1][i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
+        else:
+            running = running_mean(data[dictkeys[i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
+
         if datatype == 'number and mass':
             temp_number, temp_mass = data[dictkeys[0][i]], data[dictkeys[1][i]]
             for key in df_keys:
                 temp_number[key], temp_mass[key] = temp_number[key].replace(0, 10**(-1)).ffill(), temp_mass[key].replace(0, 10**(-3)).ffill()
+
+            # Plot heatmap, total concentration, and geometric mean diameter for number
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
             plot_timeseries(fig1, axes1, data[dictkeys[0][i]], df_keys, bin_means, 'number', time, total_key, None, t_zero[i])
             axes1[0].set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
@@ -560,6 +556,8 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, RH, tot
             ax1_twin.tick_params(axis = 'y', labelcolor = 'green')
             fig1.tight_layout()
             fig1.savefig(f'{save_path}Timeseries_{dictkeys[0][i]}.jpg', dpi = 600)
+
+            # Plot heatmap, total concentration, and geometric mean diameter for mass
             fig2, axes2 = plt.subplots(2, 1, figsize = (6.3, 6))
             plot_timeseries(fig2, axes2, data[dictkeys[1][i]], df_keys, bin_means, 'mass', time, total_key, None, t_zero[i])
             axes2[0].set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
@@ -573,6 +571,7 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, RH, tot
             fig2.tight_layout()
             fig2.savefig(f'{save_path}Timeseries_{dictkeys[1][i]}.jpg', dpi = 600)
 
+            # Plot mean size distributions
             if nrows > 1 or ncols > 1:
                 ax = ax_mean.flatten()[i]
                 ax_number, ax_mass = ax_run_number.flatten()[i], ax_run_mass.flatten()[i]
@@ -584,8 +583,9 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, RH, tot
             axes_number.append(ax3)
             axes_mass.append(ax3_2)
 
-            plot_running_sizedist(fig_run_number, ax_number, running_SMPS[dictkeys[0][i]], bin_means, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
-            plot_running_sizedist(fig_run_mass, ax_mass, running_SMPS[dictkeys[1][i]], bin_means, ['Diameter (nm)', 'dM/dlogDp ($\mu$g m$^{-3}$)'], run_length)
+            # Plot running size distributions
+            plot_running_sizedist(fig_run_number, ax_number, running_number, bin_means, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
+            plot_running_sizedist(fig_run_mass, ax_mass, running_mass, bin_means, ['Diameter (nm)', 'dM/dlogDp ($\mu$g m$^{-3}$)'], run_length)
             ax_number.set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
             ax_mass.set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
 
@@ -618,7 +618,7 @@ def plot_SMPS(data, dictkeys, df_keys, datatype, timestamps, run_length, RH, tot
                 ax.set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
                 axes_number.append(ax2)
 
-                plot_running_sizedist(fig_run_number, ax_number, running_SMPS[dictkeys[i]], bin_means, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
+                plot_running_sizedist(fig_run_number, ax_number, running, bin_means, ['Diameter (nm)', 'dN/dlogDp (# cm$^{-3}$)'], run_length)
                 ax_number.set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
     
     fig_mean.tight_layout()
