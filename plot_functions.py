@@ -523,21 +523,28 @@ def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, total_key, t
     axes_number, axes_mass = [], []
     
     for i, time in enumerate(timestamps):
-        df_keys = data[dictkeys[0][i]].keys()[42:-1]
-        bin_means = []
-        for key in df_keys:
-            bin_means.append(float(key))
-
         if datatype == 'number and mass':
+            df_keys = data[dictkeys[0][i]].keys()[42:-1]
+            
             running_number = running_mean(data[dictkeys[0][i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
             running_mass = running_mean(data[dictkeys[1][i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
         else:
+            df_keys = data[dictkeys[i]].keys()[42:-1]
+
             running = running_mean(data[dictkeys[i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
+
+        bin_means = []
+        for key in df_keys:
+            bin_means.append(float(key))
+        print(df_keys)
+        print(bin_means)
 
         if datatype == 'number and mass':
             temp_number, temp_mass = data[dictkeys[0][i]], data[dictkeys[1][i]]
             for key in df_keys:
                 temp_number[key], temp_mass[key] = temp_number[key].replace(0, 10**(-1)).ffill(), temp_mass[key].replace(0, 10**(-3)).ffill()
+
+            print(temp_number)
 
             # Plot heatmap, total concentration, and geometric mean diameter for number
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
