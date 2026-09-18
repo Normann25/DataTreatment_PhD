@@ -515,7 +515,7 @@ def plot_AURA_overview(daq, smps, ams, timestamps, bg_timestamps, t_zero, RH, sa
 
     return fig, ax
 
-def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, total_key, t_zero, nrows, ncols, save_path):
+def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, t_zero, nrows, ncols, save_path):
     fig_run_number, ax_run_number = plt.subplots(nrows, ncols, figsize = (3.5*ncols, 3*nrows))
     if 'mass' in datatype:
         fig_run_mass, ax_run_mass = plt.subplots(nrows, ncols, figsize = (3.5*ncols, 3*nrows))
@@ -536,19 +536,15 @@ def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, total_key, t
         bin_means = []
         for key in df_keys:
             bin_means.append(float(key))
-        print(df_keys)
-        print(bin_means)
 
         if datatype == 'number and mass':
             temp_number, temp_mass = data[dictkeys[0][i]], data[dictkeys[1][i]]
             for key in df_keys:
                 temp_number[key], temp_mass[key] = temp_number[key].replace(0, 10**(-1)).ffill(), temp_mass[key].replace(0, 10**(-3)).ffill()
 
-            print(temp_number)
-
             # Plot heatmap, total concentration, and geometric mean diameter for number
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig1, axes1, temp_number, df_keys, bin_means, 'number', time, total_key, None, t_zero[i])
+            plot_timeseries(fig1, axes1, temp_number, df_keys, bin_means, 'number', time, 'Total concentration', None, t_zero[i])
             axes1[0].set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
             axes1[1].set_ylabel('Total number conc. (# cm$^{-3}$)', color = 'purple')
             axes1[1].tick_params(axis = 'y', labelcolor = 'purple')
@@ -562,7 +558,7 @@ def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, total_key, t
 
             # Plot heatmap, total concentration, and geometric mean diameter for mass
             fig2, axes2 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig2, axes2, temp_mass, df_keys, bin_means, 'mass', time, total_key, None, t_zero[i])
+            plot_timeseries(fig2, axes2, temp_mass, df_keys, bin_means, 'mass', time, 'Total concentration', None, t_zero[i])
             axes2[0].set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
             axes2[1].set_ylabel('Total mass conc. ($\mu$g m$^{-3}$)', color = 'purple')
             axes2[1].tick_params(axis = 'y', labelcolor = 'purple')
@@ -594,7 +590,7 @@ def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, total_key, t
 
         else:
             fig1, axes1 = plt.subplots(2, 1, figsize = (6.3, 6))
-            plot_timeseries(fig1, axes1, data[dictkeys[i]], df_keys, bin_means, datatype, time, total_key, None, t_zero[i])
+            plot_timeseries(fig1, axes1, data[dictkeys[i]], df_keys, bin_means, datatype, time, 'Total concentration', None, t_zero[i])
             axes1[0].set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
             fig1.tight_layout()
             fig1.savefig(f'{save_path}Timeseries_{dictkeys[i]}.jpg', dpi = 600)
