@@ -621,7 +621,7 @@ def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, t_zero, nrow
                 ax_number.set_title(f'{t_zero[i].split(' ')[0]}, {RH[i]}')
     
     fig_mean.tight_layout()
-    fig_mean.savefig(f'{save_path}SizeDist.jpg', dpi = 600)
+    fig_mean.savefig(f'{save_path}{t_zero[0].split(' ')[0]}_{t_zero[-1].split(' ')[0]}SizeDist.jpg', dpi = 600)
 
     if 'number' in datatype:
         fig_run_number.tight_layout()
