@@ -34,11 +34,12 @@ for key in DAQ.keys():
 save_path = '../../../Figures/Vanillin/2608_Blanks/'
 
 for key in SMPS.keys():
-    SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
-    if '85RH' in key or 'vanillin70ppb' in key:
+    if '85RH' in key and 'number' in key:
         SMPS[key].loc[SMPS[key]['Total concentration'] <= 10, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     if '260908' in key:
         SMPS[key].loc[SMPS[key]['Time'] < pd.to_datetime(t_zero[3]) + pd.Timedelta(minutes = 45), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+    if 'vanillin' in key and 'mass' in key:
+        SMPS[key].loc[SMPS[key]['Geo. Mean (nm)'] > 55, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
 
 RH_mask = DAQ['DataDAQ_260826']['RH_Percent'] > 10
 DAQ['DataDAQ_260826'] = DAQ['DataDAQ_260826'][RH_mask]
@@ -46,8 +47,8 @@ DAQ['DataDAQ_260826'] = DAQ['DataDAQ_260826'][RH_mask]
 ptr_mask = PTRMS['260908_VL+UV_dry_fragments']['m153.059 (C[12]8H[1]9O[16]3) (Conc)'] < 70
 PTRMS['260908_VL+UV_dry_fragments'] = PTRMS['260908_VL+UV_dry_fragments'][ptr_mask]
 
-SMPS_blank = [['20260824_blank_uv_dry_number', '20260827_blank_uv_85RH_number', '20260824_blank_uv_dry_number'],
-             ['20260824_blank_uv_dry_mass', '20260827_blank_uv_85RH_mass', '20260824_blank_uv_dry_mass']]
+SMPS_blank = [['20260824_blank_uv_dry_number', '20260827_blank_uv_85RH_number', '20260828_blank_uv_dry_number'],
+             ['20260824_blank_uv_dry_mass', '20260827_blank_uv_85RH_mass', '20260828_blank_uv_dry_mass']]
 SMPS_rep = [['260908_vanillin+UV_dry_number', '260909_vanillin+UV_85RH_number'],
             ['260908_vanillin+UV_dry_mass', '260909_vanillin+UV_85RH_mass']]
 DAQ_keys = ['DataDAQ_260824', 'DataDAQ_260826', 'DataDAQ_260828', 'DataDAQ_260908', 'DataDAQ_260909']
@@ -57,11 +58,9 @@ SMPS_number = SMPS_blank[0] + SMPS_rep[0]
 for i, time in enumerate(timestamps):
     plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_number[i]], None, time, None, t_zero[i], RH[i], save_path)
 #%%
-ax, ax_2 = plot_SMPS(SMPS, SMPS_blank, SMPS['20260824_blank_uv_dry_mass'].columns[42:-1], 'number and mass', 
-                     timestamps[:3], 10, RH[:3], 'Total concentration', t_zero[:3], 1, 3, save_path)
+ax, ax_2 = plot_SMPS(SMPS, SMPS_rep, 'number and mass', timestamps[3:], 10, RH[3:], t_zero[3:], 1, 2, save_path)
 
-ax, ax_2 = plot_SMPS(SMPS, SMPS_rep, SMPS['260908_vanillin+UV_dry_number'].columns[42:-1], 'number and mass', 
-                     timestamps[3:], 10, RH[3:], 'Total concentration', t_zero[3:], 1, 2, save_path)
+ax, ax_2 = plot_SMPS(SMPS, SMPS_blank, 'number and mass', timestamps[:3], 10, RH[:3], t_zero[:3], 1, 3, save_path)
 #%%
 # PTR-MS decay (no wall loss correction)
 for i, key in enumerate(PTRMS_keys[3:]):  
