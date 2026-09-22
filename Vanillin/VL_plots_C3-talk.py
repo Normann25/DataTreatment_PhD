@@ -184,11 +184,12 @@ fig2, ax2 = plt.subplots(figsize = (6.3, 3.5))
 cmap = mpl.colormaps['viridis']
 colors = cmap(np.linspace(0, 1, 4))
 labels = ['Detection limit', 'Humid', 'Dry']
-time_masks = [50, 100]
+time_masks = [70, 150]
+ls = ['-', '--']
 
 ax.axvspan(0, 240, color = 'yellow', alpha = 0.15, lw = 0, label = 'UV on')
 ax2.axvspan(0, 240, color = 'yellow', alpha = 0.15, lw = 0, label = 'UV on')
-ax.hlines(0.02, -20, 300, color = 'gray', ls = '--', lw = 1, label = 'Detection limit', zorder = 10)
+ax.hlines(0.023, -20, 300, color = 'gray', ls = '--', lw = 1, label = 'Detection limit', zorder = 10)
 
 for i, key in enumerate(AMS_keys):
     ams_bg = time_filtered_conc(AMS[key], ['HROrg'], HEPA_timestamps[i])
@@ -197,7 +198,7 @@ for i, key in enumerate(AMS_keys):
 
     time = (AMS[key]['Time'] - pd.to_datetime(t_zero[i])) / pd.Timedelta(minutes = 1)
 
-    ax.plot(time, AMS[key]['HROrg'], color = colors[i*2], lw = 2, label = labels[i])
+    ax.plot(time, AMS[key]['HROrg'], color = '#00cc00', lw = 2, label = labels[i], ls = ls[i])
 
     ax2.plot(time[OC_mask], AMS[key][OC_mask]['Ratio_O_C'], color = colors[i*2], lw = 2, label = labels[i])
 
@@ -222,3 +223,26 @@ ax2.set(xlim = (-20, 300), ylim = (-0.2, 2))
 
 fig2.tight_layout()
 fig2.savefig(f'{save_path}OC_ratio.jpg', dpi = 600)
+#%%
+print(AMS['260429_AMS_vanillin+UV_85RH_TS'].keys()[:-1])
+#%%
+# AMS van Krevelen
+Org_DL = [0.03, 0.0195]
+titles = ['Humid', 'Dry']
+
+AMS_running = {}
+for i, key in enumerate(AMS_keys):
+    temp = running_mean(AMS[key], AMS[key].keys()[:-1], 'Time', '10min', timestamps[i])
+    temp['Time'] = temp.index
+    temp = temp.reset_index(drop = True)
+
+    fig, ax = vanKrevelen_ts(temp, ['Ratio_H_C', 'Ratio_O_C', 'HROrg'], Org_DL[i], t_zero[i], [t_zero[i], timestamps[i][1]], 10, titles[i])
+    fig.tight_layout()
+
+    AMS_running[key] = temp
+
+fig, ax = plt.subplots(2, 1, figsize = (3.5, 6))
+
+vanKrevelen_multi_exp(ax, AMS_running, AMS_keys, ['Ratio_H_C', 'Ratio_O_C', 'HROrg'], 0.024, timestamps, ['Humid', 'Dry'])
+
+fig.tight_layout()
