@@ -347,14 +347,14 @@ def vanKrevelen_ts(df, df_keys, Org_DL, t_zero, timestamps, run_length, title):
 
     return fig, ax
 
-def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, timestamps, labels):
+def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, Org_DL, timestamps, labels):
     n_exp = len(dict_keys)
     cmap = mpl.colormaps['viridis_r']
     colors = cmap(np.linspace(0, 1, n_exp+1))
     markers = ['o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X']
 
     for i, key in enumerate(dict_keys):
-        conc_mask = data_dict[key][df_keys[2]] >= 0.03 # Based on AMS detection limit for organics (in V-mode)
+        conc_mask = data_dict[key][df_keys[2]] >= Org_DL
         df = data_dict[key][conc_mask]
 
         new_df = time_filtered_conc(df, df_keys, timestamps[i])
