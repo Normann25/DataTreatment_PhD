@@ -76,8 +76,9 @@ def import_AMS(paths, parent_path, hour):
     for path in paths:
         data = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', hour)
         for key in data.keys():
-            if 'PToF' not in key or 'ePToF' not in key or 'MassSpec' not in key:
-                data[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
+            if 'TS' in key:
+                if 'PToF' not in key or 'ePToF' not in key:
+                    data[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
                                      'familyCHN', 'familyCHO1', 'familyCHOgt1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
 
             new_dict[key] = data[key].drop(['t_series'], axis = 1)
