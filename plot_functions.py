@@ -401,7 +401,7 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
     axes[1].plot(UV_on_df['Time'], on_fit, color = 'k', lw = 1.2, ls = '--')
     axes[1].text(0.05, 0.075, f'ln[{labels[0]}] = {on_values[0]:.3f}t + {on_values[1]:.3f}', transform = axes[1].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
     axes[1].set_title('UV on', fontsize = 12)
-    print(f'{t_zero.split(' ')[0]}, {RH}, UV on: ln[{labels[0]}] = {on_values[0]}t + {on_values[1]}')
+    print(f'{t_zero.split(' ')[0]}, {RH}, UV on: ln[{labels[0]}] = ({on_values[0]}+-{on_errors[0]})t + ({on_values[1]}+-{on_errors[1]})')
 
     axes[2].scatter(UV_off_df['Time'], np.log(UV_off_df[parent_compound]), color = scatter_color, s = 10)
     off_values, off_errors, off_ndof, off_squares, off_R2 = linear_fit(UV_off_df['Time'], np.log(UV_off_df[parent_compound]), linear, a = 1, b = 10)
@@ -409,7 +409,7 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
     axes[2].plot(UV_off_df['Time'], off_fit, color = 'k', lw = 1.2, ls = '--')
     axes[2].text(0.05, 0.075, f'ln[{labels[0]}] = {off_values[0]:.3f}t + {off_values[1]:.3f}', transform = axes[2].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
     axes[2].set_title('UV off', fontsize = 12)
-    print(f'{t_zero.split(' ')[0]}, {RH}, UV off: ln[{labels[0]}] = {off_values[0]}t + {off_values[1]}')
+    print(f'{t_zero.split(' ')[0]}, {RH}, UV off: ln[{labels[0]}] = ({off_values[0]}+-{off_errors[0]})t + ({off_values[1]}+-{off_errors[1]})')
 
     for ax in axes[1:]:
         ax.set(xlabel = 'Time (min)', ylabel = f'ln[{labels[0]}]')
