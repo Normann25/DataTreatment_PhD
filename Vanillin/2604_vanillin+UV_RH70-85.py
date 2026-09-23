@@ -180,9 +180,38 @@ for i, key in enumerate(PTRMS_keys[:2]):
     fig.tight_layout()
     fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_PTRMS_initial.jpg', dpi = 600)
 #%%
-decays_minutes = np.array([0.001745234872389867, 0.00013875589631456853, 0.00184678401616728, 0.00015147742025972688])
+decays_minutes = np.array([0.00175, 0.000139, 0.00185, 0.000151])
+errors_minutes = np.array([0.00106, 0.00980, 0.00106, 0.00784])
+
 decays_seconds = decays_minutes / 60
+errors_seconds = errors_minutes / 60
 print(decays_seconds)
+print(errors_seconds)
+
+from sympy import *
+# Define variables
+k1, k2, k_mean = symbols('k1, k2, k_mean')
+dk1, dk2, dk_mean = symbols('sigma_k1, sigma_k2, sigma_k_mean')
+
+# Define relation
+k_mean = (k1 + k2) / 2
+
+# Calculate uncertainty
+dk_mean = sqrt((k_mean.diff(k1) * dk1)**2 + (k_mean.diff(k2) * dk2)**2)
+
+# Turn expressions into numerical functions
+fk_mean = lambdify((k1, k2), k_mean)
+fdk_mean = lambdify((k1, dk1, k2, dk2), dk_mean)
+
+for i in range(2):
+    # Define values and their errors
+    vk1, vdk1 = decays_seconds[i], errors_seconds[i]
+    vk2, vdk2 = decays_seconds[i+2], errors_seconds[i+2]
+
+    # Numerically evaluate expressions
+    vk_mean = fk_mean(vk1, vk2)
+    vdk_mean = fdk_mean(vk1, vdk1, vk2, vdk2)
+    print(f'k_mean = {vk_mean} +- {vdk_mean}')
 #%%
 # AMS and PTR-MS carbon oxidation state
 COS_ylim = [(-1, 0), (-1.2, -0.2)]
