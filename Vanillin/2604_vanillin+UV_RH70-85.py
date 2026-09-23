@@ -6,6 +6,7 @@ from plot_functions import *
 from calculations import *
 from grouping import *
 plt.style.use('../Style.mplstyle')
+plt.rcParams['font.family'] = 'Arial'
 import warnings
 warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
@@ -34,6 +35,7 @@ SMPS_keys = [['260427_vanillin+UV_RH70_number', '260428_vanillin+UV_RH70_number'
              ['260427_vanillin+UV_RH70_mass', '260428_vanillin+UV_RH70_mass', '260429_vanillin+UV_RH85_mass', '260430_vanillin+UV_RH85_mass']]
 AMS_keys = ['260427_AMS_vanillin+UV_70RH_TS', '260428_AMS_vanillin+UV_70RH_TS', '260429_AMS_vanillin+UV_85RH_TS', '260430_AMS_vanillin+UV_85RH_TS']
 DAQ_keys = ['DataDAQ_260427', 'DataDAQ_260428', 'DataDAQ_260429', 'DataDAQ_260430']
+PTRMS_keys = ['260429_VL+UV_RH85_fragments', '260430_VL+UV_RH85_fragments', '260429_VL+UV_RH85_all', '260430_VL+UV_RH85_all']
 
 # Exp relative humidity
 RH = ['70% RH', '70% RH', '85% RH', '85% RH']
@@ -55,13 +57,18 @@ for i, key in enumerate(np.array(SMPS_keys).flatten()):
     if 'number' in key:
         temp.loc[temp['Total concentration'] <= 2, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     SMPS[key] = temp
-for key in PTRMS.keys():
-    if 'fragments' in key or 'all' in key:
+for i, key in enumerate(PTRMS_keys):
+    if 'fragments' in key:
         mask = (0 < PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
-        PTRMS[key] = PTRMS[key][mask]
-
-for key in SMPS.keys():
-    print(SMPS[key]['Total concentration'])
+        temp = PTRMS[key][mask]
+        temp = wall_loss_corr(temp, ['m153.061 (C[12]8H[1]9O[16]3) (Conc)'], t_zero[i+2], 
+                              [pd.to_datetime(t_UV_off[i+2]) + pd.Timedelta(minutes = 10), timestamps[i+2][1]])
+    if 'all' in key:
+        mask = (0 < PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
+        temp = PTRMS[key][mask]
+        temp = wall_loss_corr(temp, ['m153.061 (C[12]8H[1]9O[16]3) (Conc)'], t_zero[i], 
+                              [pd.to_datetime(t_UV_off[i]) + pd.Timedelta(minutes = 10), timestamps[i][1]])
+    PTRMS[key] = temp
 
 # PTR-MS H:C and O:C calculation
 bg_timestamps = [['2026-04-29 09:50', '2026-04-29 10:02'],
@@ -112,7 +119,7 @@ for time, key in zip(t_zero[2:], AMS_keys[2:]):
 # PTR-MS VL concentration and chamber temperature
 ylim = [(50, 72), (38, 51)]
 
-for i, key in enumerate(['260429_VL+UV_RH85_fragments', '260430_VL+UV_RH85_fragments']):
+for i, key in enumerate(PTRMS_keys[:2]):
     PTR_df = time_filtered_conc(PTRMS[key], ['m153.061 (C[12]8H[1]9O[16]3) (Conc)'], timestamps[i+2])
     DAQ_df = time_filtered_conc(DAQ[DAQ_keys[i+2]], ['Temp_C'], timestamps[i+2])
 
@@ -164,7 +171,8 @@ for i, key in enumerate(['260429_VL+UV_RH85_OC-HC', '260430_VL+UV_RH85_OC-HC']):
     fig.tight_layout(pad = 0.75)
     fig.savefig(f'{save_path}{timestamps[i+2][0].split(' ')[0]}_vanKrevelen_PTRMS.jpg', dpi = 600)
 #%%
-for i, key in enumerate(['260429_VL+UV_RH85_fragments', '260430_VL+UV_RH85_fragments']):
+# PTR-MS decay (wall loss corrected)
+for i, key in enumerate(PTRMS_keys[:2]):
     fig, ax = plot_PTRMS_decay(PTRMS[key], 'm153.061 (C[12]8H[1]9O[16]3) (Conc)', list(PTRMS[key].keys()[:-2]), 
                                ['C$_{8}$H$_{8}$O$_{3}$H$^{+}$', 'C$_{5}$H$_{4}$H$^{+}$', 'C$_{6}$H$_{5}$O$_{2}$H$^{+}$', 
                                 'C$_{6}$H$_{6}$O$_{2}$H$^{+}$', 'C$_{7}$H$_{8}$O$_{2}$H$^{+}$', 'C$_{8}$H$_{6}$O$_{3}$H$^{+}$'], 
@@ -172,24 +180,7 @@ for i, key in enumerate(['260429_VL+UV_RH85_fragments', '260430_VL+UV_RH85_fragm
     fig.tight_layout()
     fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_PTRMS_initial.jpg', dpi = 600)
 #%%
-# PTR-MS decay (wall loss corrected)
-wall_loss = [0.0006446245895402325, 0.0004942765846080444]
-
-for i, key in enumerate(['260429_VL+UV_RH85_fragments', '260430_VL+UV_RH85_fragments']):
-    time_minutes = (PTRMS[key]['Time'] - pd.to_datetime(t_zero[i+2])) / pd.Timedelta(minutes = 1)
-    to_replace = [t for t in time_minutes if t < 0]
-    time_minutes = time_minutes.replace(to_replace, 0)
-
-    PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] = PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] + time_minutes*wall_loss[i]*PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)']
-    
-    fig, ax = plot_PTRMS_decay(PTRMS[key], 'm153.061 (C[12]8H[1]9O[16]3) (Conc)', list(PTRMS[key].keys()[:-2]), 
-                               ['C$_{8}$H$_{8}$O$_{3}$H$^{+}$', 'C$_{5}$H$_{4}$H$^{+}$', 'C$_{6}$H$_{5}$O$_{2}$H$^{+}$', 
-                                'C$_{6}$H$_{6}$O$_{2}$H$^{+}$', 'C$_{7}$H$_{8}$O$_{2}$H$^{+}$', 'C$_{8}$H$_{6}$O$_{3}$H$^{+}$'], 
-                               t_zero[i+2], t_UV_off[i+2], timestamps[i+2][1], RH[i+2])
-    fig.tight_layout()
-    fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_PTRMS_VLdecay_wall-loss-corrected.jpg', dpi = 600)
-#%%
-decays_minutes = np.array([0.0015498450850007783, 9.553880394080894e-05, 0.0015976754392935666, 5.9092508593650006e-05])
+decays_minutes = np.array([0.001745234872389867, 0.00013875589631456853, 0.00184678401616728, 0.00015147742025972688])
 decays_seconds = decays_minutes / 60
 print(decays_seconds)
 #%%
