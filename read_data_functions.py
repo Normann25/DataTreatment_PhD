@@ -81,7 +81,8 @@ def import_AMS(paths, parent_path, hour):
                     data[key].columns = ['t_series', 'HROrg', 'HRNO3', 'HRSO4', 'HRNH4', 'HRChl', 'Ratio_H_C', 'Ratio_O_C', 
                                      'familyCHN', 'familyCHO1', 'familyCHOgt1', 'familyCHO1N', 'familyCH', 'f43', 'f44', 'Time']
 
-                new_dict[key] = data[key].drop(['t_series'], axis = 1)
+                data[key] = data[key].drop(['t_series'], axis = 1)
+            new_dict[key] = data[key]
 
     return new_dict
 
