@@ -91,6 +91,43 @@ def remove_spikes_down(df, df_keys, value):
 
     return df
 
+def wall_loss_corr(df, keys, t_zero, t_loss):
+    """
+    Wall loss correction of AURA data
+
+    Parameters
+    ----------
+    df: pandas DataFrame
+        DataFrame containing timeseries
+
+    keys: DataFrame keys
+        Name of specific timeseries the wall loss correction should be applied to
+    
+    t_zero: string
+        Timestamp for beginning of particle formation
+    
+    t_loss: list of strings
+        Timestamp of when wall loss measurements begin and of when experiment ended
+    """
+    new_df = pd.DataFrame({'Time': df['Time']})
+
+    loss_df = time_filtered_conc(df, keys, t_loss)
+    loss_df['Time'] = (loss_df['Time']- pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+
+    time_minutes = (df['Time'] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+    to_replace = [t for t in time_minutes if t < 0]
+    time_minutes = time_minutes.replace(to_replace, 0)
+
+    for key in keys:
+        wall_loss, error, ndof, squares, R2 = linear_fit(loss_df['Time'], np.log(loss_df[key]), linear, a = 1, b = 10)
+
+        yIntegral = np.cumsum(df[key])
+        tDiff = np.mean(np.diff(time_minutes)) 
+        yCorr = df[key] + yIntegral*(-wall_loss[0])*tDiff
+        new_df[key] = yCorr
+
+    return new_df
+
 def time_filtered_conc(df, df_keys, timestamps):
     start_time, end_time = pd.to_datetime(timestamps[0]), pd.to_datetime(timestamps[1])
     time = pd.to_datetime(df['Time'])
