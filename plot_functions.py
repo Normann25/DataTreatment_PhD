@@ -386,10 +386,12 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
         plot_total(axes[0], df, parent_compound, 'indigo', t_zero)
     axes[0].set(title = f'{t_zero.split(' ')[0]}, {RH}', ylabel = 'Concentration (ppb)')
     
-    UV_on_df = running_mean(df, [parent_compound], 'Time', '1min', [t_zero, ts_UV_off])
+    UV_on_df = running_mean(df, [parent_compound], 'Time', '1min', 
+                            [pd.to_datetime(t_zero) + pd.Timedelta(minutes = 10), pd.to_datetime(ts_UV_off) - pd.Timedelta(minutes = 5)])
     UV_on_df['Time'] = (UV_on_df.index - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
     UV_on_df = UV_on_df.reset_index(drop = True)
-    UV_off_df = running_mean(df, [parent_compound], 'Time', '1min', [ts_UV_off, ts_exp_end])
+    UV_off_df = running_mean(df, [parent_compound], 'Time', '1min', 
+                             [pd.to_datetime(ts_UV_off) + pd.Timedelta(minutes = 10), ts_exp_end])
     UV_off_df['Time'] = (UV_off_df.index - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
     UV_off_df = UV_off_df.reset_index(drop = True)
 
