@@ -6,6 +6,7 @@ from plot_functions import *
 from calculations import *
 from grouping import *
 plt.style.use('../Style.mplstyle')
+plt.rcParams['font.family'] = 'Arial'
 import warnings
 warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
@@ -33,6 +34,7 @@ SMPS_keys = [['260421_vanillin+UV_dry_number', '260422_vanillin+UV_dry_number', 
              ['260421_vanillin+UV_dry_mass', '260422_vanillin+UV_dry_mass', '260501_vanillin+UV_dry_mass', '260504_vanillin+UV_dry_mass']]
 AMS_keys = ['260421_AMS_vanillin+UV_dry_TS', '260422_AMS_vanillin+UV_dry_TS', '260501_AMS_vanillin+UV_dry_TS', '260504_AMS_vanillin+UV_dry_TS']
 DAQ_keys = ['DataDAQ_260421', 'DataDAQ_260422', 'DataDAQ_260501', 'DataDAQ_260504']
+PTRMS_keys = ['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragments', '260501_VL+UV_dry_all', '260504_VL+UV_dry_all']
 
 # Read data
 SMPS = {}
@@ -53,10 +55,18 @@ for i, key in enumerate(np.array(SMPS_keys).flatten()):
     temp = remove_spikes_down(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 50)
     temp.rename(columns = {temp.columns[38]:'Total concentration'}, inplace = True)
     SMPS[key] = temp
-for key in PTRMS.keys():
-    if 'fragments' in key or 'all' in key or 'filtered' in key:
+for i, key in enumerate(PTRMS_keys):
+    if 'fragments' in key:
         mask = (0 < PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
-        PTRMS[key] = PTRMS[key][mask]
+        temp = PTRMS[key][mask]
+        temp = wall_loss_corr(temp, ['m153.060 (C[12]8H[1]9O[16]3) (Conc)'], t_zero[i+2], 
+                              [pd.to_datetime(t_UV_off[i]) + pd.Timedelta(minutes = 10), timestamps[i+2][1]])
+    if 'all' in key:
+        mask = (0 < PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
+        temp = PTRMS[key][mask]
+        temp = wall_loss_corr(temp, ['m153.060 (C[12]8H[1]9O[16]3) (Conc)'], t_zero[i], 
+                              [pd.to_datetime(t_UV_off[i-2]) + pd.Timedelta(minutes = 10), timestamps[i][1]])
+    PTRMS[key] = temp
 for key in DAQ.keys():
     DAQ[key] = remove_spikes(DAQ[key], ['Temp_C', 'RH_Percent'], 5)
 
@@ -137,7 +147,7 @@ for time, key in zip(t_zero[2:], AMS_keys[2:]):
 # PTR-MS VL concentration and chamber temperature
 ylim = [(45, 65), (60, 90)]
 
-for i, key in enumerate(['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragments']):
+for i, key in enumerate(PTRMS_keys[:2]):
     PTR_df = time_filtered_conc(PTRMS[key], ['m153.060 (C[12]8H[1]9O[16]3) (Conc)'], timestamps[i+2])
     DAQ_df = time_filtered_conc(DAQ[DAQ_keys[i+2]], ['Temp_C'], timestamps[i+2])
 
@@ -256,8 +266,8 @@ for i, key in enumerate(['260501_VL+UV_dry_OC-HC', '260504_VL+UV_dry_OC-HC']):
     fig2.tight_layout(pad = 0.75)
     fig2.savefig(f'{save_path}{timestamps[i+2][0].split(' ')[0]}_vanKrevelen_PTRMS_filtered.jpg', dpi = 600)
 #%%
-# PTR-MS decay (no wall loss correction)
-for i, key in enumerate(['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragments']):  
+# PTR-MS decay (wall loss corrected)
+for i, key in enumerate(PTRMS_keys[:2]):  
     fig, ax = plot_PTRMS_decay(PTRMS[key], 'm153.060 (C[12]8H[1]9O[16]3) (Conc)', list(PTRMS[key].keys()[:-2]), 
                                ['C$_{8}$H$_{8}$O$_{3}$H$^{+}$', 'C$_{5}$H$_{4}$H$^{+}$', 'C$_{7}$H$_{6}$O$_{2}$H$^{+}$', 
                                 'C$_{7}$H$_{8}$O$_{2}$H$^{+}$', 'C$_{7}$H$_{5}$O$_{3}$H$^{+}$', 'C$_{8}$H$_{6}$O$_{3}$H$^{+}$'], 
@@ -265,26 +275,39 @@ for i, key in enumerate(['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragmen
     fig.tight_layout()
     fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_PTRMS_initial.jpg', dpi = 600)
 #%%
-# PTR-MS decay (wall loss corrected)
-wall_loss = [0.001150, 0.001086]
-
-for i, key in enumerate(['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragments']):
-    time_minutes = (PTRMS[key]['Time'] - pd.to_datetime(t_zero[i+2])) / pd.Timedelta(minutes = 1)
-    to_replace = [t for t in time_minutes if t < 0]
-    time_minutes = time_minutes.replace(to_replace, 0)
-
-    PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] = PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] + time_minutes*wall_loss[i]*PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)']
-    
-    fig, ax = plot_PTRMS_decay(PTRMS[key], 'm153.060 (C[12]8H[1]9O[16]3) (Conc)', list(PTRMS[key].keys()[:-2]), 
-                               ['C$_{8}$H$_{8}$O$_{3}$H$^{+}$', 'C$_{5}$H$_{4}$H$^{+}$', 'C$_{7}$H$_{6}$O$_{2}$H$^{+}$', 
-                                'C$_{7}$H$_{8}$O$_{2}$H$^{+}$', 'C$_{7}$H$_{5}$O$_{3}$H$^{+}$', 'C$_{8}$H$_{6}$O$_{3}$H$^{+}$'], 
-                               t_zero[i+2], t_UV_off[i], timestamps[i+2][1], 'Dry')
-    fig.tight_layout()
-    fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_PTRMS_VLdecay_wall-loss-corrected.jpg', dpi = 600)
 #%%
-decays_minutes = np.array([0.0010559449780166985, 0.00027258228496152004, 0.0008375560255074466, 0.0002468836583012779])
+decays_minutes = np.array([0.00123, 0.000258, 0.00102, 0.000223])
+errors_minutes = np.array([0.00103, 0.00980, 0.00105, 0.00980])
+
 decays_seconds = decays_minutes / 60
+errors_seconds = errors_minutes / 60
 print(decays_seconds)
+print(errors_seconds)
+
+from sympy import *
+# Define variables
+k1, k2, k_mean = symbols('k1, k2, k_mean')
+dk1, dk2, dk_mean = symbols('sigma_k1, sigma_k2, sigma_k_mean')
+
+# Define relation
+k_mean = (k1 + k2) / 2
+
+# Calculate uncertainty
+dk_mean = sqrt((k_mean.diff(k1) * dk1)**2 + (k_mean.diff(k2) * dk2)**2)
+
+# Turn expressions into numerical functions
+fk_mean = lambdify((k1, k2), k_mean)
+fdk_mean = lambdify((k1, dk1, k2, dk2), dk_mean)
+
+for i in range(2):
+    # Define values and their errors
+    vk1, vdk1 = decays_seconds[i], errors_seconds[i]
+    vk2, vdk2 = decays_seconds[i+2], errors_seconds[i+2]
+
+    # Numerically evaluate expressions
+    vk_mean = fk_mean(vk1, vk2)
+    vdk_mean = fdk_mean(vk1, vdk1, vk2, vdk2)
+    print(f'k_mean = {vk_mean} +- {vdk_mean}')
 #%%
 # AMS and PTR-MS carbon oxidation state
 for i, keys in enumerate([['260501_AMS_vanillin+UV_dry_TS', '260501_VL+UV_dry_OC-HC'],
