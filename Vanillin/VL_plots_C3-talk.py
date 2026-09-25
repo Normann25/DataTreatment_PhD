@@ -31,36 +31,45 @@ HEPA_timestamps = [['2026-04-29 08:40', '2026-04-29 09:00'],
 SMPS_keys = ['260429_vanillin+UV_RH85_number', '260504_vanillin+UV_dry_number']
 AMS_keys = ['260429_AMS_vanillin+UV_85RH_TS', '260504_AMS_vanillin+UV_dry_TS']
 PTRMS_keys = [['260429_VL+UV_RH85_fragments', 'm153.061 (C[12]8H[1]9O[16]3) (Conc)'],
-              ['260504_VL+UV_dry_fragments', 'm153.060 (C[12]8H[1]9O[16]3) (Conc)']]
+              ['260504_VL+UV_dry_fragments', 'm153.060 (C[12]8H[1]9O[16]3) (Conc)'],
+              ['260429_VL+UV_RH85_all', 'm153.061 (C[12]8H[1]9O[16]3) (Conc)'],
+              ['260504_VL+UV_dry_all', 'm153.060 (C[12]8H[1]9O[16]3) (Conc)']]
 
 # Read data
 SMPS = {}
 SMPS_raw = import_SMPS(paths, parent_path, 0)
 PTRMS = import_PTRMS(paths, parent_path)
 AMS = import_AMS(paths, parent_path, 0)
-for t, key in zip(t_zero, SMPS_keys):
+for i, key in enumerate(SMPS_keys):
     temp = SMPS_raw[key]
-    temp.loc[temp['Time'] < pd.to_datetime(t), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+    temp.loc[temp['Time'] < pd.to_datetime(t_zero[i]), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     temp.loc[temp[temp.keys()[38]] <= 6, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+    temp = wall_loss_corr(temp, ['Total concentration'], t_zero[i], [t_off[i], timestamps[i][1]])
     SMPS[key] = temp
-for key in PTRMS.keys():
-    if 'fragments' in key or 'all' in key:
-        try:
-            mask = (0 < PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.060 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
-        except KeyError:
-            mask = (0 < PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)']) & (PTRMS[key]['m153.061 (C[12]8H[1]9O[16]3) (Conc)'] < 90)
-    PTRMS[key] = PTRMS[key][mask]
-
-wall_loss = [0.0006446245895402325, 0.001086]
-
-for i, keys in enumerate(PTRMS_keys):
-    time_minutes = (PTRMS[keys[0]]['Time'] - pd.to_datetime(t_zero[i])) / pd.Timedelta(minutes = 1)
-    to_replace = [t for t in time_minutes if t < 0]
-    time_minutes = time_minutes.replace(to_replace, 0)
-
-    PTRMS[keys[0]][keys[1]] = PTRMS[keys[0]][keys[1]] + time_minutes*wall_loss[i]*PTRMS[keys[0]][keys[1]]
+for i, key in enumerate(PTRMS_keys):
+    if 'fragments' in key[0]:
+        mask = (0 < PTRMS[key[0]][key[1]]) & (PTRMS[key[0]][key[1]] < 90)
+        temp = PTRMS[key[0]][mask]
+        temp = wall_loss_corr(temp, [key[1]], t_zero[i], [t_off[i], timestamps[i][1]])
+    if 'all' in key[0]:
+        mask = (0 < PTRMS[key[0]][key[1]]) & (PTRMS[key[0]][key[1]] < 90)
+        temp = PTRMS[key[0]][mask]
+        temp = wall_loss_corr(temp, [key[1]], t_zero[i-2], [t_off[i-2], timestamps[i-2][1]])
+    PTRMS[key[0]] = temp
+for i, key in enumerate(AMS_keys):
+    df_keys = AMS[key].keys()[:5].to_list() + AMS[key].keys()[7:12].to_list()
+    temp = wall_loss_corr(AMS[key], df_keys, t_zero[i], [t_off[i], timestamps[i][1]])
+    AMS[key] = temp
 #%%
-# PTR-MS decay
+mean_conc = []
+for i, key in enumerate(AMS_keys):
+    df = time_filtered_conc(AMS[key], ['HROrg'], [t_off[i], timestamps[i][1]])
+    mean_conc.append(df['HROrg'].mean())
+
+print(mean_conc)
+print(mean_conc[0]/mean_conc[1])
+#%%
+# PTR-MS VL timeseries
 fig, ax = plt.subplots(figsize = (6.3, 3.5))
 cmap = mpl.colormaps['viridis']
 colors = cmap(np.linspace(0, 1, 4))
@@ -70,7 +79,7 @@ ax.axvspan(-175, -120, color = 'blue', alpha = 0.15, lw = 0, label = 'Humidifica
 ax.axvspan(-105, -25, color = 'gray', alpha = 0.15, lw = 0, label = 'Injection')
 ax.axvspan(0, 240, color = 'yellow', alpha = 0.15, lw = 0, label = 'UV on')
 
-for i, key in enumerate(PTRMS_keys):
+for i, key in enumerate(PTRMS_keys[:2]):
     temp = running_mean(PTRMS[key[0]], [key[1]], 'Time', '1min', None)
     time = (temp.index - pd.to_datetime(t_zero[i])) / pd.Timedelta(minutes = 1)
 
@@ -86,6 +95,9 @@ ax.set(ylim = (0, 95))
 
 fig.tight_layout()
 fig.savefig(f'{save_path}VL-decay.jpg', dpi = 600)
+#%%
+# PTR-MS VL decay
+
 #%%
 # PTR-MS concentration vs. m/z
 PTR_products = [[113.059, 139.039, 141.055, 143.034, 169.049, 183.029],
@@ -142,6 +154,7 @@ for i, key in enumerate(['260429_VL+UV_RH85_products', '260504_VL+UV_dry_product
 # SMPS
 fig, ax = plt.subplots(figsize = (6.3, 3.5))
 fig2, ax2 = plt.subplots(figsize = (6.3, 3.5))
+formation_start = [25, 50]
 cmap = mpl.colormaps['viridis']
 colors = cmap(np.linspace(0, 1, 4))
 labels = ['Humid', 'Dry']
@@ -173,7 +186,7 @@ ax2.legend(handles = handles[1:], labels = labels, fontsize = 12)
 ax2.tick_params(axis = 'both', labelsize = 12)
 ax2.set_ylabel('Number conc. (cm$^{-3}$)', fontsize = 16)
 ax2.set_xlabel('Time (min)', fontsize = 16)
-ax2.set(xlim = (-20, 300))
+ax2.set(xlim = (-20, 300), ylim = (0, 3.8*10**4))
 
 fig2.tight_layout()
 fig2.savefig(f'{save_path}Total_conc_number.jpg', dpi = 600)
@@ -181,6 +194,7 @@ fig2.savefig(f'{save_path}Total_conc_number.jpg', dpi = 600)
 # AMS
 fig, ax = plt.subplots(figsize = (6.3, 3.5))
 fig2, ax2 = plt.subplots(figsize = (6.3, 3.5))
+formation_start = [55, 110]
 cmap = mpl.colormaps['viridis']
 colors = cmap(np.linspace(0, 1, 4))
 labels = ['Detection limit', 'Humid', 'Dry']
@@ -208,7 +222,7 @@ ax.legend(handles = handles[1:], labels = labels, fontsize = 12)
 ax.tick_params(axis = 'both', labelsize = 12)
 ax.set_ylabel('SOA mass ($\mu$g m$^{-3}$)', fontsize = 16)
 ax.set_xlabel('Time (min)', fontsize = 16)
-ax.set(xlim = (-20, 300))
+ax.set(xlim = (-20, 300), ylim = (0, 2.2))
 
 fig.tight_layout()
 fig.savefig(f'{save_path}SOA_mass.jpg', dpi = 600)
@@ -219,12 +233,63 @@ ax2.legend(handles = handles[1:], labels = labels[1:], fontsize = 12)
 ax2.tick_params(axis = 'both', labelsize = 12)
 ax2.set_ylabel('O:C ratio', fontsize = 16)
 ax2.set_xlabel('Time (min)', fontsize = 16)
-ax2.set(xlim = (-20, 300), ylim = (-0.2, 2))
+ax2.set(xlim = (-20, 300), ylim = (0, 1.5))
 
 fig2.tight_layout()
 fig2.savefig(f'{save_path}OC_ratio.jpg', dpi = 600)
 #%%
-print(AMS['260429_AMS_vanillin+UV_85RH_TS'].keys()[:-1])
+# AMS mass spectra
+AMS_MS_keys = [['260429_AMS_vanillin+UV_85RH_MassSpec_120min', '260429_AMS_vanillin+UV_85RH_MassSpec_180min', '260429_AMS_vanillin+UV_85RH_MassSpec_240min'],
+               ['260504_AMS_vanillin+UV_dry_MassSpec_120min', '260504_AMS_vanillin+UV_dry_MassSpec_180min', '260504_AMS_vanillin+UV_dry_MassSpec_240min']]
+
+def plot_AMS_mass_spec(data, dict_keys, scaling, save_path):
+    nrows = len(dict_keys)
+
+    colors = ['#009900', '#7f0073', '#ff00e6', '#9039e6', '#205f7f']    # CH, CHO1, CHOgt1, CHN, CHO1N
+    labels = ['C$_{x}$H$_{y}$', 'C$_{x}$H$_{y}$O$_{1}$', 'C$_{x}$H$_{y}$O$_{>1}$', 'C$_{x}$H$_{y}$N$_{z}$', 'C$_{x}$H$_{y}$O$_{1}$N$_{z}$']
+
+    fig, axes = plt.subplots(nrows, 1, figsize = (7, 2*nrows))
+
+    for i, key in enumerate(dict_keys):      
+        df = data[key].copy().fillna(0)
+        for column in df.keys()[1:]:
+            df.loc[df[column] < 0, [column]] = 0
+
+        axes[i].text(0.02, 0.85, f'{key.split('_')[-1]}', transform = axes[i].transAxes)
+
+        baseline = np.zeros((len(df[df.keys()[0]])))
+
+        normalize = df[df.keys()[1:]].sum()
+
+        scaled = df[df.keys()[0]] >= 60
+        scaled_df = df[scaled]
+
+        inset_ax = inset_axes(axes[i],
+                              width = 3.5, 
+                              height = 0.6,
+                              loc = 'upper right',
+                              bbox_to_anchor = (0.97, 0.9, 0, 0),
+                              bbox_transform = axes[i].transAxes)
+
+        for j, column in enumerate(df.keys()[1:]):
+            df[column] = df[column] / sum(normalize)
+            scaled_df[column] = scaled_df[column] / sum(normalize)
+
+            axes[i].bar(df[df.keys()[0]], df[column], 0.75, color = colors[j], label = labels[j], bottom = baseline)
+            inset_ax.bar(scaled_df[df.keys()[0]], scaled_df[column], 0.75, color = colors[j], label = labels[j], bottom = baseline[59:])
+
+            baseline += df[column]
+
+        axes[i].set(xlabel = 'm/z', ylabel = 'Relative intensity')
+
+    axes[0].legend(ncols = len(labels), bbox_to_anchor = (1, 1.25, 0, 0))
+    fig.tight_layout()
+    fig.savefig(f'{save_path}{dict_keys[0].split('_')[0]}_AMS_MassSpec.jpg', dpi = 600)
+
+    return fig, ax
+
+for dict_keys in AMS_MS_keys:
+    fig, ax = plot_AMS_mass_spec(AMS, dict_keys, 5, save_path)
 #%%
 # AMS van Krevelen
 Org_DL = [0.03, 0.0195]
