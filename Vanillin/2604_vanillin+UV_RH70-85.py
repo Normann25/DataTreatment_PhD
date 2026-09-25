@@ -76,6 +76,8 @@ bg_timestamps = [['2026-04-29 09:50', '2026-04-29 10:02'],
 for i, key in enumerate(['260429_VL+UV_RH85_all', '260430_VL+UV_RH85_all']):
     PTRMS[f'{key.split('_')[0]}_VL+UV_RH85_OC-HC'] = calc_OC_HC_PTRMS(PTRMS[key], bg_timestamps[i])
 #%%
+print(len(PTRMS['260429_VL+UV_RH85_products'].keys()))
+#%%
 # Experiment overview
 for i, time in enumerate(timestamps):
     fig, ax = plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, HEPA_timestamps[i], t_zero[i], RH[i], save_path)
