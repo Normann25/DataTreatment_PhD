@@ -275,7 +275,6 @@ for i, key in enumerate(PTRMS_keys[:2]):
     fig.tight_layout()
     fig.savefig(f'{save_path}{t_zero[i+2].split(' ')[0]}_PTRMS_initial.jpg', dpi = 600)
 #%%
-#%%
 decays_minutes = np.array([0.00123, 0.000258, 0.00102, 0.000223])
 errors_minutes = np.array([0.00103, 0.00980, 0.00105, 0.00980])
 
