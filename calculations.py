@@ -150,7 +150,8 @@ def running_mean(df, concentration, timelabel, interval, timestamps):
         df = df.set_index(timelabel)
 
         # Resample the data to bins 
-        new_df = df[concentration].resample(interval).mean() 
+        mean_df = df[concentration].resample(interval).mean()
+        std_df =  df[concentration].resample(interval).std()
 
     else:
         new_df = pd.DataFrame()
@@ -182,9 +183,10 @@ def running_mean(df, concentration, timelabel, interval, timestamps):
         new_df = new_df.set_index('Timestamp')
 
         # Resample the data to bins 
-        new_df = new_df.resample(interval).mean() 
+        mean_df = new_df.resample(interval).mean() 
+        std_df = new_df.resample(interval).std() 
 
-    return new_df
+    return mean_df, std_df
 
 def bin_mean(timestamps, df, df_keys, timelabel):
     mean = np.zeros(len(df_keys))
