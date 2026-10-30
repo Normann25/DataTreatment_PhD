@@ -43,3 +43,11 @@ ax_Cresol.legend(['o-Cresol w. m/z 110', 'o-Cresol w. m/z 111'])
 ax_Cresol.set(ylabel = 'o-Cresol conc (ppb)')
 fig_Cresol.tight_layout()
 # %%
+stabilization_time = [['2026-06-30 14:00', '2026-06-30 14:10'],
+                      ['2026-07-14 11:44', '2026-07-14 11:54']]
+
+for dict_key, df_key, time in zip(PTRMS.keys(), df_keys, stabilization_time):
+    temp = time_filtered_conc(PTRMS[dict_key], df_key, time)
+    for key in df_key:
+        conc = temp[key].mean()
+        print(f'{key}: {conc} ppb')
