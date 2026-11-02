@@ -20,8 +20,9 @@ print(PTRMS.keys())
 PTRMS['2026-06-30_3MC_traces']['3MC (ppb)'] = PTRMS['2026-06-30_3MC_traces'].iloc[:, :-1].sum(axis = 1)
 PTRMS['2026-07-14_o-Cresol_traces']['o-Cresol 110 (ppb)'] = PTRMS['2026-07-14_o-Cresol_traces'].iloc[:, [0, 2, 3]].sum(axis = 1)
 PTRMS['2026-07-14_o-Cresol_traces']['o-Cresol 111 (ppb)'] = PTRMS['2026-07-14_o-Cresol_traces'].iloc[:, 1:-2].sum(axis = 1)
+PTRMS['2026-07-08_Toluene_traces']['Toluene (ppb)'] = PTRMS['2026-07-08_Toluene_traces'].iloc[:, :-1].sum(axis = 1)
 
-df_keys = [['3MC (ppb)'], ['o-Cresol 110 (ppb)', 'o-Cresol 111 (ppb)']]
+df_keys = [['3MC (ppb)'], ['Toluene (ppb)'], ['o-Cresol 110 (ppb)', 'o-Cresol 111 (ppb)']]
 for dict_key, df_key in zip(PTRMS.keys(), df_keys):
     temp, temp_std = running_mean(PTRMS[dict_key], df_key, 'Time', '1min', None)
     for key in temp_std.keys():
@@ -42,12 +43,20 @@ plot_total(ax_Cresol, PTRMS['2026-07-14_o-Cresol_traces'], 'o-Cresol 111 (ppb)',
 ax_Cresol.legend(['o-Cresol w. m/z 110', 'o-Cresol w. m/z 111'])
 ax_Cresol.set(ylabel = 'o-Cresol conc (ppb)')
 fig_Cresol.tight_layout()
+
+fig_Toluene, ax_Toluene = plt.subplots(figsize = (6.3, 3))
+plot_total(ax_Toluene, PTRMS['2026-07-08_Toluene_traces'], 'Toluene (ppb)', 'b', None)
+ax_Toluene.set(ylabel = 'Toluene conc (ppb)')
+fig_Toluene.tight_layout()
 # %%
 stabilization_time = [['2026-06-30 14:00', '2026-06-30 14:10'],
+                      ['2026-07-08 11:40', '2026-07-08 11:45'],
                       ['2026-07-14 11:44', '2026-07-14 11:54']]
 
 for dict_key, df_key, time in zip(PTRMS.keys(), df_keys, stabilization_time):
+    PTRMS[dict_key].to_csv(f'{parent_path}{dict_key.split('_') [1]}.csv', index = False)
     temp = time_filtered_conc(PTRMS[dict_key], df_key, time)
     for key in df_key:
         conc = temp[key].mean()
-        print(f'{key}: {conc} ppb')
+        print(f'{key}: {conc}')
+        
