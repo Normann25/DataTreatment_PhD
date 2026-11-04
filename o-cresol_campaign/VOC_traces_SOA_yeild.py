@@ -58,5 +58,5 @@ for dict_key, df_key, time in zip(PTRMS.keys(), df_keys, stabilization_time):
     temp = time_filtered_conc(PTRMS[dict_key], df_key, time)
     for key in df_key:
         conc = temp[key].mean()
-        print(f'{key}: {conc}')
+        print(f'{key}: {conc} +- {temp[key].std()}')
         
