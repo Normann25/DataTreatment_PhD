@@ -11,9 +11,17 @@ import warnings
 warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
-# Import PTR-MS data
+# Path to data folder
 parent_path = '../../../Data/2026/2026_TOTeM-campaign/'
+# Path to figures
+savepath = '../../../Figures/TOTeM/PTRMS/'
+
+# Import PTR-MS data
 PTRMS = import_PTRMS([''], parent_path)
+
+# Import timestamps
+timestamps = import_data(parent_path, '', None, None, None)
+timestamps = timestamps['Timestamps'].replace(0, np.nan)
 
 # Calculate total concentration of VOC from parent compound and fragments
 for key in PTRMS.keys():
@@ -30,28 +38,12 @@ exp_keys = ['20260629_3MC_traces', '20260630_3MC_traces', '20260707_Toluene_trac
             '20260714_o-Cresol_traces', '20260715_o-Cresol_traces', '20260716_3MC_traces']
 blank_keys = ['20260730_o-Cresol_traces', '20260731_3MC_traces']
 
-# Define experiment timestamps
-stabilization_time = [['2026-06-29 13:22', '2026-06-29 13:27'],
-                      ['2026-06-30 14:00', '2026-06-30 14:10'],
-                      ['2026-07-07 11:40', '2026-07-07 11:45'],
-                      ['2026-07-08 11:40', '2026-07-08 11:45'],
-                      ['2026-07-09 10:43', '2026-07-09 10:48'],
-                      ['2026-07-10 11:16', '2026-07-10 11:21'],
-                      ['2026-07-11 12:13', '2026-07-11 12:18'],
-                      ['2026-07-13 12:21', '2026-07-13 12:26'],
-                      ['2026-07-14 11:44', '2026-07-14 11:54'],
-                      ['2026-07-15 11:56', '2026-07-15 12:01'],
-                      ['2026-07-16 11:30', '2026-07-16 11:35']]
-UV_on = ['2026-06-29 13:28', '2026-06-30 14:12', ' 2026-07-07 11:36', '2026-07-08 11:50', '2026-07-09 10:49', 
-         '2026-07-10 11:22', ' 2026-07-11 12:19', '2026-07-13 12:27', '2026-07-14 11:55', '2026-07-15 12:02',
-         '2026-07-16 11:36']
-max_particle_time = ['2026-06-29 15:22', '2026-06-30 16:18', ' 2026-07-07 13:45', '2026-07-08 13:02', '2026-07-09 11:55', 
-                     '2026-07-10 14:55', ' 2026-07-11 15:06', '2026-07-13 17:40', '2026-07-14 16:12', '2026-07-15 15:45',
-                     '2026-07-16 13:08']
-
+# Calculate start concentration of VOC
 start_VOC = []
 start_VOC_STD = []
-for key, time in zip(exp_keys, stabilization_time):
+for i, key in enumerate(exp_keys):
+    time = [f'{timestamps['date'][i]} {timestamps['stabilization start'][i]}',
+            f'{timestamps['date'][i]} {timestamps['stabilization end'][i]}']
     if '3MC' in key:
         temp = time_filtered_conc(PTRMS[key], ['3MC (ppb)'], time)
     if 'o-Cresol' in key:
@@ -62,9 +54,6 @@ for key, time in zip(exp_keys, stabilization_time):
     start_VOC_STD.append(temp[temp.keys()[1]].std())
     print(f'{key.split('_')[0]}: {key.split('_')[1]} = ({temp[temp.keys()[1]].mean()} +- {temp[temp.keys()[1]].std()}) ppb')
 
-# Max particle concentrations
-max_particle_concentration = [17.79, 39.36, 0.00, 0.00, 0.01, 38.86, 25.66, 39.10, 24.67, 21.44, 68.23]
-
 # 1 min running mean of data
 PTRMS_STD = {}
 for dict_key in PTRMS.keys():
@@ -73,34 +62,47 @@ for dict_key in PTRMS.keys():
     temp['Time'], temp_std['Time'] = temp.index, temp_std.index
     PTRMS[dict_key], PTRMS_STD[dict_key] = temp.reset_index(drop = True), temp_std.reset_index(drop = True)
 #%%
-for key in exp_keys:
-    fig, ax = plt.subplots()
+# Max particle concentrations
+max_particle_concentration = [17.79, 39.36, 0.00, 0.00, 0.01, 38.86, 25.66, 39.10, 24.67, 21.44, 68.23]
+Mws = [124.14, 124.14, 92.14, 92.14, 92.14, 108.14, 108.14, 108.14, 108.14, 108.14, 124.14]
+temperatures = [20, 20, 0, 20, 0, 0, 20, 0, 20, 20, 20]
 #%%
-fig_3MC, ax_3MC = plt.subplots(figsize = (6.3, 3))
-plot_total(ax_3MC, PTRMS['2026-06-30_3MC_traces'], '3MC (ppb)', 'b', None)
-ax_3MC.set(ylabel = '3MC conc (ppb)')
-fig_3MC.tight_layout()
+for i, key in enumerate(exp_keys):
+    t_zero = f'{timestamps['date'][i]} {timestamps['UV on'][i]}'
+    fig, ax = plt.subplots(figsize = (6.3, 3))
+    plot_total(ax, PTRMS[key], PTRMS[key].keys()[-2], None, t_zero)
 
-fig_Cresol, ax_Cresol = plt.subplots(figsize = (6.3, 3))
-plot_total(ax_Cresol, PTRMS['2026-07-14_o-Cresol_traces'], 'o-Cresol 110 (ppb)', 'b', None)
-plot_total(ax_Cresol, PTRMS['2026-07-14_o-Cresol_traces'], 'o-Cresol 111 (ppb)', 'r', None)
-ax_Cresol.legend(['o-Cresol w. m/z 110', 'o-Cresol w. m/z 111'])
-ax_Cresol.set(ylabel = 'o-Cresol conc (ppb)')
-fig_Cresol.tight_layout()
+    # UV on
+    ax.axvspan(0, (pd.to_datetime(f'{timestamps['date'][i]} {timestamps['UV off'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'yellow', alpha = 0.15, lw = 0, label = 'UV ov')
 
-fig_Toluene, ax_Toluene = plt.subplots(figsize = (6.3, 3))
-plot_total(ax_Toluene, PTRMS['2026-07-08_Toluene_traces'], 'Toluene (ppb)', 'b', None)
-ax_Toluene.set(ylabel = 'Toluene conc (ppb)')
-fig_Toluene.tight_layout()
-# %%
-stabilization_time = [['2026-06-30 14:00', '2026-06-30 14:10'],
-                      ['2026-07-08 11:40', '2026-07-08 11:45'],
-                      ['2026-07-14 11:44', '2026-07-14 11:54']]
+    # d9-BuOH inj
+    ax.axvspan((pd.to_datetime(f'{timestamps['date'][i]} {timestamps['d9-BuOH inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{timestamps['date'][i]} {timestamps['d9-BuOH inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'blue', alpha = 0.15, lw = 0, label = 'd9-BuOH inj')
 
-for dict_key, df_key, time in zip(PTRMS.keys(), df_keys, stabilization_time):
-    PTRMS[dict_key].to_csv(f'{parent_path}{dict_key.split('_') [1]}.csv', index = False)
-    temp = time_filtered_conc(PTRMS[dict_key], df_key, time)
-    for key in df_key:
-        conc = temp[key].mean()
-        print(f'{key}: {conc} +- {temp[key].std()}')
-        
+    # H2O2 inj
+    ax.axvspan((pd.to_datetime(f'{timestamps['date'][i]} {timestamps['H2O2 inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{timestamps['date'][i]} {timestamps['H2O2 inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'orange', alpha = 0.15, label = 'H$_{2}$O$_{2}$ inj')
+
+    # VOC inj
+    ax.axvspan((pd.to_datetime(f'{timestamps['date'][i]} {timestamps['VOC inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{timestamps['date'][i]} {timestamps['VOC inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'green', alpha = 0.15, lw = 0, label = 'VOC inj')
+
+    ax.legend(frameon = True)
+
+    ax.set(ylabel = 'VOC conc. (ppb)', title = f'{timestamps['date'][i]} {key.split('_')[1]}')
+
+    fig.tight_layout()
+    fig.savefig(f'{savepath}{timestamps['date'][i]}_{key.split('_')[1]}.jpg', dpi = 600)
+#%%
+def convert_ppb_to_ugm3(conc_ppb, Mw, T):
+    conc_ppm = conc_ppb * 10**(-3)
+    conc_ugm3 = ((1.013 * 10**(5) * Mw) / (8.314 * (T + 273))) * conc_ppm
+    return conc_ugm3
+
+def SOA_yield(VOC_start, VOC_max_mass, particle_max_mass):
+     # VOC_start and VOC_max_mass has to be in um/m3
+     return particle_max_mass / (VOC_start - VOC_max_mass)
+
+for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, timestamps.iterrows(), max_particle_concentration, start_VOC, Mws, temperatures):
+    max_mass_ts = pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}')
+    VOC_end = PTRMS[key][PTRMS[key].keys()[-2]][PTRMS[key]['Time'] == max_mass_ts]
+    VOC_start_ugm3, VOC_end_ugm3 = convert_ppb_to_ugm3(VOC_start_conc, Mw, T), convert_ppb_to_ugm3(VOC_end, Mw, T)
+    Y_SOA = SOA_yield(VOC_start_ugm3, VOC_end_ugm3, max_particle)
+    print(f'{row[1]['date']} Y({key.split('_')[1]}) = {Y_SOA * 100}')
