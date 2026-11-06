@@ -52,7 +52,7 @@ for i, key in enumerate(exp_keys):
             temp = time_filtered_conc(PTRMS[key], ['Toluene (ppb)'], time)
     start_VOC.append(temp[temp.keys()[1]].mean())
     start_VOC_STD.append(temp[temp.keys()[1]].std())
-    print(f'{key.split('_')[0]}: {key.split('_')[1]} = ({temp[temp.keys()[1]].mean()} +- {temp[temp.keys()[1]].std()}) ppb')
+    print(f'{key.split('_')[0]}: {key.split('_')[1]} = ({temp[temp.keys()[1]].mean():.2f} +- {temp[temp.keys()[1]].std():.2f}) ppb')
 
 # 1 min running mean of data
 PTRMS_STD = {}
@@ -63,7 +63,7 @@ for dict_key in PTRMS.keys():
     PTRMS[dict_key], PTRMS_STD[dict_key] = temp.reset_index(drop = True), temp_std.reset_index(drop = True)
 #%%
 # Max particle concentrations
-max_particle_concentration = [17.79, 39.36, 0.00, 0.00, 0.01, 38.86, 25.66, 39.10, 24.67, 21.44, 68.23]
+max_particle_concentration = np.array([17.79, 39.36, 0.00, 0.00, 0.01, 38.86, 25.66, 39.10, 24.67, 21.44, 68.23])
 Mws = [124.14, 124.14, 92.14, 92.14, 92.14, 108.14, 108.14, 108.14, 108.14, 108.14, 124.14]
 temperatures = [20, 20, 0, 20, 0, 0, 20, 0, 20, 20, 20]
 #%%
@@ -91,18 +91,9 @@ for i, key in enumerate(exp_keys):
     fig.tight_layout()
     fig.savefig(f'{savepath}{timestamps['date'][i]}_{key.split('_')[1]}.jpg', dpi = 600)
 #%%
-def convert_ppb_to_ugm3(conc_ppb, Mw, T):
-    conc_ppm = conc_ppb * 10**(-3)
-    conc_ugm3 = ((1.013 * 10**(5) * Mw) / (8.314 * (T + 273))) * conc_ppm
-    return conc_ugm3
-
-def SOA_yield(VOC_start, VOC_max_mass, particle_max_mass):
-     # VOC_start and VOC_max_mass has to be in um/m3
-     return particle_max_mass / (VOC_start - VOC_max_mass)
-
 for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, timestamps.iterrows(), max_particle_concentration, start_VOC, Mws, temperatures):
     max_mass_ts = pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}')
-    VOC_end = PTRMS[key][PTRMS[key].keys()[-2]][PTRMS[key]['Time'] == max_mass_ts]
-    VOC_start_ugm3, VOC_end_ugm3 = convert_ppb_to_ugm3(VOC_start_conc, Mw, T), convert_ppb_to_ugm3(VOC_end, Mw, T)
-    Y_SOA = SOA_yield(VOC_start_ugm3, VOC_end_ugm3, max_particle)
-    print(f'{row[1]['date']} Y({key.split('_')[1]}) = {Y_SOA * 100}')
+    VOC_end = PTRMS[key][PTRMS[key].keys()[-2]][PTRMS[key]['Time'] == max_mass_ts].item()
+    Y_SOA, Delta_VOC = SOA_yield(VOC_start_conc, VOC_end, max_particle, Mw, T)
+    print(f'{row[1]['date']} Y({key.split('_')[1]}) = {Y_SOA:.2f}')
+    print(f'VOC consumed = {Delta_VOC:.2f} ppb')
