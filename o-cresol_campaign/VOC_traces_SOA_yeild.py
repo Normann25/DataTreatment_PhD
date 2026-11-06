@@ -19,9 +19,9 @@ savepath = '../../../Figures/TOTeM/PTRMS/'
 # Import PTR-MS data
 PTRMS = import_PTRMS([''], parent_path)
 
-# Import timestamps
-timestamps = import_data(parent_path, '', None, None, None)
-timestamps = timestamps['Timestamps'].replace(0, np.nan)
+# Import timestamps and density
+data = import_data(parent_path, '', None, None, None)
+data['Timestamps'] = data['Timestamps'].replace(0, np.nan)
 
 # Calculate total concentration of VOC from parent compound and fragments
 for key in PTRMS.keys():
@@ -42,8 +42,8 @@ blank_keys = ['20260730_o-Cresol_traces', '20260731_3MC_traces']
 start_VOC = []
 start_VOC_STD = []
 for i, key in enumerate(exp_keys):
-    time = [f'{timestamps['date'][i]} {timestamps['stabilization start'][i]}',
-            f'{timestamps['date'][i]} {timestamps['stabilization end'][i]}']
+    time = [f'{data['Timestamps']['date'][i]} {data['Timestamps']['stabilization start'][i]}',
+            f'{data['Timestamps']['date'][i]} {data['Timestamps']['stabilization end'][i]}']
     if '3MC' in key:
         temp = time_filtered_conc(PTRMS[key], ['3MC (ppb)'], time)
     if 'o-Cresol' in key:
@@ -64,36 +64,44 @@ for dict_key in PTRMS.keys():
 #%%
 # Max particle concentrations
 max_particle_concentration = np.array([17.79, 39.36, 0.00, 0.00, 0.01, 38.86, 25.66, 39.10, 24.67, 21.44, 68.23])
+max_particle_concentration = max_particle_concentration * data['density_TOTEM']['Denisty'][::-1]
 Mws = [124.14, 124.14, 92.14, 92.14, 92.14, 108.14, 108.14, 108.14, 108.14, 108.14, 124.14]
 temperatures = [20, 20, 0, 20, 0, 0, 20, 0, 20, 20, 20]
 #%%
 for i, key in enumerate(exp_keys):
-    t_zero = f'{timestamps['date'][i]} {timestamps['UV on'][i]}'
+    t_zero = f'{data['Timestamps']['date'][i]} {data['Timestamps']['UV on'][i]}'
     fig, ax = plt.subplots(figsize = (6.3, 3))
     plot_total(ax, PTRMS[key], PTRMS[key].keys()[-2], None, t_zero)
 
     # UV on
-    ax.axvspan(0, (pd.to_datetime(f'{timestamps['date'][i]} {timestamps['UV off'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'yellow', alpha = 0.15, lw = 0, label = 'UV ov')
+    ax.axvspan(0, (pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['UV off'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'yellow', alpha = 0.15, lw = 0, label = 'UV ov')
 
     # d9-BuOH inj
-    ax.axvspan((pd.to_datetime(f'{timestamps['date'][i]} {timestamps['d9-BuOH inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{timestamps['date'][i]} {timestamps['d9-BuOH inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'blue', alpha = 0.15, lw = 0, label = 'd9-BuOH inj')
+    ax.axvspan((pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['d9-BuOH inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['d9-BuOH inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'blue', alpha = 0.15, lw = 0, label = 'd9-BuOH inj')
 
     # H2O2 inj
-    ax.axvspan((pd.to_datetime(f'{timestamps['date'][i]} {timestamps['H2O2 inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{timestamps['date'][i]} {timestamps['H2O2 inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'orange', alpha = 0.15, label = 'H$_{2}$O$_{2}$ inj')
+    ax.axvspan((pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['H2O2 inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['H2O2 inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'orange', alpha = 0.15, label = 'H$_{2}$O$_{2}$ inj')
 
     # VOC inj
-    ax.axvspan((pd.to_datetime(f'{timestamps['date'][i]} {timestamps['VOC inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{timestamps['date'][i]} {timestamps['VOC inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'green', alpha = 0.15, lw = 0, label = 'VOC inj')
+    ax.axvspan((pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['VOC inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['VOC inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'green', alpha = 0.15, lw = 0, label = 'VOC inj')
 
     ax.legend(frameon = True)
 
-    ax.set(ylabel = 'VOC conc. (ppb)', title = f'{timestamps['date'][i]} {key.split('_')[1]}')
+    ax.set(ylabel = 'VOC conc. (ppb)', title = f'{data['Timestamps']['date'][i]} {key.split('_')[1]}')
 
     fig.tight_layout()
-    fig.savefig(f'{savepath}{timestamps['date'][i]}_{key.split('_')[1]}.jpg', dpi = 600)
+    fig.savefig(f'{savepath}{data['Timestamps']['date'][i]}_{key.split('_')[1]}.jpg', dpi = 600)
 #%%
-for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, timestamps.iterrows(), max_particle_concentration, start_VOC, Mws, temperatures):
-    max_mass_ts = pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}')
-    VOC_end = PTRMS[key][PTRMS[key].keys()[-2]][PTRMS[key]['Time'] == max_mass_ts].item()
+for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, data['Timestamps'].iterrows(), max_particle_concentration, start_VOC, Mws, temperatures):
+    # Determine time period where maximum particle mass is reached
+    max_mass_ts1 = pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}') - pd.Timedelta(minutes = 2) 
+    max_mass_ts2 = pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}') + pd.Timedelta(minutes = 2)
+
+    # Calculate VOC concentration when maximum particle mass is reached (from time-2min to time+2min)
+    VOC_end = time_filtered_conc(PTRMS[key], [PTRMS[key].keys()[-2]], [max_mass_ts1, max_mass_ts2])
+    VOC_end = VOC_end[PTRMS[key].keys()[-2]].mean()
+
+    # Determine SOA yield and consumed VOC
     Y_SOA, Delta_VOC = SOA_yield(VOC_start_conc, VOC_end, max_particle, Mw, T)
     print(f'{row[1]['date']} Y({key.split('_')[1]}) = {Y_SOA:.2f}')
     print(f'VOC consumed = {Delta_VOC:.2f} ppb')
