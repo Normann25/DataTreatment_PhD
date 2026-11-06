@@ -170,9 +170,13 @@ def SOA_yield(VOC_start, VOC_max_mass, particle_max_mass, Mw, T):
     T: float or int
         Temperature in Celcius
     """
-    VOC_start_ugm3, VOC_end_ugm3 = convert_ppb_to_ugm3(VOC_start, Mw, T), convert_ppb_to_ugm3(VOC_max_mass, Mw, T)
+    Delta_VOC = VOC_start - VOC_max_mass
+
+    Delta_VOC_ugm3 = convert_ppb_to_ugm3(Delta_VOC, Mw, T)
+
+    Y_SOA = (particle_max_mass / Delta_VOC_ugm3) * 100
     
-    return (particle_max_mass / (VOC_start_ugm3 - VOC_end_ugm3)) * 100
+    return Y_SOA, Delta_VOC
 
 
 def time_filtered_conc(df, df_keys, timestamps):
