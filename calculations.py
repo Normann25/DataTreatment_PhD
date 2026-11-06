@@ -128,6 +128,53 @@ def wall_loss_corr(df, keys, t_zero, t_loss):
 
     return new_df
 
+def convert_ppb_to_ugm3(conc_ppb, Mw, T):
+    """
+    Convert mixing ratio in ppb to concentration in ug/m3: ug/m3 = ((p*Mw)/(R*T)) * ppm, where p is the pressure in Pa (here set to 1 atm = 1.013*10**(5) Pa), Mw is the molecular weight, R is the gas constant (R = 8.314 J/(mol*K)), and T is the temperature in K. 
+    Equation is from Seinfeld and Pandis 2026.
+
+    Parameters
+    ----------
+    conc_ppb: float or array of floats
+        VOC concentration in ppb
+    
+    Mw: float
+        Molecular weight of VOC
+    
+    T: float or int
+        Temperature i Celcius
+    """
+    conc_ppm = conc_ppb * 10**(-3)
+    conc_ugm3 = ((1.013 * 10**(5) * Mw) / (8.314 * (T + 273))) * conc_ppm
+    return conc_ugm3
+
+def SOA_yield(VOC_start, VOC_max_mass, particle_max_mass, Mw, T):
+    """
+    Calculate SOA yield
+    Equation is from Odum et al. 1996
+
+    Parameters
+    ----------
+    VOC start: float
+        VOC concentration in ppb at the beginning of the experiment
+
+    VOC_max_mass: float
+        VOC concentration in ppb when the maximum particle mass is reached
+    
+    particle_max_mass: float
+        Maximum particle mass in ug/m3 reached during the experiment
+    
+    Mw: float
+        Molecular weight of VOC
+    
+    T: float or int
+        Temperature in Celcius
+    """
+    VOC_start_ugm3, VOC_end_ugm3 = convert_ppb_to_ugm3(VOC_start, Mw, T), convert_ppb_to_ugm3(VOC_max_mass, Mw, T)
+    
+    return (particle_max_mass / (VOC_start_ugm3 - VOC_end_ugm3)) * 100
+
+
 def time_filtered_conc(df, df_keys, timestamps):
     start_time, end_time = pd.to_datetime(timestamps[0]), pd.to_datetime(timestamps[1])
     time = pd.to_datetime(df['Time'])
