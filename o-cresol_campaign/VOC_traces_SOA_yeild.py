@@ -74,7 +74,7 @@ for i, key in enumerate(exp_keys):
     plot_total(ax, PTRMS[key], PTRMS[key].keys()[-2], None, t_zero)
 
     # UV on
-    ax.axvspan(0, (pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['UV off'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'yellow', alpha = 0.15, lw = 0, label = 'UV ov')
+    ax.axvspan(0, (pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['UV off'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'yellow', alpha = 0.15, lw = 0, label = 'UV on')
 
     # d9-BuOH inj
     ax.axvspan((pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['d9-BuOH inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['d9-BuOH inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'blue', alpha = 0.15, lw = 0, label = 'd9-BuOH inj')
@@ -105,3 +105,46 @@ for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, data['Timesta
     Y_SOA, Delta_VOC = SOA_yield(VOC_start_conc, VOC_end, max_particle, Mw, T)
     print(f'{row[1]['date']} Y({key.split('_')[1]}) = {Y_SOA:.2f}')
     print(f'VOC consumed = {Delta_VOC:.2f} ppb')
+
+    # Plot VOC timeseries and decay
+    fig, ax = plt.subplots(2, 1, figsize = (6.3, 6.3))
+
+    t_zero = pd.to_datetime(f'{row[1]['date']} {row[1]['UV on']}')
+    plot_total(ax[0], PTRMS[key], PTRMS[key].keys()[-2], None, t_zero)
+
+    # UV on
+    ax[0].axvspan(0, (pd.to_datetime(f'{row[1]['date']} {row[1]['UV off']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'yellow', alpha = 0.15, lw = 0, label = 'UV on')
+
+    # d9-BuOH inj
+    ax[0].axvspan((pd.to_datetime(f'{row[1]['date']} {row[1]['d9-BuOH inj start']}') -  t_zero) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{row[1]['date']} {row[1]['d9-BuOH inj end']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'blue', alpha = 0.15, lw = 0, label = 'd9-BuOH inj')
+
+    # H2O2 inj
+    ax[0].axvspan((pd.to_datetime(f'{row[1]['date']} {row[1]['H2O2 inj start']}') -  t_zero) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{row[1]['date']} {row[1]['H2O2 inj end']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'orange', alpha = 0.15, label = 'H$_{2}$O$_{2}$ inj')
+
+    # VOC inj
+    ax[0].axvspan((pd.to_datetime(f'{row[1]['date']} {row[1]['VOC inj start']}') -  t_zero) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{row[1]['date']} {row[1]['VOC inj end']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'green', alpha = 0.15, lw = 0, label = 'VOC inj')
+
+    # Determine VOC decay rate
+    Fit_df = time_filtered_conc(PTRMS[key], [PTRMS[key].keys()[-2]], 
+                                [t_zero, pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}')]).dropna()
+    Fit_df['Time'] = (Fit_df['Time'] - t_zero) / pd.Timedelta(minutes = 1)
+    values, errors, ndof, squares, R2 = linear_fit(Fit_df['Time'], np.log(Fit_df[PTRMS[key].keys()[-2]]), linear,
+                                                   a = -0.01, b = 5)
+    fit = linear(Fit_df['Time'], *values)
+
+    # Plot fitted decay
+    ax[1].scatter(Fit_df['Time'], np.log(Fit_df[PTRMS[key].keys()[-2]]), s = 10)
+    ax[1].plot(Fit_df['Time'], fit, color = 'k', lw = 1.2)
+    ax[1].text(0.05, 0.075, f'ln[{PTRMS[key].keys()[-2]}] = {values[0]:.3f}t + {values[1]:.3f}', 
+               transform = ax[1].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
+
+    # print fitted decay rate
+    print(f'{row[1]['date']} ln[{key.split('_')[1]}] = ({values[0]:.5f}+-{errors[0]:.5f})t + ({values[1]:.2f}+-{errors[1]:.2f})')
+
+    # Set legend, ax-labels and title
+    ax[0].legend(frameon = True)
+    ax[0].set(ylabel = 'VOC conc. (ppb)', title = f'{row[1]['date']} {key.split('_')[1]}')
+    ax[1].set(ylabel = f'ln[{key.split('_')[1]}]', xlabel = 'Time (min)')
+
+    fig.tight_layout()
+    fig.savefig(f'{savepath}{row[1]['date']}_{key.split('_')[1]}.jpg', dpi = 600)
