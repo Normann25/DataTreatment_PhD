@@ -135,11 +135,11 @@ for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, data['Timesta
     # Plot fitted decay
     ax[1].scatter(Fit_df['Time'], np.log(Fit_df[PTRMS[key].keys()[-2]]), s = 10)
     ax[1].plot(Fit_df['Time'], fit, color = 'k', lw = 1.2)
-    ax[1].text(0.05, 0.075, f'ln[{PTRMS[key].keys()[-2]}] = {values[0]:.3f}t + {values[1]:.3f}', 
+    ax[1].text(0.05, 0.075, f'ln[{PTRMS[key].keys()[-2]}] = ({values[0]*10**(3):.2f}E-03)t + {values[1]:.3f}', 
                transform = ax[1].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
 
     # print fitted decay rate
-    print(f'{row[1]['date']} ln[{key.split('_')[1]}] = ({values[0]:.5f}+-{errors[0]:.5f})t + ({values[1]:.2f}+-{errors[1]:.2f})')
+    print(f'{row[1]['date']} ln[{key.split('_')[1]}] = ({values[0]*10**(3):.2f}E-03+-{errors[0]*10**(3):.2f}E-03)t + ({values[1]:.2f}+-{errors[1]:.2f})')
 
     # Set legend, ax-labels and title
     ax[0].legend(frameon = True)
