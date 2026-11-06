@@ -124,7 +124,7 @@ for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, data['Timesta
     # VOC inj
     ax[0].axvspan((pd.to_datetime(f'{row[1]['date']} {row[1]['VOC inj start']}') -  t_zero) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{row[1]['date']} {row[1]['VOC inj end']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'green', alpha = 0.15, lw = 0, label = 'VOC inj')
 
-    # Determine VOC decay rate
+    # Determine VOC decay rate (from UV on until max particle mass is reached)
     Fit_df = time_filtered_conc(PTRMS[key], [PTRMS[key].keys()[-2]], 
                                 [t_zero, pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}')]).dropna()
     Fit_df['Time'] = (Fit_df['Time'] - t_zero) / pd.Timedelta(minutes = 1)
