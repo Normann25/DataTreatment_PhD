@@ -196,6 +196,24 @@ def time_filtered_conc(df, df_keys, timestamps):
     return new_df
 
 def running_mean(df, concentration, timelabel, interval, timestamps):
+    """
+    Average dataframe to obtain a different time resolution
+
+    Parameters
+    ----------
+    df: pandas DataFrame
+        DataFrame containing timeseries
+    
+    concentration: list of DataFrame keys
+        Name of specific timeseries the averaging should be applied to
+    
+    interval: string
+        New time resolution
+    
+    timestamps: list of two strings or None
+        Timestamp of when the averaging should begin and end 
+        Include this if you only want to average a specific part of the experiment, otherwise, write None
+    """
 
     if timestamps == None:      
         df = df.set_index(timelabel)
