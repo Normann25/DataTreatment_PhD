@@ -5,6 +5,7 @@ from read_data_functions import *
 from plot_functions import *
 from calculations import *
 from grouping import *
+from sympy import*
 plt.style.use('../Style.mplstyle')
 plt.rcParams['font.family'] = 'Arial'
 import warnings
@@ -148,3 +149,54 @@ for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, data['Timesta
 
     fig.tight_layout()
     fig.savefig(f'{savepath}{row[1]['date']}_{key.split('_')[1]}.jpg', dpi = 600)
+
+#%%
+def calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps):
+
+    k_D9BuOH = 2.7*10**(-12)    # cm3 molecules-1 s-1
+
+    # Filter the timeperiod that you want to fit
+    if averaging_time == None:
+        filtered_df = time_filtered_conc(df, d9_key, timestamps)
+    else:
+        filtered_df = running_mean(df, [d9_key], 'Time', averaging_time, timestamps)
+
+    # Convert timestamps into time passed in seconds
+    time_seconds = (pd.to_datetime(filtered_df['Time']) - pd.to_datetime(timestamps[0])) / pd.Timedelta(seconds = 1)
+
+    # Calculate ln(I/I0)
+    I0 = filtered_df[d9_key][0]
+    filtered_df['ln(I/I0)'] = np.log(filtered_df[d9_key] / I0)
+
+    # Linear fit 
+    values, errors, ndof, squares, R2 = linear_fit(time_seconds, filtered_df['ln(I/I0)'], linear, a = 1, b = 1)
+    filtered_df['y_fit'] = linear(time_seconds, *values)
+
+    # OH concentration calculation
+    # Define variables
+    OH, I = symbols('OH, I, k')
+    dOH, dI = symbols('sigma_OH, sigma_I')
+    # Perimeter:
+    # Define relation
+    OH = (-I) / k_D9BuOH
+    # Calculate uncertainty
+    dOH = sqrt((OH.diff(I)*I)**2)
+    # Turn expression into numerical functions
+    fOH = lambdify((I), OH)
+    fdOH = lambdify((I,dI), dOH)
+    # define values and their errors
+    vI, vdI = values[0], errors[0]
+    # numerically evaluate expression
+    vOH = fOH(vI)
+    vdOH = fdOH(vI, vdI)
+
+    # Print results
+    print(f'R2 = {R2:.2f}')
+    print(f'slope = ({values[0]:.3e}+-{errors[0]:.3e}) s-1')
+    print(f'[OH] = ({vOH:.3e}+-{vdOH:.3e}) molecules cm-3')
+    
+    return filtered_df, vOH, vdOH, values, errors, R2
+
+def plot_D9BuOh_decay(df, d9_key, averaging_time, timestamps):
+    filtered_df, vOH, vdOH, values, errors, R2 = calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps)
+    return
