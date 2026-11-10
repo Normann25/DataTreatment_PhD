@@ -438,7 +438,7 @@ def linear_fit(x, y, fitfunc, **kwargs):
     def obt(*args):
         squares = np.sum(((y-fitfunc(x, *args)))**2)
         return squares
-    obt.errordef = 1 # for Minuit to compute errors correctly
+    # obt.errordef = 1 # for Minuit to compute errors correctly
 
     minuit = Minuit(obt, **kwargs, name = [*kwargs]) # Setup; obtimization function, initial variable guesses, names of variables. 
 
