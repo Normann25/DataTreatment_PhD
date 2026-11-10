@@ -440,7 +440,7 @@ def linear_fit(x, y, fitfunc, **kwargs):
         return squares
 
     minuit = Minuit(obt, **kwargs, name = [*kwargs]) # Setup; obtimization function, initial variable guesses, names of variables. 
-    minuit.errordef = 1 # needed for likelihood fits. No explaination in the documentation.
+    minuit.errordef = Minuit.LEAST_SQUARES  # for Minuit to compute errors correctly
 
     minuit.migrad() # Compute the fit
     valuesfit = np.array(minuit.values, dtype = np.float64) # Convert to numpy
