@@ -69,30 +69,6 @@ max_particle_concentration = max_particle_concentration * data['density_TOTEM'][
 Mws = [124.14, 124.14, 92.14, 92.14, 92.14, 108.14, 108.14, 108.14, 108.14, 108.14, 124.14]
 temperatures = [20, 20, 0, 20, 0, 0, 20, 0, 20, 20, 20]
 #%%
-for i, key in enumerate(exp_keys):
-    t_zero = f'{data['Timestamps']['date'][i]} {data['Timestamps']['UV on'][i]}'
-    fig, ax = plt.subplots(figsize = (6.3, 3))
-    plot_total(ax, PTRMS[key], PTRMS[key].keys()[-2], None, t_zero)
-
-    # UV on
-    ax.axvspan(0, (pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['UV off'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'yellow', alpha = 0.15, lw = 0, label = 'UV on')
-
-    # d9-BuOH inj
-    ax.axvspan((pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['d9-BuOH inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['d9-BuOH inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'blue', alpha = 0.15, lw = 0, label = 'd9-BuOH inj')
-
-    # H2O2 inj
-    ax.axvspan((pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['H2O2 inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['H2O2 inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'orange', alpha = 0.15, label = 'H$_{2}$O$_{2}$ inj')
-
-    # VOC inj
-    ax.axvspan((pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['VOC inj start'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{data['Timestamps']['date'][i]} {data['Timestamps']['VOC inj end'][i]}') -  pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1), color = 'green', alpha = 0.15, lw = 0, label = 'VOC inj')
-
-    ax.legend(frameon = True)
-
-    ax.set(ylabel = 'VOC conc. (ppb)', title = f'{data['Timestamps']['date'][i]} {key.split('_')[1]}')
-
-    fig.tight_layout()
-    fig.savefig(f'{savepath}{data['Timestamps']['date'][i]}_{key.split('_')[1]}.jpg', dpi = 600)
-#%%
 for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, data['Timestamps'].iterrows(), max_particle_concentration, start_VOC, Mws, temperatures):
     # Determine time period where maximum particle mass is reached
     max_mass_ts1 = pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}') - pd.Timedelta(minutes = 2) 
@@ -157,24 +133,29 @@ def calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps):
 
     # Filter the timeperiod that you want to fit
     if averaging_time == None:
-        filtered_df = time_filtered_conc(df, d9_key, timestamps)
+        filtered_df = time_filtered_conc(df, [d9_key], timestamps)
     else:
-        filtered_df = running_mean(df, [d9_key], 'Time', averaging_time, timestamps)
+        filtered_df, _ = running_mean(df, [d9_key], 'Time', averaging_time, timestamps)
+        filtered_df['Time'] = filtered_df.index
+        filtered_df = filtered_df.reset_index(drop = True)
+
+    filtered_df = filtered_df.dropna()
 
     # Convert timestamps into time passed in seconds
-    time_seconds = (pd.to_datetime(filtered_df['Time']) - pd.to_datetime(timestamps[0])) / pd.Timedelta(seconds = 1)
+    time_minutes = (pd.to_datetime(filtered_df['Time']) - pd.to_datetime(timestamps[0])) / pd.Timedelta(seconds = 1)
 
     # Calculate ln(I/I0)
     I0 = filtered_df[d9_key][0]
     filtered_df['ln(I/I0)'] = np.log(filtered_df[d9_key] / I0)
 
     # Linear fit 
-    values, errors, ndof, squares, R2 = linear_fit(time_seconds, filtered_df['ln(I/I0)'], linear, a = 1, b = 1)
-    filtered_df['y_fit'] = linear(time_seconds, *values)
+    values, errors, ndof, squares, R2 = linear_fit(time_minutes, filtered_df['ln(I/I0)'], linear, a = 10**(-5), b = 0)
+
+    filtered_df['y_fit'] = linear(time_minutes, *values)
 
     # OH concentration calculation
     # Define variables
-    OH, I = symbols('OH, I, k')
+    OH, I = symbols('OH, I')
     dOH, dI = symbols('sigma_OH, sigma_I')
     # Perimeter:
     # Define relation
@@ -185,18 +166,52 @@ def calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps):
     fOH = lambdify((I), OH)
     fdOH = lambdify((I,dI), dOH)
     # define values and their errors
-    vI, vdI = values[0], errors[0]
+    vI, vdI = values[0] / 60, errors[0] / 60
     # numerically evaluate expression
     vOH = fOH(vI)
     vdOH = fdOH(vI, vdI)
 
     # Print results
     print(f'R2 = {R2:.2f}')
-    print(f'slope = ({values[0]:.3e}+-{errors[0]:.3e}) s-1')
+    print(f'slope = ({values[0]:.3e}+-{errors[0]:.3e}) min-1')
+    print(f'intercept = ({values[1]:.3e}+-{errors[1]:.3e}) min-1')
     print(f'[OH] = ({vOH:.3e}+-{vdOH:.3e}) molecules cm-3')
     
     return filtered_df, vOH, vdOH, values, errors, R2
 
 def plot_D9BuOh_decay(df, d9_key, averaging_time, timestamps):
     filtered_df, vOH, vdOH, values, errors, R2 = calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps)
-    return
+
+    time_minutes = (pd.to_datetime(filtered_df['Time']) - pd.to_datetime(timestamps[0])) / pd.Timedelta(minutes = 1)
+
+    fig, ax = plt.subplots(figsize = (5, 3.5))
+
+    ax.scatter(time_minutes, filtered_df['ln(I/I0)'], s = 10, label = f'Measured data')
+    ax.plot(time_minutes, filtered_df['y_fit'], lw = 1, 
+            label = ('Fit\n' f'OH = {vOH:.2e} ${{\pm}}$ {vdOH:.1e} molecules cm$^{{-3}}$'))
+    ax.fill_between(time_minutes, 
+                    linear(time_minutes, *(values + errors)),
+                    linear(time_minutes, *(values - errors)),
+                    alpha = 0.25, label = 'Error on fit')
+
+    ax.legend(frameon = True)
+
+    ax.set(xlabel = 'Time (min)', ylabel = r'ln$\frac{I}{I_{0}}$')
+
+    return fig, ax
+
+for key, row in zip(exp_keys, data['Timestamps'].iterrows()):
+    if 'Toluene' in key:
+        fig, ax = plot_D9BuOh_decay(PTRMS[key], 'm94.074 (C[12]6C[13]1H[1]9) (Conc)', None, 
+                                    [f'{row[1]['date']} {row[1]['UV on']}', 
+                                     f'{row[1]['date']} {row[1]['max particle conc']}']) 
+    else:
+        d9_key = [k for k in PTRMS[key].keys() if 'm67.129' in k]
+        fig, ax = plot_D9BuOh_decay(PTRMS[key], d9_key[0], None,
+                                    [f'{row[1]['date']} {row[1]['UV on']}', 
+                                     f'{row[1]['date']} {row[1]['max particle conc']}'])
+
+    ax.set(title = f'{row[1]['date']} {key.split('_')[1]}')
+    
+    fig.tight_layout()
+    fig.savefig(f'{savepath}{row[1]['date']}_{key.split('_')[1]}_D9-BuOH.jpg', dpi = 600)
