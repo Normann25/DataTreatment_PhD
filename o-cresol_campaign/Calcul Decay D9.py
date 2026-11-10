@@ -10,15 +10,15 @@ from scipy.stats import t
 # =========================
 lv_path = Path(
     r"C:\Users\au799171\OneDrive - Aarhus universitet\Dokumenter\Data\2026"
-    r"\20260626_test_3MC_H2O2_UV_wCIMS\PTR"
-    r"\20260626_d9-butanol_traces.txt"
+    r"\2026_TOTeM-campaign\PTRMS"
+    r"\20260716_3MC_traces.txt"
 )
 
 # =========================
 # Parameters to change manually
 # =========================
-fit_start = "2026-06-26 14:37:00"   # Light ON
-fit_end   = "2026-06-26 15:19:00"   # Light OFF
+fit_start = "2026-07-16 11:36:00"   # Light ON
+fit_end   = "2026-07-16 13:08:00"   # Light OFF
 
 average_time = "1min"   # examples: "30s", "1min", "2min", "5min"
 
@@ -37,7 +37,7 @@ df["DateTime"] = pd.to_datetime(
     origin="1899-12-30"
 )
 
-signal_col = "m67.129 (d9-butanol_i_Peak2) (Raw)"
+signal_col = 'm67.129 (D9_butanol_frag_isotope) (Conc)'
 
 df = df[["DateTime", signal_col]].dropna()
 df = df[df[signal_col] > 0]
@@ -223,8 +223,7 @@ ax.legend()
 
 plt.tight_layout()
 
-plt.savefig(
-    lv_path.parent / f"OH_d9butanol_decay_{average_time}_CI.png",
+plt.savefig(f'../../../Figures/TOTeM/PTRMS/D9-BuOH_decay/{fit_start.split(' ')[0]}_d9-BuOH_decay.png',
     dpi=300,
     bbox_inches="tight"
 )
