@@ -150,16 +150,10 @@ def calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps):
     filtered_df['ln(I/I0)'] = np.log(filtered_df[d9_key] / I0)
 
     # Linear fit 
-    fit_result, fit_cov, R2 = linear_fit(filtered_df['time_seconds'], filtered_df['ln(I/I0)'], linear, a = 10**(-5), b = 0)
-    #### test ####
-    p, cov = np.polyfit(filtered_df['time_seconds'], filtered_df['ln(I/I0)'], 1, cov = True)
+    fit_result, fit_error, filtered_df['y_fit'], filtered_df['y_error'], R2 = least_squares_reg(filtered_df['time_seconds'], filtered_df['ln(I/I0)'], linear, True)
 
-    print(fit_cov, cov)
-
-
-    #### test ####
-# ndof, squares,
-    filtered_df['y_fit'] = linear(filtered_df['time_seconds'], *fit_result)
+    # filtered_df['y_fit'] = y_fit
+    # filtered_df['y_error'] = y_error
 
     # OH concentration calculation
     # Define variables
@@ -174,28 +168,27 @@ def calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps):
     fOH = lambdify((I), OH)
     fdOH = lambdify((I,dI), dOH)
     # define values and their errors
-    vI, vdI = fit_result[0], np.sqrt(fit_cov[0,0])
+    vI, vdI = fit_result[0], fit_error[0]
     # numerically evaluate expression
     vOH = fOH(vI)
     vdOH = fdOH(vI, vdI)
 
     # Print results
     print(f'R2 = {R2:.2f}')
-    print(f'slope = ({fit_result[0]:.3e}+-{fit_cov[0,0]:.3e}) s-1')
+    print(f'slope = ({fit_result[0]:.3e}+-{np.sqrt(fit_error[0]):.3e}) s-1')
     print(f'[OH] = ({vOH:.3e}+-{vdOH:.3e}) molecules cm-3')
     
-    return filtered_df, vOH, vdOH, fit_result, fit_cov
+    return filtered_df, vOH, vdOH, fit_result, fit_error
 
 def plot_D9BuOh_decay(df, d9_key, averaging_time, timestamps):
-    filtered_df, vOH, vdOH, fit_result, fit_cov = calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps)
+    filtered_df, vOH, vdOH, fit_result, fit_error = calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps)
 
     time_minutes = (pd.to_datetime(filtered_df['Time']) - pd.to_datetime(timestamps[0])) / pd.Timedelta(minutes = 1)
 
     fig, ax = plt.subplots(figsize = (5, 3.5))
 
-    y_error = np.sqrt(fit_cov[1,1]+filtered_df['time_seconds']**2*fit_cov[0,0]+2*filtered_df['time_seconds']*fit_cov[0,1])
-
-    ax.fill_between(time_minutes, filtered_df['y_fit'] + y_error, filtered_df['y_fit'] - y_error,
+    ax.fill_between(time_minutes, filtered_df['y_fit'] + filtered_df['y_error'], 
+                    filtered_df['y_fit'] - filtered_df['y_error'],
                         alpha = 0.25, label = 'Error on fit', color = 'k', lw = 0)
     ax.plot(time_minutes, filtered_df['y_fit'], lw = 1, 
             label = ('Fit\n' f'OH = {vOH:.2e} ${{\pm}}$ {vdOH:.1e} molecules cm$^{{-3}}$'), color = 'k')
