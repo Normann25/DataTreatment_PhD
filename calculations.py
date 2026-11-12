@@ -10,9 +10,9 @@ def remove_spikes(df, df_keys, value):
     """
     Parameters
     ----------
-    df: pandas dataframe
+    df: pandas DataFrame
 
-    df_keys: dataframe keys
+    df_keys: pandas DataFrame keys
 
     value: float or int
         Peak detection threshold
@@ -42,9 +42,9 @@ def remove_spikes_up(df, df_keys, value):
     """
     Parameters
     ----------
-    df: pandas dataframe
+    df: pandas DataFrame
 
-    df_keys: dataframe keys
+    df_keys: pandas DataFrame keys
 
     value: float or int
         Peak detection threshold
@@ -69,9 +69,9 @@ def remove_spikes_down(df, df_keys, value):
     """
     Parameters
     ----------
-    df: pandas dataframe
+    df: pandas DataFrame
 
-    df_keys: dataframe keys
+    df_keys: pandas DataFrame keys
 
     value: float or int
         Peak detection threshold
@@ -431,7 +431,15 @@ def linear_forced_zero(x, a):
 def linear(x, a, b):
     return b + (a * x)
 
-def least_squares_reg(x, y, fitfunc, linear):
+def least_squares_reg(x, y, fitfunc, linear_function):
+    """
+    Least sqaures regression of any function
+
+    Parameters
+    ----------
+    x: array_like or pandas DataFrame column
+
+    """
 
     x, y = np.array(x), np.array(y)
 
@@ -442,7 +450,7 @@ def least_squares_reg(x, y, fitfunc, linear):
     y_fit = fitfunc(x, *fit_result)
 
     # Calculate errors on fit
-    if linear:
+    if linear_function:
         y_error = np.sqrt(fit_cov[1,1] + x**2*fit_cov[0,0] + 2*x*fit_cov[0,1]) # only true for linear
     else:
         y_error = np.zeros_like(x)
