@@ -419,6 +419,26 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
 
     return fig, axes
 
+def plot_D9BuOh_decay(df, d9_key, averaging_time, timestamps):
+    filtered_df, vOH, vdOH, fit_result, fit_error = calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps)
+
+    time_minutes = (pd.to_datetime(filtered_df['Time']) - pd.to_datetime(timestamps[0])) / pd.Timedelta(minutes = 1)
+
+    fig, ax = plt.subplots(figsize = (5, 3.5))
+
+    ax.fill_between(time_minutes, filtered_df['y_fit'] + filtered_df['y_error'], 
+                    filtered_df['y_fit'] - filtered_df['y_error'],
+                        alpha = 0.25, label = 'Error on fit', color = 'k', lw = 0)
+    ax.plot(time_minutes, filtered_df['y_fit'], lw = 1, 
+            label = ('Fit\n' f'OH = {vOH:.2e} ${{\pm}}$ {vdOH:.1e} molecules cm$^{{-3}}$'), color = 'k')
+    ax.scatter(time_minutes, filtered_df['ln(I/I0)'], s = 10, label = f'Measured data', color = 'r')
+
+    ax.legend(frameon = True)
+
+    ax.set(xlabel = 'Time (min)', ylabel = r'ln$\frac{I}{I_{0}}$')
+
+    return fig, ax
+
 def plot_COS(df_AMS, AMS_DL, df_PTR, t_injection, t_zero, t_off):
     cmap = mpl.colormaps['viridis_r']
     colors = cmap(np.linspace(0, 1, 8))
