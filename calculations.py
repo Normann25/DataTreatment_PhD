@@ -434,19 +434,22 @@ def linear_fit(x, y, fitfunc, **kwargs):
 
     Npoints = len(y)
     x, y = np.array(x), np.array(y)
+
+    # fit_result = scipy.stats.linregress(x, y)
+    fit_result, fit_cov = scipy.optimize.curve_fit(fitfunc, x, y)
     
     def obt(*args):
         squares = np.sum(((y-fitfunc(x, *args)))**2)
         return squares
-    obt.errordef = 1 # for Minuit to compute errors correctly
 
     minuit = Minuit(obt, **kwargs, name = [*kwargs]) # Setup; obtimization function, initial variable guesses, names of variables. 
+    minuit.errordef = 1 # for Minuit to compute errors correctly
 
     minuit.migrad() # Compute the fit
     valuesfit = np.array(minuit.values, dtype = np.float64) # Convert to numpy
     errorsfit = np.array(minuit.errors, dtype = np.float64) # Convert to numpy
-    # if not minuit.valid: # Give custom error if the fit did not converge
-    #     print("!!! Fit did not converge !!!\n!!! Give better initial parameters !!!")
+    if not minuit.valid: # Give custom error if the fit did not converge
+        print("!!! Fit did not converge !!!\n!!! Give better initial parameters !!!")
 
     Nvar = len(kwargs)           # Number of variables
     Ndof_fit = len(x) - Nvar
@@ -456,4 +459,4 @@ def linear_fit(x, y, fitfunc, **kwargs):
     # Calculate R2
     R2 = ((Npoints * np.sum(x * y) - np.sum(x) * np.sum(y)) / (np.sqrt(Npoints * np.sum(x**2) - (np.sum(x))**2)*np.sqrt(Npoints * np.sum(y**2) - (np.sum(y))**2)))**2 
 
-    return valuesfit, errorsfit, Ndof_fit, squares_fit, R2
+    return fit_result, fit_cov, R2   # valuesfit, errorsfit, Ndof_fit, squares_fit

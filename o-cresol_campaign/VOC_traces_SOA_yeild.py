@@ -5,6 +5,7 @@ from read_data_functions import *
 from plot_functions import *
 from calculations import *
 from grouping import *
+
 from sympy import*
 plt.style.use('../Style.mplstyle')
 plt.rcParams['font.family'] = 'Arial'
@@ -68,63 +69,63 @@ max_particle_concentration = np.array([17.79, 39.36, 0.00, 0.00, 0.01, 38.86, 25
 max_particle_concentration = max_particle_concentration * data['density_TOTEM']['Denisty'][::-1]
 Mws = [124.14, 124.14, 92.14, 92.14, 92.14, 108.14, 108.14, 108.14, 108.14, 108.14, 124.14]
 temperatures = [20, 20, 0, 20, 0, 0, 20, 0, 20, 20, 20]
-#%%
-for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, data['Timestamps'].iterrows(), max_particle_concentration, start_VOC, Mws, temperatures):
-    # Determine time period where maximum particle mass is reached
-    max_mass_ts1 = pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}') - pd.Timedelta(minutes = 2) 
-    max_mass_ts2 = pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}') + pd.Timedelta(minutes = 2)
+# #%%
+# for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, data['Timestamps'].iterrows(), max_particle_concentration, start_VOC, Mws, temperatures):
+#     # Determine time period where maximum particle mass is reached
+#     max_mass_ts1 = pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}') - pd.Timedelta(minutes = 2) 
+#     max_mass_ts2 = pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}') + pd.Timedelta(minutes = 2)
 
-    # Calculate VOC concentration when maximum particle mass is reached (from time-2min to time+2min)
-    VOC_end = time_filtered_conc(PTRMS[key], [PTRMS[key].keys()[-2]], [max_mass_ts1, max_mass_ts2])
-    VOC_end = VOC_end[PTRMS[key].keys()[-2]].mean()
+#     # Calculate VOC concentration when maximum particle mass is reached (from time-2min to time+2min)
+#     VOC_end = time_filtered_conc(PTRMS[key], [PTRMS[key].keys()[-2]], [max_mass_ts1, max_mass_ts2])
+#     VOC_end = VOC_end[PTRMS[key].keys()[-2]].mean()
 
-    # Determine SOA yield and consumed VOC
-    Y_SOA, Delta_VOC = SOA_yield(VOC_start_conc, VOC_end, max_particle, Mw, T)
-    print(f'{row[1]['date']} Y({key.split('_')[1]}) = {Y_SOA:.2f}')
-    print(f'VOC consumed = {Delta_VOC:.2f} ppb')
+#     # Determine SOA yield and consumed VOC
+#     Y_SOA, Delta_VOC = SOA_yield(VOC_start_conc, VOC_end, max_particle, Mw, T)
+#     print(f'{row[1]['date']} Y({key.split('_')[1]}) = {Y_SOA:.2f}')
+#     print(f'VOC consumed = {Delta_VOC:.2f} ppb')
 
-    # Plot VOC timeseries and decay
-    fig, ax = plt.subplots(2, 1, figsize = (6.3, 6.3))
+#     # Plot VOC timeseries and decay
+#     fig, ax = plt.subplots(2, 1, figsize = (6.3, 6.3))
 
-    t_zero = pd.to_datetime(f'{row[1]['date']} {row[1]['UV on']}')
-    plot_total(ax[0], PTRMS[key], PTRMS[key].keys()[-2], None, t_zero)
+#     t_zero = pd.to_datetime(f'{row[1]['date']} {row[1]['UV on']}')
+#     plot_total(ax[0], PTRMS[key], PTRMS[key].keys()[-2], None, t_zero)
 
-    # UV on
-    ax[0].axvspan(0, (pd.to_datetime(f'{row[1]['date']} {row[1]['UV off']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'yellow', alpha = 0.15, lw = 0, label = 'UV on')
+#     # UV on
+#     ax[0].axvspan(0, (pd.to_datetime(f'{row[1]['date']} {row[1]['UV off']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'yellow', alpha = 0.15, lw = 0, label = 'UV on')
 
-    # d9-BuOH inj
-    ax[0].axvspan((pd.to_datetime(f'{row[1]['date']} {row[1]['d9-BuOH inj start']}') -  t_zero) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{row[1]['date']} {row[1]['d9-BuOH inj end']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'blue', alpha = 0.15, lw = 0, label = 'd9-BuOH inj')
+#     # d9-BuOH inj
+#     ax[0].axvspan((pd.to_datetime(f'{row[1]['date']} {row[1]['d9-BuOH inj start']}') -  t_zero) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{row[1]['date']} {row[1]['d9-BuOH inj end']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'blue', alpha = 0.15, lw = 0, label = 'd9-BuOH inj')
 
-    # H2O2 inj
-    ax[0].axvspan((pd.to_datetime(f'{row[1]['date']} {row[1]['H2O2 inj start']}') -  t_zero) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{row[1]['date']} {row[1]['H2O2 inj end']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'orange', alpha = 0.15, label = 'H$_{2}$O$_{2}$ inj')
+#     # H2O2 inj
+#     ax[0].axvspan((pd.to_datetime(f'{row[1]['date']} {row[1]['H2O2 inj start']}') -  t_zero) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{row[1]['date']} {row[1]['H2O2 inj end']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'orange', alpha = 0.15, label = 'H$_{2}$O$_{2}$ inj')
 
-    # VOC inj
-    ax[0].axvspan((pd.to_datetime(f'{row[1]['date']} {row[1]['VOC inj start']}') -  t_zero) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{row[1]['date']} {row[1]['VOC inj end']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'green', alpha = 0.15, lw = 0, label = 'VOC inj')
+#     # VOC inj
+#     ax[0].axvspan((pd.to_datetime(f'{row[1]['date']} {row[1]['VOC inj start']}') -  t_zero) / pd.Timedelta(minutes = 1), (pd.to_datetime(f'{row[1]['date']} {row[1]['VOC inj end']}') -  t_zero) / pd.Timedelta(minutes = 1), color = 'green', alpha = 0.15, lw = 0, label = 'VOC inj')
 
-    # Determine VOC decay rate (from UV on until max particle mass is reached)
-    Fit_df = time_filtered_conc(PTRMS[key], [PTRMS[key].keys()[-2]], 
-                                [t_zero, pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}')]).dropna()
-    Fit_df['Time'] = (Fit_df['Time'] - t_zero) / pd.Timedelta(minutes = 1)
-    values, errors, ndof, squares, R2 = linear_fit(Fit_df['Time'], np.log(Fit_df[PTRMS[key].keys()[-2]]), linear,
-                                                   a = -0.01, b = 5)
-    fit = linear(Fit_df['Time'], *values)
+#     # Determine VOC decay rate (from UV on until max particle mass is reached)
+#     Fit_df = time_filtered_conc(PTRMS[key], [PTRMS[key].keys()[-2]], 
+#                                 [t_zero, pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}')]).dropna()
+#     Fit_df['Time'] = (Fit_df['Time'] - t_zero) / pd.Timedelta(minutes = 1)
+#     values, errors, ndof, squares, R2 = linear_fit(Fit_df['Time'], np.log(Fit_df[PTRMS[key].keys()[-2]]), linear,
+#                                                    a = -0.01, b = 5)
+#     fit = linear(Fit_df['Time'], *values)
 
-    # Plot fitted decay
-    ax[1].scatter(Fit_df['Time'], np.log(Fit_df[PTRMS[key].keys()[-2]]), s = 10)
-    ax[1].plot(Fit_df['Time'], fit, color = 'k', lw = 1.2)
-    ax[1].text(0.05, 0.075, f'ln[{PTRMS[key].keys()[-2]}] = ({values[0]*10**(3):.2f}E-03)t + {values[1]:.3f}', 
-               transform = ax[1].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
+#     # Plot fitted decay
+#     ax[1].scatter(Fit_df['Time'], np.log(Fit_df[PTRMS[key].keys()[-2]]), s = 10)
+#     ax[1].plot(Fit_df['Time'], fit, color = 'k', lw = 1.2)
+#     ax[1].text(0.05, 0.075, f'ln[{PTRMS[key].keys()[-2]}] = ({values[0]*10**(3):.2f}E-03)t + {values[1]:.3f}', 
+#                transform = ax[1].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
 
-    # print fitted decay rate
-    print(f'{row[1]['date']} ln[{key.split('_')[1]}] = ({values[0]*10**(3):.2f}E-03+-{errors[0]*10**(3):.2f}E-03)t + ({values[1]:.2f}+-{errors[1]:.2f})')
+#     # print fitted decay rate
+#     print(f'{row[1]['date']} ln[{key.split('_')[1]}] = ({values[0]*10**(3):.2f}E-03+-{errors[0]*10**(3):.2f}E-03)t + ({values[1]:.2f}+-{errors[1]:.2f})')
 
-    # Set legend, ax-labels and title
-    ax[0].legend(frameon = True)
-    ax[0].set(ylabel = 'VOC conc. (ppb)', title = f'{row[1]['date']} {key.split('_')[1]}')
-    ax[1].set(ylabel = f'ln[{key.split('_')[1]}]', xlabel = 'Time (min)')
+#     # Set legend, ax-labels and title
+#     ax[0].legend(frameon = True)
+#     ax[0].set(ylabel = 'VOC conc. (ppb)', title = f'{row[1]['date']} {key.split('_')[1]}')
+#     ax[1].set(ylabel = f'ln[{key.split('_')[1]}]', xlabel = 'Time (min)')
 
-    fig.tight_layout()
-    fig.savefig(f'{savepath}{row[1]['date']}_{key.split('_')[1]}.jpg', dpi = 600)
+#     fig.tight_layout()
+#     fig.savefig(f'{savepath}{row[1]['date']}_{key.split('_')[1]}.jpg', dpi = 600)
 
 #%%
 def calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps):
@@ -142,16 +143,23 @@ def calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps):
     filtered_df = filtered_df.dropna()
 
     # Convert timestamps into time passed in seconds
-    time_minutes = (pd.to_datetime(filtered_df['Time']) - pd.to_datetime(timestamps[0])) / pd.Timedelta(seconds = 1)
+    filtered_df['time_seconds'] = (pd.to_datetime(filtered_df['Time']) - pd.to_datetime(timestamps[0])) / pd.Timedelta(seconds = 1)
 
     # Calculate ln(I/I0)
     I0 = filtered_df[d9_key][0]
     filtered_df['ln(I/I0)'] = np.log(filtered_df[d9_key] / I0)
 
     # Linear fit 
-    values, errors, ndof, squares, R2 = linear_fit(time_minutes, filtered_df['ln(I/I0)'], linear, a = 10**(-5), b = 0)
+    fit_result, fit_cov, R2 = linear_fit(filtered_df['time_seconds'], filtered_df['ln(I/I0)'], linear, a = 10**(-5), b = 0)
+    #### test ####
+    p, cov = np.polyfit(filtered_df['time_seconds'], filtered_df['ln(I/I0)'], 1, cov = True)
 
-    filtered_df['y_fit'] = linear(time_minutes, *values)
+    print(fit_cov, cov)
+
+
+    #### test ####
+# ndof, squares,
+    filtered_df['y_fit'] = linear(filtered_df['time_seconds'], *fit_result)
 
     # OH concentration calculation
     # Define variables
@@ -161,38 +169,37 @@ def calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps):
     # Define relation
     OH = (-I) / k_D9BuOH
     # Calculate uncertainty
-    dOH = sqrt((OH.diff(I)*I)**2)
+    dOH = sqrt((OH.diff(I)*dI)**2)
     # Turn expression into numerical functions
     fOH = lambdify((I), OH)
     fdOH = lambdify((I,dI), dOH)
     # define values and their errors
-    vI, vdI = values[0] / 60, errors[0] / 60
+    vI, vdI = fit_result[0], np.sqrt(fit_cov[0,0])
     # numerically evaluate expression
     vOH = fOH(vI)
     vdOH = fdOH(vI, vdI)
 
     # Print results
     print(f'R2 = {R2:.2f}')
-    print(f'slope = ({values[0]:.3e}+-{errors[0]:.3e}) min-1')
-    print(f'intercept = ({values[1]:.3e}+-{errors[1]:.3e}) min-1')
+    print(f'slope = ({fit_result[0]:.3e}+-{fit_cov[0,0]:.3e}) s-1')
     print(f'[OH] = ({vOH:.3e}+-{vdOH:.3e}) molecules cm-3')
     
-    return filtered_df, vOH, vdOH, values, errors, R2
+    return filtered_df, vOH, vdOH, fit_result, fit_cov
 
 def plot_D9BuOh_decay(df, d9_key, averaging_time, timestamps):
-    filtered_df, vOH, vdOH, values, errors, R2 = calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps)
+    filtered_df, vOH, vdOH, fit_result, fit_cov = calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps)
 
     time_minutes = (pd.to_datetime(filtered_df['Time']) - pd.to_datetime(timestamps[0])) / pd.Timedelta(minutes = 1)
 
     fig, ax = plt.subplots(figsize = (5, 3.5))
 
-    ax.scatter(time_minutes, filtered_df['ln(I/I0)'], s = 10, label = f'Measured data')
+    y_error = np.sqrt(fit_cov[1,1]+filtered_df['time_seconds']**2*fit_cov[0,0]+2*filtered_df['time_seconds']*fit_cov[0,1])
+
+    ax.fill_between(time_minutes, filtered_df['y_fit'] + y_error, filtered_df['y_fit'] - y_error,
+                        alpha = 0.25, label = 'Error on fit', color = 'k', lw = 0)
     ax.plot(time_minutes, filtered_df['y_fit'], lw = 1, 
-            label = ('Fit\n' f'OH = {vOH:.2e} ${{\pm}}$ {vdOH:.1e} molecules cm$^{{-3}}$'))
-    ax.fill_between(time_minutes, 
-                    linear(time_minutes, *(values + errors)),
-                    linear(time_minutes, *(values - errors)),
-                    alpha = 0.25, label = 'Error on fit')
+            label = ('Fit\n' f'OH = {vOH:.2e} ${{\pm}}$ {vdOH:.1e} molecules cm$^{{-3}}$'), color = 'k')
+    ax.scatter(time_minutes, filtered_df['ln(I/I0)'], s = 10, label = f'Measured data', color = 'r')
 
     ax.legend(frameon = True)
 
