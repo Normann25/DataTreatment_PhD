@@ -257,12 +257,10 @@ def instrument_comparison(ax, x_data, y_data, label, ax_labels, forced_zero):
     # ax.plot(x_plot, x_plot, color = 'grey', lw = 1, ls = '--', label = None)
 
     if forced_zero:
-        fit_params, fit_errors, squares, ndof, R2 = linear_fit(x_data, y_data, linear_forced_zero, a_guess = 1)
-        y_fit = linear_forced_zero(x_plot, *fit_params)
+        fit_params, fit_errors, y_fit, y_errors, R2 = least_squares_reg(x_data, y_data, linear_forced_zero, True)
         print(f'f(x) = {fit_params[0]}x, R2 = {R2}')
     else:
-        fit_params, fit_errors, squares, ndof, R2 = linear_fit(x_data, y_data, linear, a_guess = 1, b_guess = 0)
-        y_fit = linear(x_plot, *fit_params)
+        fit_params, fit_errors, y_fit, y_errors, R2 = least_squares_reg(x_data, y_data, linear, True)
         print(f'f(x) = {fit_params[0]}x + {fit_params[1]}, R2 = {R2}')
 
     ax.plot(x_plot, y_fit, color = 'k', lw = 1.2, label = 'Fit')
@@ -271,7 +269,7 @@ def instrument_comparison(ax, x_data, y_data, label, ax_labels, forced_zero):
     
     ax.set(xlabel = ax_labels[0], ylabel = ax_labels[1])
     
-    return fit_params, fit_errors, squares, ndof, R2
+    return fit_params, fit_errors, R2
 
 def vanKrevelen_OS(ax, rotation):
     O_C_ratio = np.linspace(0, 1.5, 100)
@@ -370,8 +368,11 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, Org_DL, timestamps,
     return ax
 
 def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, ts_exp_end, RH):
-    fig = plt.figure(figsize = (7, 6.5))
-    axes = [plt.subplot(2, 1, 1), plt.subplot(2, 2, 3), plt.subplot(2, 2, 4)]
+    if ts_exp_end == None:
+        fig, axes = plt.subplots(2, 1, figsize = (6.3, 6))
+    else:
+        fig = plt.figure(figsize = (7, 6.5))
+        axes = [plt.subplot(2, 1, 1), plt.subplot(2, 2, 3), plt.subplot(2, 2, 4)]
 
     if fragments != None:
         n_lines = len(labels) + 1
@@ -396,20 +397,22 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
     UV_off_df = UV_off_df.reset_index(drop = True)
 
     axes[1].scatter(UV_on_df['Time'], np.log(UV_on_df[parent_compound]), color = scatter_color, s = 10)
-    on_values, on_errors, on_ndof, on_squares, on_R2 = linear_fit(UV_on_df['Time'], np.log(UV_on_df[parent_compound]), linear, a = 1, b = 10)
-    on_fit = linear(UV_on_df['Time'], *on_values)
+    on_values, on_errors, on_fit, y_error, on_R2 = least_squares_reg(UV_on_df['Time'], np.log(UV_on_df[parent_compound]), 
+                                                                     linear, True)
     axes[1].plot(UV_on_df['Time'], on_fit, color = 'k', lw = 1.2, ls = '--')
     axes[1].text(0.05, 0.075, f'ln[{labels[0]}] = {on_values[0]:.2e}t + {on_values[1]:.2e}', transform = axes[1].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
     axes[1].set_title('UV on', fontsize = 12)
     print(f'{t_zero.split(' ')[0]}, {RH}, UV on: ln[{labels[0]}] = ({on_values[0]:.2e}+-{on_errors[0]:.2e})t + ({on_values[1]:.2e}+-{on_errors[1]:.2e})')
 
-    axes[2].scatter(UV_off_df['Time'], np.log(UV_off_df[parent_compound]), color = scatter_color, s = 10)
-    off_values, off_errors, off_ndof, off_squares, off_R2 = linear_fit(UV_off_df['Time'], np.log(UV_off_df[parent_compound]), linear, a = 1, b = 10)
-    off_fit = linear(UV_off_df['Time'], *off_values)
-    axes[2].plot(UV_off_df['Time'], off_fit, color = 'k', lw = 1.2, ls = '--')
-    axes[2].text(0.05, 0.075, f'ln[{labels[0]}] = {off_values[0]:.2e}t + {off_values[1]:.2e}', transform = axes[2].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
-    axes[2].set_title('UV off', fontsize = 12)
-    print(f'{t_zero.split(' ')[0]}, {RH}, UV off: ln[{labels[0]}] = ({off_values[0]:.2e}+-{off_errors[0]:.2e})t + ({off_values[1]:.2e}+-{off_errors[1]:.2e})')
+    if ts_exp_end != None:
+        axes[2].scatter(UV_off_df['Time'], np.log(UV_off_df[parent_compound]), color = scatter_color, s = 10)
+        off_values, off_errors, off_fit, y_error, off_R2 = least_squares_reg(UV_off_df['Time'], 
+                                                                             np.log(UV_off_df[parent_compound]), 
+                                                                             linear, True)
+        axes[2].plot(UV_off_df['Time'], off_fit, color = 'k', lw = 1.2, ls = '--')
+        axes[2].text(0.05, 0.075, f'ln[{labels[0]}] = {off_values[0]:.2e}t + {off_values[1]:.2e}', transform = axes[2].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
+        axes[2].set_title('UV off', fontsize = 12)
+        print(f'{t_zero.split(' ')[0]}, {RH}, UV off: ln[{labels[0]}] = ({off_values[0]:.2e}+-{off_errors[0]:.2e})t + ({off_values[1]:.2e}+-{off_errors[1]:.2e})')
 
     for ax in axes[1:]:
         ax.set(xlabel = 'Time (min)', ylabel = f'ln[{labels[0]}]')
