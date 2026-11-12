@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import scipy
+import matplotlib.pyplot as plt
 from iminuit import Minuit
 import re
 from ExternalFunctions import *
@@ -112,14 +113,14 @@ def wall_loss_corr(df, keys, t_zero, t_loss):
     new_df = df
 
     loss_df = time_filtered_conc(df, keys, t_loss)
-    loss_df['Time'] = (loss_df['Time']- pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+    loss_df['Time'] = (loss_df['Time'] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
 
     time_minutes = (df['Time'] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
     to_replace = [t for t in time_minutes if t < 0]
     time_minutes = time_minutes.replace(to_replace, 0)
 
     for key in keys:
-        wall_loss, error, ndof, squares, R2 = linear_fit(loss_df['Time'], np.log(loss_df[key]), linear, a = 1, b = 10)
+        wall_loss, error, y_fit, y_error, R2 = least_squares_reg(loss_df['Time'], np.log(loss_df[key]), linear, True)
 
         yIntegral = np.cumsum(df[key])
         tDiff = np.mean(np.diff(time_minutes)) 
@@ -430,33 +431,30 @@ def linear_forced_zero(x, a):
 def linear(x, a, b):
     return b + (a * x)
 
-def linear_fit(x, y, fitfunc, **kwargs):
+def least_squares_reg(x, y, fitfunc, linear):
 
-    Npoints = len(y)
     x, y = np.array(x), np.array(y)
 
-    # fit_result = scipy.stats.linregress(x, y)
+    # Compute the fit
     fit_result, fit_cov = scipy.optimize.curve_fit(fitfunc, x, y)
-    
-    def obt(*args):
-        squares = np.sum(((y-fitfunc(x, *args)))**2)
-        return squares
 
-    minuit = Minuit(obt, **kwargs, name = [*kwargs]) # Setup; obtimization function, initial variable guesses, names of variables. 
-    minuit.errordef = 1 # for Minuit to compute errors correctly
+    # Calculate y values from fit
+    y_fit = fitfunc(x, *fit_result)
 
-    minuit.migrad() # Compute the fit
-    valuesfit = np.array(minuit.values, dtype = np.float64) # Convert to numpy
-    errorsfit = np.array(minuit.errors, dtype = np.float64) # Convert to numpy
-    if not minuit.valid: # Give custom error if the fit did not converge
-        print("!!! Fit did not converge !!!\n!!! Give better initial parameters !!!")
+    # Calculate errors on fit
+    if linear:
+        y_error = np.sqrt(fit_cov[1,1] + x**2*fit_cov[0,0] + 2*x*fit_cov[0,1]) # only true for linear
+    else:
+        y_error = np.zeros_like(x)
+    fit_error = np.sqrt(np.diag(fit_cov))
 
-    Nvar = len(kwargs)           # Number of variables
-    Ndof_fit = len(x) - Nvar
+    # Calculate residuals and R2
+    residuals = y - y_fit
+    R2 = 1 - (np.sum(residuals**2) / np.sum((y - y.mean())**2))
 
-    squares_fit = minuit.fval  
+    # Plot residuals
+    fig, ax = plt.subplots()
+    ax.scatter(x, residuals)
+    ax.set(ylabel = 'Residuals')
 
-    # Calculate R2
-    R2 = ((Npoints * np.sum(x * y) - np.sum(x) * np.sum(y)) / (np.sqrt(Npoints * np.sum(x**2) - (np.sum(x))**2)*np.sqrt(Npoints * np.sum(y**2) - (np.sum(y))**2)))**2 
-
-    return fit_result, fit_cov, R2   # valuesfit, errorsfit, Ndof_fit, squares_fit
+    return fit_result, fit_error, y_fit, y_error, R2
