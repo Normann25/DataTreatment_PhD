@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import scipy
 import matplotlib.pyplot as plt
-from iminuit import Minuit
+from sympy import*
 import re
 from ExternalFunctions import *
 #%%
@@ -128,6 +128,58 @@ def wall_loss_corr(df, keys, t_zero, t_loss):
         new_df[key] = yCorr
 
     return new_df
+
+def calc_D9BuOH_decay(df, d9_key, averaging_time, timestamps):
+
+    k_D9BuOH = 2.7*10**(-12)    # cm3 molecules-1 s-1
+
+    # Filter the timeperiod that you want to fit
+    if averaging_time == None:
+        filtered_df = time_filtered_conc(df, [d9_key], timestamps)
+    else:
+        filtered_df, _ = running_mean(df, [d9_key], 'Time', averaging_time, timestamps)
+        filtered_df['Time'] = filtered_df.index
+        filtered_df = filtered_df.reset_index(drop = True)
+
+    filtered_df = filtered_df.dropna()
+
+    # Convert timestamps into time passed in seconds
+    filtered_df['time_seconds'] = (pd.to_datetime(filtered_df['Time']) - pd.to_datetime(timestamps[0])) / pd.Timedelta(seconds = 1)
+
+    # Calculate ln(I/I0)
+    I0 = filtered_df[d9_key][0]
+    filtered_df['ln(I/I0)'] = np.log(filtered_df[d9_key] / I0)
+
+    # Linear fit 
+    fit_result, fit_error, filtered_df['y_fit'], filtered_df['y_error'], R2 = least_squares_reg(filtered_df['time_seconds'], filtered_df['ln(I/I0)'], linear, True)
+
+    # filtered_df['y_fit'] = y_fit
+    # filtered_df['y_error'] = y_error
+
+    # OH concentration calculation
+    # Define variables
+    OH, I = symbols('OH, I')
+    dOH, dI = symbols('sigma_OH, sigma_I')
+    # Perimeter:
+    # Define relation
+    OH = (-I) / k_D9BuOH
+    # Calculate uncertainty
+    dOH = sqrt((OH.diff(I)*dI)**2)
+    # Turn expression into numerical functions
+    fOH = lambdify((I), OH)
+    fdOH = lambdify((I,dI), dOH)
+    # define values and their errors
+    vI, vdI = fit_result[0], fit_error[0]
+    # numerically evaluate expression
+    vOH = fOH(vI)
+    vdOH = fdOH(vI, vdI)
+
+    # Print results
+    print(f'R2 = {R2:.2f}')
+    print(f'slope = ({fit_result[0]:.3e}+-{np.sqrt(fit_error[0]):.3e}) s-1')
+    print(f'[OH] = ({vOH:.3e}+-{vdOH:.3e}) molecules cm-3')
+    
+    return filtered_df, vOH, vdOH, fit_result, fit_error
 
 def convert_ppb_to_ugm3(conc_ppb, Mw, T):
     """
