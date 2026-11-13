@@ -257,7 +257,7 @@ def instrument_comparison(ax, x_data, y_data, label, ax_labels, forced_zero):
     # ax.plot(x_plot, x_plot, color = 'grey', lw = 1, ls = '--', label = None)
 
     if forced_zero:
-        fit_params, fit_errors, y_fit, y_errors, R2 = least_squares_reg(x_data, y_data, linear_forced_zero, True)
+        fit_params, fit_errors, y_fit, y_errors, R2 = least_squares_reg(x_data, y_data, linear_forced_zero, False)
         print(f'f(x) = {fit_params[0]}x, R2 = {R2}')
     else:
         fit_params, fit_errors, y_fit, y_errors, R2 = least_squares_reg(x_data, y_data, linear, True)
