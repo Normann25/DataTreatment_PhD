@@ -490,7 +490,16 @@ def least_squares_reg(x, y, fitfunc, linear_function):
     Parameters
     ----------
     x: array_like or pandas DataFrame column
+        Independent variable, that the data is measured against. Should be an M-length sequence.
 
+    y: array_like of pandas DataFrame column
+        Dependent or measured data. Should be an M-length sequence.
+    
+    fitfunc: callable
+        The model function, f(x, ...). It must take the independent variable as the first argument and the parameters to fit as separate remaining arguments.
+    
+    linear_function: bool
+        If True, the error on the fitted y-values will be calculated. ONLY set this to True if a linear function of the form f(x) = ax + b is being fitted.
     """
 
     x, y = np.array(x), np.array(y)
