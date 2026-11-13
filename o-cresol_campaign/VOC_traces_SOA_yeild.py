@@ -104,18 +104,17 @@ for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, data['Timesta
     Fit_df = time_filtered_conc(PTRMS[key], [PTRMS[key].keys()[-2]], 
                                 [t_zero, pd.to_datetime(f'{row[1]['date']} {row[1]['max particle conc']}')]).dropna()
     Fit_df['Time'] = (Fit_df['Time'] - t_zero) / pd.Timedelta(minutes = 1)
-    values, errors, ndof, squares, R2 = linear_fit(Fit_df['Time'], np.log(Fit_df[PTRMS[key].keys()[-2]]), linear,
-                                                   a = -0.01, b = 5)
-    fit = linear(Fit_df['Time'], *values)
+    values, errors, y_fit, y_error, R2 = least_squares_reg(Fit_df['Time'], np.log(Fit_df[PTRMS[key].keys()[-2]]), 
+                                                          linear, True)
 
     # Plot fitted decay
     ax[1].scatter(Fit_df['Time'], np.log(Fit_df[PTRMS[key].keys()[-2]]), s = 10)
-    ax[1].plot(Fit_df['Time'], fit, color = 'k', lw = 1.2)
-    ax[1].text(0.05, 0.075, f'ln[{PTRMS[key].keys()[-2]}] = ({values[0]*10**(3):.2f}E-03)t + {values[1]:.3f}', 
+    ax[1].plot(Fit_df['Time'], y_fit, color = 'k', lw = 1.2)
+    ax[1].text(0.05, 0.075, f'ln[{PTRMS[key].keys()[-2]}] = ({values[0]:.2e})t + {values[1]:.2f}', 
                transform = ax[1].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
 
     # print fitted decay rate
-    print(f'{row[1]['date']} ln[{key.split('_')[1]}] = ({values[0]*10**(3):.2f}E-03+-{errors[0]*10**(3):.2f}E-03)t + ({values[1]:.2f}+-{errors[1]:.2f})')
+    print(f'{row[1]['date']} ln[{key.split('_')[1]}] = ({values[0]:.2e} +- {errors[0]:.2e})t + ({values[1]:.2f} +- {errors[1]:.2f})')
 
     # Set legend, ax-labels and title
     ax[0].legend(frameon = True)
