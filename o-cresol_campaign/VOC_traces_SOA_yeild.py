@@ -114,7 +114,7 @@ for key, row, max_particle, VOC_start_conc, Mw, T in zip(exp_keys, data['Timesta
                transform = ax[1].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
 
     # print fitted decay rate
-    print(f'{row[1]['date']} ln[{key.split('_')[1]}] = ({values[0]:.2e} +- {errors[0]:.2e})t + ({values[1]:.2f} +- {errors[1]:.2f})')
+    print(f'{row[1]['date']} ln[{key.split('_')[1]}] = ({values[0]:.2e} +- {errors[0]:.2e})t + ({values[1]:.2f} +- {errors[1]:.3f})')
 
     # Set legend, ax-labels and title
     ax[0].legend(frameon = True)
