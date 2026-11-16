@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 # Paths
-parent_path = '../../../Data/2026/'
+parent_path = '../../../Data/Processed data/2026_vanillin-campaign/'
 paths = ['260427_Vanillin70ppb_UV_RH70/', '260428_Vanillin70ppb_UV_RH70/', 
          '260429_Vanillin70ppb_UV_RH85/', '260430_Vanillin70ppb_UV_RH85/']
 save_path = '../../../Figures/Vanillin/2604_vanillin+UV_RH70-85/'

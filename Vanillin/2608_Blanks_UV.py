@@ -11,7 +11,7 @@ import warnings
 warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
-parent_path = '../../../Data/2026/'
+parent_path = '../../../Data/Processed data/2026_vanillin-campaign/'
 paths = ['20260824_blank_UV/', '20260827_Blank_UV_85RH/', '20260828_Blank_UV/', '20260908_vanillin70ppb_UV_dry/', '20260909_vanillin70ppb_UV_85RH/']
 
 timestamps = [['2026-08-24 12:45', '2026-08-24 18:21'],

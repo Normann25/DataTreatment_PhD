@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
-parent_path = '../../../Data/2026/'
+parent_path = '../../../Data/Processed data/2026_vanillin-campaign/'
 paths = ['260505_Vanillin70ppb_UV_85RH_(NH4)2SO4-seeds/', '260506_Vanillin70ppb_UV_85RH_(NH4)2SO4-seeds/', 
          '260507_Vanillin70ppb_UV_dry_(NH4)2SO4-seeds/', '260508_Vanillin70ppb_UV_dry_(NH4)2SO4-seeds/']
 
