@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 # Path to data folder
-parent_path = '../../../Data/2026/2026_TOTeM-campaign/'
+parent_path = '../../../Data/Processed data/2026_TOTeM-campaign/'
 # Path to figures
 savepath = '../../../Figures/TOTeM/PTRMS/'
 
