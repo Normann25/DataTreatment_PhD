@@ -47,8 +47,8 @@ DAQ['DataDAQ_260826'] = DAQ['DataDAQ_260826'][RH_mask]
 ptr_mask = PTRMS['260908_VL+UV_dry_fragments']['m153.059 (C[12]8H[1]9O[16]3) (Conc)'] < 70
 PTRMS['260908_VL+UV_dry_fragments'] = PTRMS['260908_VL+UV_dry_fragments'][ptr_mask]
 
-SMPS_blank = [['20260824_blank_uv_dry_number', '20260827_blank_uv_85RH_number', '20260828_blank_uv_dry_number'],
-             ['20260824_blank_uv_dry_mass', '20260827_blank_uv_85RH_mass', '20260828_blank_uv_dry_mass']]
+SMPS_blank = [['260824_blank_uv_dry_number', '260827_blank_uv_85RH_number', '260828_blank_uv_dry_number'],
+             ['260824_blank_uv_dry_mass', '260827_blank_uv_85RH_mass', '260828_blank_uv_dry_mass']]
 SMPS_rep = [['260908_vanillin+UV_dry_number', '260909_vanillin+UV_85RH_number'],
             ['260908_vanillin+UV_dry_mass', '260909_vanillin+UV_85RH_mass']]
 DAQ_keys = ['DataDAQ_260824', 'DataDAQ_260826', 'DataDAQ_260828', 'DataDAQ_260908', 'DataDAQ_260909']
