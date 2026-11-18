@@ -45,7 +45,6 @@ for i, key in enumerate(np.array(SMPS_keys).flatten()):
         t = t_injection[i]
     SMPS[key].loc[SMPS[key]['Time'] < pd.to_datetime(t), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     SMPS[key] = remove_spikes_up(SMPS[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
-    SMPS[key].rename(columns = {SMPS[key].columns[38]:'Total concentration'}, inplace = True)
 for t, key in zip(t_injection, AMS.keys()):
     if 'PToF' not in key:
         AMS[key].loc[AMS[key]['Time'] < pd.to_datetime(t), ['Ratio_H_C', 'Ratio_O_C']] = np.nan
