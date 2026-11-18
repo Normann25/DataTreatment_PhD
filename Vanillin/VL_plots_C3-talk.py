@@ -13,7 +13,6 @@ pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 # Paths
 parent_path = '../../../Data/Processed data/2026_vanillin-campaign/'
-paths = ['260429_Vanillin70ppb_UV_RH85/', '260504_Vanillin70ppb_UV_dry/']
 save_path = '../../../Figures/Vanillin/C3-retreat_talk/'
 
 # Timestamps
@@ -37,9 +36,9 @@ PTRMS_keys = [['260429_VL+UV_RH85_fragments', 'm153.061 (C[12]8H[1]9O[16]3) (Con
 
 # Read data
 SMPS = {}
-SMPS_raw = import_SMPS(paths, parent_path, 0)
-PTRMS = import_PTRMS(paths, parent_path)
-AMS = import_AMS(paths, parent_path, 0)
+SMPS_raw = import_SMPS([''], parent_path, 0)
+PTRMS = import_PTRMS([''], parent_path)
+AMS = import_AMS([''], parent_path, 0)
 for i, key in enumerate(SMPS_keys):
     temp = SMPS_raw[key]
     temp.loc[temp['Time'] < pd.to_datetime(t_zero[i]), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
