@@ -13,8 +13,6 @@ pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 # Paths
 parent_path = '../../../Data/Processed data/2026_vanillin-campaign/'
-paths = ['260427_Vanillin70ppb_UV_RH70/', '260428_Vanillin70ppb_UV_RH70/', 
-         '260429_Vanillin70ppb_UV_RH85/', '260430_Vanillin70ppb_UV_RH85/']
 save_path = '../../../Figures/Vanillin/2604_vanillin+UV_RH70-85/'
 
 # Timestamps
@@ -42,10 +40,10 @@ RH = ['70% RH', '70% RH', '85% RH', '85% RH']
 
 # Read data
 SMPS = {}
-SMPS_raw = import_SMPS(paths, parent_path, 0)
-PTRMS = import_PTRMS(paths, parent_path)
-AMS = import_AMS(paths, parent_path, 0)
-DAQ = import_DAQ(paths, parent_path, 0)
+SMPS_raw = import_SMPS([''], parent_path, 0)
+PTRMS = import_PTRMS([''], parent_path)
+AMS = import_AMS([''], parent_path, 0)
+DAQ = import_DAQ([''], parent_path, 0)
 for i, key in enumerate(np.array(SMPS_keys).flatten()):
     if 'mass' in key:
         t = t_zero[i-4]
