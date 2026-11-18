@@ -11,8 +11,6 @@ warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 parent_path = '../../../Data/Processed data/2026_vanillin-campaign/'
-paths = ['260505_Vanillin70ppb_UV_85RH_(NH4)2SO4-seeds/', '260506_Vanillin70ppb_UV_85RH_(NH4)2SO4-seeds/', 
-         '260507_Vanillin70ppb_UV_dry_(NH4)2SO4-seeds/', '260508_Vanillin70ppb_UV_dry_(NH4)2SO4-seeds/']
 
 timestamps = [['2026-05-05 07:40', '2026-05-05 17:59'],
               ['2026-05-06 07:12', '2026-05-06 16:23'],
@@ -36,10 +34,10 @@ DAQ_keys = ['DataDAQ_260505', 'DataDAQ_260506', 'DataDAQ_260507', 'DataDAQ_26050
 RH = ['85% RH', '85% RH', 'Dry', 'Dry']
 
 # Import data
-SMPS = import_SMPS(paths, parent_path, 0)
+SMPS = import_SMPS([''], parent_path, 0)
 # PTRMS = {}
-AMS = import_AMS(paths, parent_path, 0)
-DAQ = import_DAQ(paths, parent_path, 0)
+AMS = import_AMS([''], parent_path, 0)
+DAQ = import_DAQ([''], parent_path, 0)
 for i, key in enumerate(np.array(SMPS_keys).flatten()):
     if 'mass' in key:
         t = t_injection[i-4]
