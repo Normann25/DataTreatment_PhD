@@ -49,10 +49,9 @@ for i, key in enumerate(np.array(SMPS_keys).flatten()):
         t = t_zero[i]
         temp = SMPS_raw[key]
     temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 30), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
-    temp.loc[temp[SMPS_raw[key].keys()[38]] == 0, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+    temp.loc[temp['Total concentration'] == 0, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 50)
     temp = remove_spikes_down(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 50)
-    temp.rename(columns = {temp.columns[38]:'Total concentration'}, inplace = True)
     SMPS[key] = temp
 for i, key in enumerate(PTRMS_keys):
     if 'fragments' in key:
