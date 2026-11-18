@@ -12,7 +12,6 @@ warnings.filterwarnings('ignore')
 pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 parent_path = '../../../Data/Processed data/2026_vanillin-campaign/'
-paths = ['20260824_blank_UV/', '20260827_Blank_UV_85RH/', '20260828_Blank_UV/', '20260908_vanillin70ppb_UV_dry/', '20260909_vanillin70ppb_UV_85RH/']
 
 timestamps = [['2026-08-24 12:45', '2026-08-24 18:21'],
               ['2026-08-27 08:20', '2026-08-27 13:45'],
@@ -24,10 +23,10 @@ t_UV_off = ['2026-08-24 17:21', '2026-08-27 12:45', '2026-08-28 12:55', '2026-09
 
 RH = ['Dry', '85% RH', 'Dry', 'Dry', '85% RH']
 
-SMPS = import_SMPS(paths, parent_path, 0)
-PTRMS = import_PTRMS(paths, parent_path)
+SMPS = import_SMPS([''], parent_path, 0)
+PTRMS = import_PTRMS([''], parent_path)
 # AMS = {}
-DAQ = import_DAQ(paths, parent_path, 0)
+DAQ = import_DAQ([''], parent_path, 0)
 for key in DAQ.keys():
     DAQ[key] = remove_spikes(DAQ[key], ['Temp_C'], 5)
 
