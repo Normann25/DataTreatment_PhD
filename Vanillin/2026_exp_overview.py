@@ -13,3 +13,4 @@ pd.options.mode.chained_assignment = None  # suppress warnings
 #%%
 # Paths
 path = '../../../Data/Processed data/2026_vanillin-campaign/'
+save_path = '../../../Figures/Vanillin/'
