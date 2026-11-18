@@ -51,7 +51,6 @@ for i, key in enumerate(np.array(SMPS_keys).flatten()):
         t = t_zero[i]
     temp = SMPS_raw[key]
     temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 20), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
-    temp.rename(columns = {temp.columns[38]:'Total concentration'}, inplace = True)
     if 'number' in key:
         temp.loc[temp['Total concentration'] <= 2, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
     SMPS[key] = temp
