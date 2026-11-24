@@ -57,7 +57,8 @@ RH_mask = DAQ['DataDAQ_260507']['RH_Percent'] < 0.005
 DAQ['DataDAQ_260507'] = DAQ['DataDAQ_260507'][RH_mask]
 #%%
 for i, time in enumerate(timestamps):
-    plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, HEPA_timestamps[i], t_zero[i], RH[i], save_path)
+    plot_AURA_overview(DAQ[DAQ_keys[i]], None, SMPS[SMPS_keys[0][i]], None, AMS[AMS_keys[i]], None, 
+                       time, HEPA_timestamps[i], t_zero[i], 4, 1, RH[i], None, save_path)
 #%%
 ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260505_vanillin+UV+seeds_RH85_mass'].columns[42:-1], 'number and mass', 
                      timestamps, 10, RH, 'Total concentration', t_zero, 2, 2, save_path)

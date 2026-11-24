@@ -80,7 +80,8 @@ for i, key in enumerate(['260501_VL+UV_dry_all', '260504_VL+UV_dry_all']):
 #%%
 # Experiment overview
 for i, time in enumerate(timestamps):
-    plot_AURA_overview(DAQ[DAQ_keys[i]], SMPS[SMPS_keys[0][i]], AMS[AMS_keys[i]], time, HEPA_timestamps[i], t_zero[i], 'Dry', save_path)
+    plot_AURA_overview(DAQ[DAQ_keys[i]], None, SMPS[SMPS_keys[0][i]], None, AMS[AMS_keys[i]], None, 
+                       time, HEPA_timestamps[i], t_zero[i], 4, 1, 'Dry', None, save_path)
 #%%
 # SMPS raw
 for i, time in enumerate(timestamps):
