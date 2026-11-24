@@ -124,12 +124,12 @@ def import_SMPS(paths, parent_path, hour, skiprows):
 
         if len(files) > 1:
 
-            for file in files:
+            for file, skips in zip(files, skiprows):
                 separations = [',', '\t']
                 for separation in separations:
                     try:
                         with open(os.path.join(f'{parent_path}{path}SMPS/', file), 'r') as f:
-                            df = pd.read_csv(f, sep = separation, skiprows = skiprows)
+                            df = pd.read_csv(f, sep = separation, skiprows = skips)
 
                         df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
                         df['Time'] = df['Time'] + pd.Timedelta(hours = hour)
