@@ -110,11 +110,10 @@ def wall_loss_corr(df, keys, t_zero, t_loss):
     t_loss: list of strings
         Timestamp of when wall loss measurements begin and of when experiment ended
     """
-    new_df = df
+    new_df = df.dropna()
 
     loss_df = time_filtered_conc(df, keys, t_loss)
     loss_df['Time'] = (loss_df['Time'] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
-    loss_df.dropna()
 
     time_minutes = (df['Time'] - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
     to_replace = [t for t in time_minutes if t < 0]
