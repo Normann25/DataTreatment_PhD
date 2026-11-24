@@ -121,7 +121,9 @@ def wall_loss_corr(df, keys, t_zero, t_loss):
     time_minutes = time_minutes.replace(to_replace, 0)
 
     for key in keys:
-        wall_loss, error, y_fit, y_error, R2 = least_squares_reg(loss_df['Time'], np.log(loss_df[key]), linear, True)
+        inf_mask = loss_df[key] > 0
+        loss_temp = loss_df[inf_mask]
+        wall_loss, error, y_fit, y_error, R2 = least_squares_reg(loss_temp['Time'], np.log(loss_temp[key]), linear, True)
 
         yIntegral = np.cumsum(df[key])
         tDiff = np.mean(np.diff(time_minutes)) 
