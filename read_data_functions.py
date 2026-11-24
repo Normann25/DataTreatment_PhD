@@ -115,7 +115,7 @@ def import_PTRMS(paths, parent_path):
 
     return new_dict
 
-def import_SMPS(paths, parent_path, hour):
+def import_SMPS(paths, parent_path, hour, skiprows):
     data = {}
 
     for path in paths:
@@ -129,7 +129,7 @@ def import_SMPS(paths, parent_path, hour):
                 for separation in separations:
                     try:
                         with open(os.path.join(f'{parent_path}{path}SMPS/', file), 'r') as f:
-                            df = pd.read_csv(f, sep = separation, skiprows = 52)
+                            df = pd.read_csv(f, sep = separation, skiprows = skiprows)
 
                         df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
                         df['Time'] = df['Time'] + pd.Timedelta(hours = hour)
@@ -148,7 +148,7 @@ def import_SMPS(paths, parent_path, hour):
             for separation in separations:
                 try:
                     with open(os.path.join(f'{parent_path}{path}SMPS/', file), 'r') as f:
-                        df = pd.read_csv(f, sep = separation, skiprows = 52)
+                        df = pd.read_csv(f, sep = separation, skiprows = skiprows)
 
                     df['Time'] = format_timestamps(df['DateTime Sample Start'], '%d/%m/%Y %H:%M:%S', "%d/%m/%Y %H:%M:%S")
                     df['Time'] = df['Time'] + pd.Timedelta(hours = hour)
