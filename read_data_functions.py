@@ -35,7 +35,7 @@ def import_data(path, parent_path, timelabel, time_format, hour):
             
             if timelabel is not None:
                 try:
-                    df['Time'] = format_timestamps(df[timelabel], time_format, '%d/%m/%Y %H:%M:%S')
+                    df['Time'] = pd.to_datetime(df[timelabel])
                     df['Time'] =  df['Time'] + pd.Timedelta(hours = hour)
                 except KeyError:
                     pass
