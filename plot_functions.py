@@ -490,7 +490,7 @@ def plot_COS(df_AMS, AMS_DL, df_PTR, t_injection, t_zero, t_off):
 
     return fig, axes, OC_ax
 
-def plot_AURA_overview(daq, daq_keys, smps, smps_keys, ams, ams_keys, timestamps, bg_timestamps, t_zero, nrows, ncols, RH, Dp_ylim, save_path):
+def plot_AURA_overview(daq, daq_keys, smps, smps_keys, ams, ams_keys, timestamps, bg_timestamps, t_zero, nrows, ncols, RH, ylims, save_path):
     def plot_AURA(ax, twin_ax, daq, smps, ams, timestamps, bg_timestamps, t_zero, RH):
         if ams is not None:
             ams_bg = time_filtered_conc(ams, ['HROrg'], bg_timestamps)
@@ -584,7 +584,9 @@ def plot_AURA_overview(daq, daq_keys, smps, smps_keys, ams, ams_keys, timestamps
                       timestamps[i], bg_time, t_zero[i], RH[i])
             set_ax_labelcolors(ax[i], x_twins, nrows)
 
-        twin_ax[-1][1].set(ylim = Dp_ylim)
+        twin_ax[-1][1].set(ylim = ylims[0])
+        if ams is not None:
+            ax[-1][0].set(ylim = ylims[1])
 
         for row in np.array(twin_ax).T:
             ref_ax = row[-1]
