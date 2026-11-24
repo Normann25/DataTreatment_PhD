@@ -77,7 +77,7 @@ print(len(PTRMS['260429_VL+UV_RH85_products'].keys()))
 #%%
 # Experiment overview
 for i, time in enumerate(timestamps):
-    plot_AURA_overview(DAQ[DAQ_keys[i]], None, SMPS[SMPS_keys[0][i]], None, AMS[AMS_keys[i]], None, 
+    fig, ax = plot_AURA_overview(DAQ[DAQ_keys[i]], None, SMPS[SMPS_keys[0][i]], None, AMS[AMS_keys[i]], None, 
                        time, HEPA_timestamps[i], t_zero[i], 4, 1, RH[i], None, save_path)
     ax[3].set_ylim (0, 1)
 #%%
