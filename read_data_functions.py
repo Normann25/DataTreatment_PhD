@@ -74,7 +74,10 @@ def import_AMS(paths, parent_path, hour):
     new_dict = {}
 
     for path in paths:
-        data = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', hour)
+        try:
+            data = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%d-%m-%Y %H:%M:%S', hour)
+        except ValueError:
+            data = import_data(f'{parent_path}{path}AMS/', '', 't_series', '%Y-%m-%d %H:%M:%S', hour)
         for key in data.keys():
             if 'TS' in key:
                 if 'PToF' not in key or 'ePToF' not in key:
