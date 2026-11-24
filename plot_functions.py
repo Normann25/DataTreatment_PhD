@@ -586,7 +586,7 @@ def plot_AURA_overview(daq, daq_keys, smps, smps_keys, ams, ams_keys, timestamps
 
         twin_ax[-1][1].set(ylim = ylims[0])
         if ams is not None:
-            ax[-1][0].set(ylim = ylims[1])
+            ax[0][-1].set(ylim = ylims[1])
 
         for row in np.array(twin_ax).T:
             ref_ax = row[-1]
