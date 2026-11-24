@@ -114,8 +114,9 @@ for i, time in enumerate(timestamps):
 ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, 'number and mass', timestamps, 10, ['Dry']*len(t_zero), t_zero, 2, 2, save_path)
 #%%
 # AMS
+HEPA_corr = [True, True, False, False]
 for i, key in enumerate(AMS_keys):
-    plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], 1, 'Dry', save_path)
+    plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], HEPA_corr[i], 1, 'Dry', save_path)
 #%%
 # AMS pie charts
 for time, key in zip(t_zero[2:], AMS_keys[2:]):
