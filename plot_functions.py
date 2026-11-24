@@ -724,7 +724,7 @@ def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, t_zero, nrow
 
     return axes_number, axes_mass if axes_mass else None
 
-def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, RH, save_path):
+def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, HEPA_corr, runlength, RH, save_path):
     date = t_zero.split(' ')[0]
 
     VK_keys = ['Ratio_H_C', 'Ratio_O_C', 'HROrg']
@@ -732,8 +732,9 @@ def plot_AMS(df, PToF_df, t_zero, timestamps, bg_timestamps, runlength, RH, save
     family_keys = ['HROrg', 'familyCHO1', 'familyCHOgt1', 'familyCH', 'familyCHN', 'familyCHO1N']
     bg_df = time_filtered_conc(df, species_keys+family_keys[1:], bg_timestamps)
     Org_DL = bg_df['HROrg'].std() * 3
-    for key in species_keys+family_keys[1:]:
-        df[key] = df[key] - bg_df[key].mean()
+    if HEPA_corr:
+        for key in species_keys+family_keys[1:]:
+            df[key] = df[key] - bg_df[key].mean()
     
     new_df = time_filtered_conc(df, species_keys+family_keys[1:]+VK_keys[:-1], timestamps)
 
