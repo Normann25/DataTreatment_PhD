@@ -77,7 +77,13 @@ for i, t in enumerate(timestamps):
     # AMS
     temp = AMS_data[AMS_keys[i]]
     bg_df = time_filtered_conc(temp, AMS_conc_keys, t[:2])
+    UV_off_df = time_filtered_conc(temp, AMS_conc_keys, [t[3], pd.to_datetime(t[3]) + pd.Timedelta( hours = 1)])
+    temp_keys = []
     for key in AMS_conc_keys:
         temp[key] = temp[key] - bg_df[key].mean()
-    ams = wall_loss_corr(temp, AMS_conc_keys, t[2], [t[3], pd.to_datetime(t[3]) + pd.Timedelta( hours = 1)])
+        if UV_off_df[key].mean() > 0:
+            temp_keys.append(key)
+
+    ams = wall_loss_corr(temp, temp_keys, t[2], [t[3], pd.to_datetime(t[3]) + pd.Timedelta(hours = 1)])
+    ams.rename(columns = {'Time': 't_series'}, inplace = True)
     ams.to_csv(f'{save_path}AMS/{AMS_keys[i]}.txt', sep = '\t', index = False)
