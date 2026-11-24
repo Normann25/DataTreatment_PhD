@@ -87,7 +87,7 @@ ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260428_vanillin+UV_RH70_mass'].colum
 #%%
 # AMS
 for i, key in enumerate(AMS_keys):
-    plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], 1, RH[i], save_path)
+    plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], False, 1, RH[i], save_path)
 #%%
 # AMS pie charts
 for time, key in zip(t_zero[2:], AMS_keys[2:]):
