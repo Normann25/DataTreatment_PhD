@@ -37,21 +37,23 @@ PTRMS_keys = ['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragments', '26050
 
 # Read data
 SMPS = {}
-SMPS_raw = import_SMPS([''], parent_path, 0)
+SMPS_raw = import_SMPS([''], parent_path, 0, [52]*13 + [0]*20 + [52]*16)
 PTRMS = import_PTRMS([''], parent_path)
 AMS = import_AMS([''], parent_path, 0)
 DAQ = import_DAQ([''], parent_path, 0)
 for i, key in enumerate(np.array(SMPS_keys).flatten()):
+    temp = SMPS_raw[key]
     if 'mass' in key:
         t = t_zero[i-4]
-        temp = remove_spikes_up(SMPS_raw[key], [SMPS_raw[key].keys()[38]], max(SMPS_raw[key][SMPS_raw[key].keys()[38]])/4)
+        temp.loc[temp['Total concentration'] < 0.01, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+        # temp = remove_spikes_up(SMPS_raw[key], [SMPS_raw[key].keys()[38]], max(SMPS_raw[key][SMPS_raw[key].keys()[38]])/4)
     else:
         t = t_zero[i]
-        temp = SMPS_raw[key]
-    temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 30), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
-    temp.loc[temp['Total concentration'] == 0, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+        temp.loc[temp['Total concentration'] < 1, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+    temp.loc[temp['Time'] < pd.to_datetime(t) + pd.Timedelta(minutes = 45), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
+    
     temp = remove_spikes_up(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 50)
-    temp = remove_spikes_down(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 50)
+    # temp = remove_spikes_down(temp, ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 50)
     SMPS[key] = temp
 for i, key in enumerate(PTRMS_keys):
     if 'fragments' in key:
