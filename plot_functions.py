@@ -368,6 +368,8 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, Org_DL, timestamps,
     return ax
 
 def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, ts_exp_end, RH):
+    temp = df
+    
     if ts_exp_end == None:
         fig, axes = plt.subplots(2, 1, figsize = (6.3, 6))
     else:
@@ -375,26 +377,23 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
         axes = [plt.subplot(2, 1, 1), plt.subplot(2, 2, 3), plt.subplot(2, 2, 4)]
 
     if fragments != None:
+        temp[parent_compound] = temp[fragments].sum(axis = 1)
         n_lines = len(labels) + 1
         cmap = mpl.colormaps['viridis']
         colors = cmap(np.linspace(0, 1, n_lines))
         scatter_color = colors[0]
         for color, compound in zip(colors[:-1], [parent_compound] + fragments):
-            plot_total(axes[0], df, compound, color, t_zero)
+            plot_total(axes[0], temp, compound, color, t_zero)
         axes[0].legend(labels = labels)
     else:
         scatter_color = 'indigo'
-        plot_total(axes[0], df, parent_compound, 'indigo', t_zero)
+        plot_total(axes[0], temp, parent_compound, 'indigo', t_zero)
     axes[0].set(title = f'{t_zero.split(' ')[0]}, {RH}', ylabel = 'Concentration (ppb)')
     
-    UV_on_df = running_mean(df, [parent_compound], 'Time', '1min', 
+    UV_on_df = running_mean(temp, [parent_compound], 'Time', '1min', 
                             [pd.to_datetime(t_zero) + pd.Timedelta(minutes = 10), pd.to_datetime(ts_UV_off) - pd.Timedelta(minutes = 10)])
     UV_on_df['Time'] = (UV_on_df.index - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
     UV_on_df = UV_on_df.reset_index(drop = True)
-    UV_off_df = running_mean(df, [parent_compound], 'Time', '1min', 
-                             [pd.to_datetime(ts_UV_off) + pd.Timedelta(minutes = 10), ts_exp_end])
-    UV_off_df['Time'] = (UV_off_df.index - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
-    UV_off_df = UV_off_df.reset_index(drop = True)
 
     axes[1].scatter(UV_on_df['Time'], np.log(UV_on_df[parent_compound]), color = scatter_color, s = 10)
     on_values, on_errors, on_fit, y_error, on_R2 = least_squares_reg(UV_on_df['Time'], np.log(UV_on_df[parent_compound]), 
@@ -405,6 +404,11 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
     print(f'{t_zero.split(' ')[0]}, {RH}, UV on: ln[{labels[0]}] = ({on_values[0]:.2e}+-{on_errors[0]:.2e})t + ({on_values[1]:.2e}+-{on_errors[1]:.2e})')
 
     if ts_exp_end != None:
+        UV_off_df = running_mean(temp, [parent_compound], 'Time', '1min', 
+                                     [pd.to_datetime(ts_UV_off) + pd.Timedelta(minutes = 10), ts_exp_end])
+        UV_off_df['Time'] = (UV_off_df.index - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+        UV_off_df = UV_off_df.reset_index(drop = True)
+
         axes[2].scatter(UV_off_df['Time'], np.log(UV_off_df[parent_compound]), color = scatter_color, s = 10)
         off_values, off_errors, off_fit, y_error, off_R2 = least_squares_reg(UV_off_df['Time'], 
                                                                              np.log(UV_off_df[parent_compound]), 
