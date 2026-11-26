@@ -604,7 +604,7 @@ def plot_AURA_overview(daq, daq_keys, smps, smps_keys, ams, ams_keys, timestamps
         plot_AURA(ax, twin_ax, daq, smps, ams, timestamps, bg_timestamps, t_zero, RH)
         set_ax_labelcolors(ax, twin_ax, nrows)
         set_ax_titles(ax, twin_ax, nrows)
-        date = t_zero[0].split(' ')[0]
+        date = t_zero.split(' ')[0]
 
     fig.tight_layout()
     fig.savefig(f'{save_path}{date}_AURA_overview.jpg', dpi = 600)
