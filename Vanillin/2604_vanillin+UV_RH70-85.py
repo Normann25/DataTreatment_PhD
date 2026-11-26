@@ -40,7 +40,7 @@ RH = ['70% RH', '70% RH', '85% RH', '85% RH']
 
 # Read data
 SMPS = {}
-SMPS_raw = import_SMPS([''], parent_path, 0)
+SMPS_raw = import_SMPS([''], parent_path, 0, [52]*13 + [0]*20 + [52]*16)
 PTRMS = import_PTRMS([''], parent_path)
 AMS = import_AMS([''], parent_path, 0)
 DAQ = import_DAQ([''], parent_path, 0)
@@ -79,11 +79,10 @@ print(len(PTRMS['260429_VL+UV_RH85_products'].keys()))
 for i, time in enumerate(timestamps):
     fig, ax = plot_AURA_overview(DAQ[DAQ_keys[i]], None, SMPS[SMPS_keys[0][i]], None, AMS[AMS_keys[i]], None, 
                        time, HEPA_timestamps[i], t_zero[i], 4, 1, RH[i], None, save_path)
-    ax[3].set_ylim (0, 1)
+    # ax[3].set_ylim (0, 1)
 #%%
 # SMPS
-ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260428_vanillin+UV_RH70_mass'].columns[42:-1], 'number and mass', 
-                     timestamps, 10, RH, 'Total concentration', t_zero, 2, 2, save_path)
+ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, 'number and mass', timestamps, 10, RH, t_zero, 2, 2, save_path)
 #%%
 # AMS
 for i, key in enumerate(AMS_keys):
