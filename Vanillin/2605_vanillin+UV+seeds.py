@@ -34,7 +34,7 @@ DAQ_keys = ['DataDAQ_260505', 'DataDAQ_260506', 'DataDAQ_260507', 'DataDAQ_26050
 RH = ['85% RH', '85% RH', 'Dry', 'Dry']
 
 # Import data
-SMPS = import_SMPS([''], parent_path, 0)
+SMPS = import_SMPS([''], parent_path, 0, [52]*13 + [0]*20 + [52]*16)
 # PTRMS = {}
 AMS = import_AMS([''], parent_path, 0)
 DAQ = import_DAQ([''], parent_path, 0)
@@ -44,7 +44,7 @@ for i, key in enumerate(np.array(SMPS_keys).flatten()):
     else:
         t = t_injection[i]
     SMPS[key].loc[SMPS[key]['Time'] < pd.to_datetime(t), ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)']] = np.nan
-    SMPS[key] = remove_spikes_up(SMPS[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
+    # SMPS[key] = remove_spikes_up(SMPS[key], ['Median (nm)', 'Mean (nm)', 'Geo. Mean (nm)', 'Mode (nm)'], 20)
 for t, key in zip(t_injection, AMS.keys()):
     if 'PToF' not in key:
         AMS[key].loc[AMS[key]['Time'] < pd.to_datetime(t), ['Ratio_H_C', 'Ratio_O_C']] = np.nan
@@ -60,8 +60,7 @@ for i, time in enumerate(timestamps):
     fig, ax = plot_AURA_overview(DAQ[DAQ_keys[i]], None, SMPS[SMPS_keys[0][i]], None, AMS[AMS_keys[i]], None, 
                        time, HEPA_timestamps[i], t_zero[i], 4, 1, RH[i], None, save_path)
 #%%
-ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, SMPS['260505_vanillin+UV+seeds_RH85_mass'].columns[42:-1], 'number and mass', 
-                     timestamps, 10, RH, 'Total concentration', t_zero, 2, 2, save_path)
+ax, ax_2 = plot_SMPS(SMPS, SMPS_keys, 'number and mass', timestamps, 10, RH, t_zero, 2, 2, save_path)
 #%%
 for i, key in enumerate(AMS_keys):
     plot_AMS(AMS[key], None, t_zero[i], timestamps[i], HEPA_timestamps[i], False, 1, RH[i], save_path)
