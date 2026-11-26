@@ -367,9 +367,9 @@ def vanKrevelen_multi_exp(ax, data_dict, dict_keys, df_keys, Org_DL, timestamps,
 
     return ax
 
-def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, ts_exp_end, RH):
+def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_fit, ts_exp_end, RH):
     temp = df
-    
+
     if ts_exp_end == None:
         fig, axes = plt.subplots(2, 1, figsize = (6.3, 6))
     else:
@@ -377,7 +377,7 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
         axes = [plt.subplot(2, 1, 1), plt.subplot(2, 2, 3), plt.subplot(2, 2, 4)]
 
     if fragments != None:
-        temp[parent_compound] = temp[fragments].sum(axis = 1)
+        temp[parent_compound] = temp[fragments+[parent_compound]].sum(axis = 1)
         n_lines = len(labels) + 1
         cmap = mpl.colormaps['viridis']
         colors = cmap(np.linspace(0, 1, n_lines))
@@ -390,23 +390,21 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
         plot_total(axes[0], temp, parent_compound, 'indigo', t_zero)
     axes[0].set(title = f'{t_zero.split(' ')[0]}, {RH}', ylabel = 'Concentration (ppb)')
     
-    UV_on_df = running_mean(temp, [parent_compound], 'Time', '1min', 
-                            [pd.to_datetime(t_zero) + pd.Timedelta(minutes = 10), pd.to_datetime(ts_UV_off) - pd.Timedelta(minutes = 10)])
-    UV_on_df['Time'] = (UV_on_df.index - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+    UV_on_df, std = running_mean(temp, [parent_compound], 'Time', '1min', ts_fit)
+    UV_on_df['Time'] = (pd.to_datetime(UV_on_df.index) - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
     UV_on_df = UV_on_df.reset_index(drop = True)
 
     axes[1].scatter(UV_on_df['Time'], np.log(UV_on_df[parent_compound]), color = scatter_color, s = 10)
     on_values, on_errors, on_fit, y_error, on_R2 = least_squares_reg(UV_on_df['Time'], np.log(UV_on_df[parent_compound]), 
                                                                      linear, True)
     axes[1].plot(UV_on_df['Time'], on_fit, color = 'k', lw = 1.2, ls = '--')
-    axes[1].text(0.05, 0.075, f'ln[{labels[0]}] = {on_values[0]:.2e}t + {on_values[1]:.2e}', transform = axes[1].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
+    axes[1].text(0.05, 0.075, f'ln[{labels[0]}] = {on_values[0]:.2e}t + {on_values[1]:.2f}', transform = axes[1].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
     axes[1].set_title('UV on', fontsize = 12)
-    print(f'{t_zero.split(' ')[0]}, {RH}, UV on: ln[{labels[0]}] = ({on_values[0]:.2e}+-{on_errors[0]:.2e})t + ({on_values[1]:.2e}+-{on_errors[1]:.2e})')
+    print(f'{t_zero.split(' ')[0]}, {RH}, UV on: ln[{labels[0]}] = ({on_values[0]:.2e}+-{on_errors[0]:.2e})t + ({on_values[1]:.2f}+-{on_errors[1]:.2f})')
 
     if ts_exp_end != None:
-        UV_off_df = running_mean(temp, [parent_compound], 'Time', '1min', 
-                                     [pd.to_datetime(ts_UV_off) + pd.Timedelta(minutes = 10), ts_exp_end])
-        UV_off_df['Time'] = (UV_off_df.index - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
+        UV_off_df, std = running_mean(temp, [parent_compound], 'Time', '1min', ts_exp_end)
+        UV_off_df['Time'] = (pd.to_datetime(UV_off_df.index) - pd.to_datetime(t_zero)) / pd.Timedelta(minutes = 1)
         UV_off_df = UV_off_df.reset_index(drop = True)
 
         axes[2].scatter(UV_off_df['Time'], np.log(UV_off_df[parent_compound]), color = scatter_color, s = 10)
@@ -414,9 +412,9 @@ def plot_PTRMS_decay(df, parent_compound, fragments, labels, t_zero, ts_UV_off, 
                                                                              np.log(UV_off_df[parent_compound]), 
                                                                              linear, True)
         axes[2].plot(UV_off_df['Time'], off_fit, color = 'k', lw = 1.2, ls = '--')
-        axes[2].text(0.05, 0.075, f'ln[{labels[0]}] = {off_values[0]:.2e}t + {off_values[1]:.2e}', transform = axes[2].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
+        axes[2].text(0.05, 0.075, f'ln[{labels[0]}] = {off_values[0]:.2e}t + {off_values[1]:.2f}', transform = axes[2].transAxes, bbox=dict(ec = 'white', fc = 'white', lw = 0.5, alpha = 0.9))
         axes[2].set_title('UV off', fontsize = 12)
-        print(f'{t_zero.split(' ')[0]}, {RH}, UV off: ln[{labels[0]}] = ({off_values[0]:.2e}+-{off_errors[0]:.2e})t + ({off_values[1]:.2e}+-{off_errors[1]:.2e})')
+        print(f'{t_zero.split(' ')[0]}, {RH}, UV off: ln[{labels[0]}] = ({off_values[0]:.2e}+-{off_errors[0]:.2e})t + ({off_values[1]:.2f}+-{off_errors[1]:.2f})')
 
     for ax in axes[1:]:
         ax.set(xlabel = 'Time (min)', ylabel = f'ln[{labels[0]}]')
