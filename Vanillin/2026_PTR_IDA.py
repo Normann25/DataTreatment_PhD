@@ -52,7 +52,7 @@ for ts, key in zip(timestamps[:2], dict_keys[:2]):
     fig, ax = plot_PTRMS_decay(temp, parent_key, frag_keys, labels, ts[1], fit_ts, None, 'Dry')
 
     fig.tight_layout()
-    fig.savefig(f'{save_path}2604_vanillin+UV_dry/{ts[0].split(' ')[0]}_VL-decay_IDA.jpg')
+    fig.savefig(f'{save_path}2604_vanillin+UV_dry/{ts[0].split(' ')[0]}_VL-decay_IDA.jpg', dpi = 600)
 
 Relative_humidity = ['85% RH', '85% RH', 'Dry', 'Dry', '85% RH', '85% RH', 'Dry', 'Dry']
 Fig_folders = ['2604_vanillin+UV_RH70-85']*2 + ['2604_vanillin+UV_dry']*2 + ['2605_vanillin+UV+seeds']*4
@@ -71,4 +71,4 @@ for ts, key, RH, folder in zip(timestamps[2:], dict_keys[2:], Relative_humidity,
     fig, ax = plot_PTRMS_decay(temp, parent_key, frag_keys, labels, ts[1], fit_ts, exp_end_ts, RH)
 
     fig.tight_layout()
-    fig.savefig(f'{save_path}{folder}/{ts[0].split(' ')[0]}_VL-decay_IDA.jpg')
+    fig.savefig(f'{save_path}{folder}/{ts[0].split(' ')[0]}_VL-decay_IDA.jpg', dpi = 600)
