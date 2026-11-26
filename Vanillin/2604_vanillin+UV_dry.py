@@ -38,7 +38,7 @@ PTRMS_keys = ['260501_VL+UV_dry_fragments', '260504_VL+UV_dry_fragments', '26050
 # Read data
 SMPS = {}
 SMPS_raw = import_SMPS([''], parent_path, 0, [52]*13 + [0]*20 + [52]*16)
-PTRMS = import_PTRMS([''], parent_path)
+PTRMS = import_PTRMS([''], parent_path, False)
 AMS = import_AMS([''], parent_path, 0)
 DAQ = import_DAQ([''], parent_path, 0)
 for i, key in enumerate(np.array(SMPS_keys).flatten()):

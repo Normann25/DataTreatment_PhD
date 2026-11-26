@@ -100,19 +100,29 @@ def import_DAQ(paths, parent_path, hour):
 
     return new_dict
 
-def import_PTRMS(paths, parent_path):
+def import_PTRMS(paths, parent_path, IDA):
+
     new_dict = {}
 
     for path in paths:
-        data = import_data(f'{parent_path}{path}PTRMS/', '', None, None, None)
+        files = file_list(f'{parent_path}{path}PTRMS/', '')
+        for file in files:
+            key = file.split('.')[0]
+            if IDA:
+                if file.endswith('.csv'):
+                    with open(os.path.join(f'{parent_path}{path}PTRMS/', file), 'r') as f:
+                        df = pd.read_csv(f, skiprows = 1)
 
-        for key in data.keys():
-            df = data[key]
+                    df['Time'] = pd.to_datetime(df['time_string'], format = '%d-%b-%Y %H:%M:%S')
+                    new_dict[key] = df.drop(['time_string', 'time_number'], axis = 1)
 
-            Timestamps = pd.to_datetime(df['AbsTime'], origin = pd.Timestamp('1899-12-30'), unit = 'D').dt.floor('s')  # format = '%d/%m/%Y %H:%M:%S'
-            df['Time'] = Timestamps
+            else:
+                if file.endswith('.txt'):
+                    with open(os.path.join(f'{parent_path}{path}PTRMS/', file), 'r') as f:
+                        df = pd.read_table(f, sep = '\t')
 
-            new_dict[key] = df.drop(['AbsTime', 'RelTime', 'Cycle', 'CycleInFile', 'Filename'], axis = 1)
+                    df['Time'] = pd.to_datetime(df['AbsTime'], origin = pd.Timestamp('1899-12-30'), unit = 'D').dt.floor('s')  # format = '%d/%m/%Y %H:%M:%S'
+                    new_dict[key] = df.drop(['AbsTime', 'RelTime', 'Cycle', 'CycleInFile', 'Filename'], axis = 1)
 
     return new_dict
 
