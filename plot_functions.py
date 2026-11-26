@@ -565,8 +565,11 @@ def plot_AURA_overview(daq, daq_keys, smps, smps_keys, ams, ams_keys, timestamps
             ax[3].spines['left'].set_linewidth(0.9)
 
         return
-
-    fig, ax = plt.subplots(nrows, ncols, figsize = (ncols*2.1, nrows*2), sharex = 'col', sharey = 'row')
+    if ncols > 2:
+        width = ncols*2.1
+    else:
+        width = 6
+    fig, ax = plt.subplots(nrows, ncols, figsize = (width, nrows*2), sharex = 'col', sharey = 'row')
 
     if ncols > 1:
         twin_ax = []
@@ -619,12 +622,12 @@ def plot_SMPS(data, dictkeys, datatype, timestamps, run_length, RH, t_zero, nrow
         if datatype == 'number and mass':
             df_keys = data[dictkeys[0][i]].keys()[42:-1]
             
-            running_number = running_mean(data[dictkeys[0][i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
-            running_mass = running_mean(data[dictkeys[1][i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
+            running_number, temp = running_mean(data[dictkeys[0][i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
+            running_mass, temp = running_mean(data[dictkeys[1][i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
         else:
             df_keys = data[dictkeys[i]].keys()[42:-1]
 
-            running = running_mean(data[dictkeys[i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
+            running, temp = running_mean(data[dictkeys[i]], df_keys, 'Time', f'{run_length}min', [t_zero[i], time[1]])
 
         bin_means = []
         for key in df_keys:
