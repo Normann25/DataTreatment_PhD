@@ -116,3 +116,8 @@ for number_key, mass_key, t in zip(SMPS_number, SMPS_mass, timestamps):
     print(f'{t[0].split(' ')[0]}')
     print(f'Max number concentration: N_max = {max_number:.1f} +- {number_std:.2f} cm^-3')
     print(f'Max mass concentration: M_max = {max_mass:.2f} +- {mass_std:.4f} ug m^-3')
+
+    daq_key = f'DataDAQ_26{t[0].split('-')[1]}{t[0].split('-')[2].split(' ')[0]}'
+    daq = time_filtered_conc(DAQ[daq_key], ['RH_Percent'], t)
+    RH_mean, RH_std = daq['RH_Percent'].mean(), daq['RH_Percent'].std()
+    print(f'RH = {RH_mean:.1f} +- {RH_std:.3f}')
